@@ -23,7 +23,6 @@ import executionservices.SystemThreadPoolExecutor;
 import utils.ApplicationProperties;
 import utils.DatabaseConnection;
 import utils.GeneralUtils;
-import utils.HazelcastInstanceUtils;
 
 public class Application {
 
@@ -92,11 +91,8 @@ public class Application {
 		// Print parameters used
 		printParameters ("Start");
 		
-		// Creates execution tasks and waits until all the workers have finished
-		createExecutionTasks ();
-		
-		// Put Stop Signal into the Hazelcast queue if required
-		putStopSignal();
+		// Execute workers
+		executeWorkers ();
         
 		applicationStopTime = System.currentTimeMillis();
 
@@ -108,25 +104,6 @@ public class Application {
 		System.exit(0);
     }
 
-    private static void createExecutionTasks () {
-    	
-    	for (String currentCurrency : currencyPairs) {
-    		try {
-				HazelcastInstanceUtils.putIntoQueue(HazelcastInstanceUtils.getTaskQueueName(), currentCurrency);
-			} catch (Exception e) {
-				logger.error ("Exception: Unable to put <" + currentCurrency + "> into Hazelcast. " + e.getClass() + " - " + e.getMessage());
-			}
-            logger.debug ("Putting <" + currentCurrency + "> into Hazelcast task queue");
-    	}
-    }
-    
-    private static void putStopSignal () {
-    	try {
-			HazelcastInstanceUtils.putStopSignalIntoQueue(HazelcastInstanceUtils.getTaskQueueName());
-		} catch (Exception e) {
-			logger.error ("Exception: Unable to put stop signal into Hazelcast");
-		}
-    }
     
     private static void executeWorkers () {
 
