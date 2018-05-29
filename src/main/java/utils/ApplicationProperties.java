@@ -10,10 +10,9 @@ import java.util.Properties;
 public class ApplicationProperties {
 
     private static Properties applicationProperties;
-    private static String propertiesFile = "application.properties";
 
     public static String getPropertiesFile () {
-    	return propertiesFile;
+    	return Constants.APPLICATION_PROPERTIES;
     }
     
     public static List<String> getListProperty (final String propertyName) {
@@ -43,7 +42,7 @@ public class ApplicationProperties {
         if (applicationProperties == null) {
             ClassLoader loader = Thread.currentThread().getContextClassLoader();
 
-            try(InputStream resourceStream = loader.getResourceAsStream(propertiesFile)){
+            try(InputStream resourceStream = loader.getResourceAsStream(getPropertiesFile ())){
                 applicationProperties = new Properties();
                 applicationProperties.load(resourceStream);
             } catch (Exception ex) {

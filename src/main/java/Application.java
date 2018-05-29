@@ -3,48 +3,35 @@ import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.Map.Entry;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import datamodel.CalcResult;
-import executionservices.RejectedExecutionHandlerImpl;
-import executionservices.RunnableWorkerThread;
-import executionservices.SystemLinkedBlockingQueue;
-import executionservices.SystemMonitorThread;
-import executionservices.SystemThreadPoolExecutor;
+import datamodel.ExecutionTask;
+import datamodel.FxRate;
 import utils.ApplicationProperties;
-import utils.DatabaseConnection;
 import utils.GeneralUtils;
+import utils.HazelcastInstanceUtils;
 
 public class Application {
 
 	// Logger
 	private static Logger logger = LoggerFactory.getLogger(Application.class);
 
-	// WorkerPool parameters 
-	private static int poolCoreSize;	
-	private static int poolMaxSize; 
-	private static int queueCapacity; 
-	private static int timeoutSecs; 
-	private static int retrySleepTime; 
-	private static int retryMaxAttempts; 
-	private static int initialSleep; 
-	private static int monitorSleep;
-
 	// Execution time
 	private static long applicationStartTime;	
 	private static long applicationStopTime;	
 	
 	// Application properties
-	private static int numberOfRecords = 0;
+	private static Properties applicationProperties;
+/*
 	private static String historicalDataPath;
 	private static String historicalDataFileExtension;
 	private static String historicalDataSeparator;
@@ -66,7 +53,7 @@ public class Application {
 	private static float increasePercentage;
 	private static float decreasePercentage;
 	private static int maxLevels;
-
+*/
 	private static long totalExecutions;
 	private static long totalHistDataLoaded;
 	private static long totalCalculations;
@@ -78,7 +65,7 @@ public class Application {
 	// Lists and Maps
 	private static Map<String,CalcResult> calcResultsMap = new HashMap<String,CalcResult>();
 	
-    public static void main (String args[]) {
+    public static void main (String args[]) throws Exception {
 
     	applicationStartTime = System.currentTimeMillis();
 
@@ -92,7 +79,10 @@ public class Application {
 		printParameters ("Start");
 		
 		// Execute workers
-		executeWorkers ();
+		//executeWorkers ();
+		
+		// Create Execution Tasks and put them into Hazelacast
+		createAndPublishExecutionTasks();
         
 		applicationStopTime = System.currentTimeMillis();
 
@@ -104,19 +94,42 @@ public class Application {
 		System.exit(0);
     }
 
-    
-    private static void executeWorkers () {
 
+    private static void createAndPublishExecutionTasks () throws Exception {
+
+		// Initialize Hazelcast instance
+		HazelcastInstanceUtils.getInstance();
+
+    	logger.info("Putting Execution Tasks into Hazelcast for processing");
+    	
+    	ExecutionTask executionTask = null;
+    	int taskId = 0;
+
+		// For each currencyPair (from properties file) create an Execution Task and put it into Hazelcast task queue for processing
+    	for (String currentCurrency : ((List<String>)applicationProperties.get("execution.currencyPairs"))) {
+    		taskId++;
+    		executionTask = new ExecutionTask (taskId,"FXRATE",applicationProperties);
+    		HazelcastInstanceUtils.putIntoQueue(HazelcastInstanceUtils.getTaskQueueName(), executionTask);
+    		logger.debug ("Put: " + taskId);
+		}
+
+        logger.info ("Created and Published " + taskId + " execution tasks");
+		
+    }
+
+    private static void executeWorkers () {
+/*
+    	
 		// RejectedExecutionHandler implementation 
 		RejectedExecutionHandlerImpl rejectionHandler = new RejectedExecutionHandlerImpl(); 
 		
 		// Get the ThreadFactory implementation to use 
 		ThreadFactory threadFactory = Executors.defaultThreadFactory();
 		
-		/* Define the BlockingQueue. 
-		 * ArrayBlockingQueue to set a fixed capacity queue
-		 * LinkedBlockingQueue to set an unbound capacity queue
-		*/
+		// Define the BlockingQueue. 
+		// ArrayBlockingQueue to set a fixed capacity queue
+		// LinkedBlockingQueue to set an unbound capacity queue
+		//
 		SystemLinkedBlockingQueue<Runnable> blockingQueue = new SystemLinkedBlockingQueue<Runnable>();		
 		
 		// Create the ThreadPoolExecutor
@@ -156,46 +169,38 @@ public class Application {
 		} finally {
 			DatabaseConnection.closeConnection();
 		}
+*/
 	} 
     
     private static void loadProperties () {
+    	
+    	applicationProperties.put("main.historicalDataPath", ApplicationProperties.getStringProperty("main.historicalDataPath"));
+    	applicationProperties.put("main.historicalDataFileExtension", ApplicationProperties.getStringProperty("main.historicalDataFileExtension"));
+    	applicationProperties.put("main.historicalDataSeparator", ApplicationProperties.getStringProperty("main.historicalDataSeparator"));
+    	applicationProperties.put("main.writeResultsToFile", ApplicationProperties.getBooleanProperty("main.writeResultsToFile"));
+    	applicationProperties.put("main.resultsPath", ApplicationProperties.getStringProperty("main.resultsPath"));
+		
+    	applicationProperties.put("main.datasource", ApplicationProperties.getStringProperty("main.datasource"));
+    	applicationProperties.put("database.host", ApplicationProperties.getStringProperty("database.host"));
+    	applicationProperties.put("database.port", ApplicationProperties.getStringProperty("database.port"));
+    	applicationProperties.put("main.historicalDataPath", ApplicationProperties.getStringProperty("database.db_name"));
+    	applicationProperties.put("database.username", ApplicationProperties.getStringProperty("database.username"));
+    	applicationProperties.put("database.password", ApplicationProperties.getStringProperty("database.password"));
 
-		poolCoreSize = ApplicationProperties.getIntProperty("workerpool.coreSize");
-		poolMaxSize = ApplicationProperties.getIntProperty("workerpool.maxSize");
-		queueCapacity = ApplicationProperties.getIntProperty("workerpool.queueCapacity");
-		timeoutSecs = ApplicationProperties.getIntProperty("workerpool.timeoutSecs");
-		retrySleepTime = ApplicationProperties.getIntProperty("workerpool.retrySleepTime");
-		retryMaxAttempts = ApplicationProperties.getIntProperty("workerpool.retryMaxAttempts");
-		monitorSleep = ApplicationProperties.getIntProperty("workerpool.monitorSleep");
-		
-		historicalDataPath = ApplicationProperties.getStringProperty("main.historicalDataPath");
-		historicalDataFileExtension = ApplicationProperties.getStringProperty("main.historicalDataFileExtension");
-		historicalDataSeparator = ApplicationProperties.getStringProperty("main.historicalDataSeparator");
-		
-		printAfter = ApplicationProperties.getIntProperty("test.printAfter");
-		writeResultsToFile = ApplicationProperties.getBooleanProperty("main.writeResultsToFile");
-		resultsPath = ApplicationProperties.getStringProperty("main.resultsPath");
-		
-		datasource = ApplicationProperties.getStringProperty("main.datasource");
-		databaseHost = ApplicationProperties.getStringProperty("database.host");
-		databasePort = ApplicationProperties.getStringProperty("database.port");
-		databaseName = ApplicationProperties.getStringProperty("database.db_name");
-		databaseUser = ApplicationProperties.getStringProperty("database.username");
-		databasePass = ApplicationProperties.getStringProperty("database.password");
-
-		currencyPairs = ApplicationProperties.getListProperty("execution.currencyPairs");
-		startDate = ApplicationProperties.getStringProperty("execution.startDate");
-		endDate = ApplicationProperties.getStringProperty("execution.endDate");
-		increasePercentage = ApplicationProperties.getFloatProperty("execution.increasePercentage");
-		decreasePercentage = ApplicationProperties.getFloatProperty("execution.decreasePercentage");
-		maxLevels = ApplicationProperties.getIntProperty("execution.maxLevels");
-		numberOfRecords = ApplicationProperties.getIntProperty("test.numberOfRecords");
-		printAfter = ApplicationProperties.getIntProperty("test.printAfter");
+    	applicationProperties.put("execution.currencyPairs", ApplicationProperties.getListProperty("execution.currencyPairs"));
+    	applicationProperties.put("execution.startDate", ApplicationProperties.getStringProperty("execution.startDate"));
+    	applicationProperties.put("execution.endDate", ApplicationProperties.getStringProperty("execution.endDate"));
+    	applicationProperties.put("execution.increasePercentage", ApplicationProperties.getFloatProperty("execution.increasePercentage"));
+    	applicationProperties.put("execution.decreasePercentage", ApplicationProperties.getFloatProperty("execution.decreasePercentage"));
+    	applicationProperties.put("execution.maxLevels", ApplicationProperties.getIntProperty("execution.maxLevels"));
+    	applicationProperties.put("test.printAfter", ApplicationProperties.getIntProperty("test.printAfter"));
 
     }
     
 	// Print execution parameters 
 	private static void printParameters (final String title) {
+		
+/*		
 		logger.info ("");
 		logger.info ("**************************************************"); 
 		logger.info (title + " WorkerPool with the following parameters:"); 
@@ -238,6 +243,7 @@ public class Application {
 		logger.info ("  - results path             : " + resultsPath);
 		logger.info ("****************************************************");
 		logger.info ("");
+*/
 	}
 
 	// Print execution times
@@ -262,6 +268,9 @@ public class Application {
 		
 		if (calcResultsMap != null && calcResultsMap.size() > 0) {
 
+			int maxLevels = (int)applicationProperties.get("execution.maxLevels");
+			boolean writeResultsToFile = (boolean)applicationProperties.get("main.writeResultsToFile");
+			
 			logger.info (printCurrencyLevelsHeader(maxLevels));
 			
 			if (writeResultsToFile) {
