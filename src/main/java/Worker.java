@@ -46,7 +46,7 @@ public class Worker {
 	private static String localEndPointAddress;
 	private static String localEndPointPort;
 	
-	private static long taskNumber = 0;
+	private static long totalExecutions = 0;
 	
 	private static Map<String,CalcResult> calcResultsMap = new HashMap<String,CalcResult>();
 	
@@ -126,14 +126,14 @@ public class Worker {
 //				(blockingQueue.remainingCapacity() > 0)) { // For ArrayBlockingQueue
 				(blockingQueue.size() < queueCapacity)) { // For LinkedBlockingQueue 
 				ExecutionTask executionTaskItem = hazelcastTaskQueue.take();
-				logger.info ("Consumed: " + executionTaskItem.getTaskId() + " from Hazelcast Task Queue");
+				logger.info ("Consumed Execution Task from Hazelcast Task Queue");
 				if ( (HazelcastInstanceUtils.getStopProcessingSignal()).equals(executionTaskItem.getTaskType()) ) {
 					logger.info ("Detected " + HazelcastInstanceUtils.getStopProcessingSignal());
 					hzClient.getQueue(HazelcastInstanceUtils.getTaskQueueName()).put(new ExecutionTask(HazelcastInstanceUtils.getStopProcessingSignal()));
 					break;
 				}				
 				executorPool.execute(new RunnableWorkerThread(executionTaskItem, calcResultsMap));
-				taskNumber++; 
+				totalExecutions++; 
 			}
 		}
 		logger.info ("Hazelcast consumer Finished");
@@ -141,11 +141,11 @@ public class Worker {
 		// Shut down the pool 
 		logger.info ("Shutting down executor pool..."); 
 		executorPool.shutdown(); 
-		logger.info (taskNumber/*executorPool.getTaskCount()*/ + " tasks. No additional tasks will be accepted"); 
+		logger.info (totalExecutions/*executorPool.getTaskCount()*/ + " tasks. No additional tasks will be accepted"); 
 
 		// Shut down the monitor thread 
 		while (!executorPool.isTerminated()) { 
-			logger.info ("Waiting for all the Executor to terminate"); 
+			logger.debug ("Waiting for all the Executor to terminate"); 
 			Thread.sleep(monitorSleep*1000); 
 		} 
 
@@ -157,11 +157,15 @@ public class Worker {
 		logger.info ("Shutting down monitor thread... done"); 
 
 		// Update WorkerDetails status to inactive
+		workerDetail.setCalculationResults(calcResultsMap);
 		workerDetail.setActiveStatus(false);
 		workerDetail.setStopTime(stopTime);
 		workerDetail.setTotalElapsedTime((stopTime - startTime));
-		workerDetail.setTotalExecutions(taskNumber);
+		workerDetail.setTotalExecutions(totalExecutions);
 		workerDetail.setAvgExecutionTime(executorPool.getAvgExecutionTime());
+		workerDetail.setTotalHistoricalDataLoaded(executorPool.getTotalHistDataLoaded());
+		workerDetail.setTotalCalculations(executorPool.getTotalCalculations());
+		workerDetail.setTotalResults(executorPool.getTotalResults());
 		hzClient.getMap(HazelcastInstanceUtils.getMonitorMapName()).put(workerDetail.getUuid(),workerDetail);
 		
 		// Shutdown Hazelcast cluster node instance		
@@ -201,7 +205,7 @@ public class Worker {
 		logger.info ("  - pool max size        : " + poolMaxSize); 
 		logger.info ("  - queue capacity       : " + queueCapacity); 
 		logger.info ("  - timeout (secs)       : " + timeoutSecs); 
-		logger.info ("  - number of tasks      : " + taskNumber); 
+		logger.info ("  - number of tasks      : " + totalExecutions); 
 		logger.info ("  - retry sleep (ms)     : " + retrySleepTime); 
 		logger.info ("  - retry max attempts   : " + retryMaxAttempts);
 		logger.info ("  - initial sleep (secs) : " + initialSleep); 

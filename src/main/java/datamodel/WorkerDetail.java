@@ -1,6 +1,8 @@
 package datamodel;
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 
 public class WorkerDetail implements Serializable {
 	
@@ -25,7 +27,12 @@ public class WorkerDetail implements Serializable {
 	private long stopTime = 0L;
 	private long totalElapsedTime = 0L; 
 	private long totalExecutions = 0;
+	private long totalHistoricalDataLoaded = 0;
+	private long totalCalculations = 0;
+	private long totalResults = 0;
 	private long avgExecutionTime = 0L;
+	
+	private Map<String,CalcResult> calcResultsMap;
 
 	private String csvFormat;
 
@@ -162,6 +169,14 @@ public class WorkerDetail implements Serializable {
 	public final void setStopTime(long stopTime) {
 		this.stopTime = stopTime;
 	}
+	
+	public final void setCalculationResults(Map<String,CalcResult> calcResults) {
+		this.calcResultsMap = calcResults;
+	}
+
+	public final Map<String,CalcResult> getCalculationResults() {
+		return calcResultsMap;
+	}
 
 	public final long getAvgExecutionTime() {
 		return avgExecutionTime;
@@ -169,6 +184,30 @@ public class WorkerDetail implements Serializable {
 
 	public final void setAvgExecutionTime(long avgExecutionTime) {
 		this.avgExecutionTime = avgExecutionTime;
+	}
+
+	public final long getTotalCalculations() {
+		return totalCalculations;
+	}
+	
+	public final void setTotalCalculations(long totalCalculations) {
+		this.totalCalculations = totalCalculations;
+	}
+
+	public final long getTotalResults() {
+		return totalResults;
+	}
+	
+	public final void setTotalResults(long totalResults) {
+		this.totalResults = totalResults;
+	}
+
+	public final long getTotalHistoricalDataLoaded() {
+		return totalHistoricalDataLoaded;
+	}
+	
+	public final void setTotalHistoricalDataLoaded(long totalHistoricalDataLoaded) {
+		this.totalHistoricalDataLoaded = totalHistoricalDataLoaded;
 	}
 
 	public final long getTotalExecutions() {

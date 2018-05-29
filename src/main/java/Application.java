@@ -3,8 +3,6 @@ import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -16,10 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import datamodel.CalcResult;
 import datamodel.ExecutionTask;
-import datamodel.FxRate;
 import datamodel.WorkerDetail;
 import utils.ApplicationProperties;
-import utils.Constants;
 import utils.GeneralUtils;
 import utils.HazelcastInstanceUtils;
 
@@ -57,19 +53,12 @@ public class Application {
 	private static float decreasePercentage;
 	private static int maxLevels;
 */
-	private static long totalExecutions;
-	private static long totalHistDataLoaded;
-	private static long totalCalculations;
-	private static long totalResults;
-	private static long avgExecutionTime;
-	
-	private static long monitorDelay = 10;
-	
-	private static final String applicationId = (""+System.currentTimeMillis());
-	
-	// Lists and Maps
-	private static Map<String,CalcResult> calcResultsMap = new HashMap<String,CalcResult>();
-	
+	private static long totalExecutions = 0;
+	private static long totalHistDataLoaded = 0;
+	private static long totalCalculations = 0;
+	private static long totalResults = 0;
+	private static long avgExecutionTime = 0;
+		
     public static void main (String args[]) throws Exception {
 
     	applicationStartTime = System.currentTimeMillis();
@@ -153,61 +142,7 @@ public class Application {
 
     }
     
-    private static void executeWorkers () {
-/*
-    	
-		// RejectedExecutionHandler implementation 
-		RejectedExecutionHandlerImpl rejectionHandler = new RejectedExecutionHandlerImpl(); 
-		
-		// Get the ThreadFactory implementation to use 
-		ThreadFactory threadFactory = Executors.defaultThreadFactory();
-		
-		// Define the BlockingQueue. 
-		// ArrayBlockingQueue to set a fixed capacity queue
-		// LinkedBlockingQueue to set an unbound capacity queue
-		//
-		SystemLinkedBlockingQueue<Runnable> blockingQueue = new SystemLinkedBlockingQueue<Runnable>();		
-		
-		// Create the ThreadPoolExecutor
-		SystemThreadPoolExecutor executorPool = new SystemThreadPoolExecutor(poolCoreSize, poolMaxSize, timeoutSecs, TimeUnit.SECONDS, blockingQueue, threadFactory, rejectionHandler); 
 
-    	try { 
-
-			logger.info ("Starting workers");
-	
-			CountDownLatch latch = new CountDownLatch(currencyPairs.size());
-			
-			for (String currentCurrency : currencyPairs) {
-				
-				// if ((executorPool.getActiveCount() < executorPool.getMaximumPoolSize()) || (blockingQueue.size() < queueCapacity)) { // For LinkedBlockingQueue 
-				executorPool.execute(new RunnableWorkerThread(datasource, currentCurrency, calcResultsMap, latch));
-			}
-
-			// Start the monitoring thread 
-			SystemMonitorThread monitor = new SystemMonitorThread(executorPool, monitorSleep, applicationId); 
-			Thread monitorThread = new Thread(monitor); 
-			monitorThread.start(); 
-
-			logger.info("Waiting for all the Workers to finish");
-			latch.await();
-			logger.info("All workers finished");
-			
-			logger.info ("Shutting down monitor thread..."); 
-			monitor.shutdown();
-
-			totalExecutions = executorPool.getTotalExecutions();
-			totalHistDataLoaded = executorPool.getTotalHistDataLoaded();
-			totalCalculations = executorPool.getTotalCalculations();
-			totalResults = executorPool.getTotalResults();
-			avgExecutionTime = executorPool.getAvgExecutionTime();
-		} catch (Exception e) { 
-			e.printStackTrace(); 
-		} finally {
-			DatabaseConnection.closeConnection();
-		}
-*/
-	} 
-    
     private static void loadProperties () {
     	
     	applicationProperties.put("main.historicalDataPath", ApplicationProperties.getStringProperty("main.historicalDataPath"));
@@ -284,10 +219,58 @@ public class Application {
 	}
 
 	// Print execution times
-	private static void printResults () {
+	private static void printResults () throws Exception {
 
-		Path path = null;
+		Path path = null;		
+		List<String> currencyPairs = (List<String>)applicationProperties.get("execution.currencyPairs");
+		int maxLevels = (int)applicationProperties.get("execution.maxLevels");
+		boolean writeResultsToFile = (boolean)applicationProperties.get("main.writeResultsToFile");
+		String resultsPath = (String)applicationProperties.get("main.resultsPath");
 
+		Map <String,CalcResult> calcResultsMap = null;
+		
+		Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getMonitorMapName()).entrySet().iterator();
+
+		while (iter.hasNext()) {
+            Entry<String, Object> entry = iter.next();
+            calcResultsMap = ((WorkerDetail) entry.getValue()).getCalculationResults();
+            totalExecutions += ((WorkerDetail) entry.getValue()).getTotalExecutions();
+            totalHistDataLoaded += ((WorkerDetail) entry.getValue()).getTotalHistoricalDataLoaded();
+            totalCalculations += ((WorkerDetail) entry.getValue()).getTotalCalculations();
+            totalResults += ((WorkerDetail) entry.getValue()).getTotalResults();
+            
+    		if (calcResultsMap != null && calcResultsMap.size() > 0) {
+     			
+    			logger.info (printCurrencyLevelsHeader(maxLevels));
+    			
+    			if (writeResultsToFile) {
+    				path = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+".csv"));
+    				GeneralUtils.writeTextToFile(path, printExecutionParams());
+    				GeneralUtils.writeTextToFile(path, printCurrencyLevelsHeader(maxLevels));
+    			}
+    			
+    			for (String currency : currencyPairs) {
+    				
+    				if (calcResultsMap.containsKey(currency)) {
+    					logger.info (printCurrencyLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getLevelResults(), maxLevels));
+    					
+    					if (writeResultsToFile) {
+    						GeneralUtils.writeTextToFile(path, printCurrencyLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getLevelResults(), maxLevels));
+    					}
+    				} else {
+    					logger.info (printCurrencyLevels (currency, null, maxLevels));
+    					if (writeResultsToFile) {
+    						GeneralUtils.writeTextToFile(path, printCurrencyLevels (currency, null, maxLevels));
+    					}
+    				}
+    			}
+    			logger.info ("**************************************************");
+    			logger.info("");
+    			if (writeResultsToFile) {
+    				logger.info("Results written into file: " + path.toString());
+    			}
+    		}            
+        }
 		logger.info ("");
 		logger.info ("Total figures:");
 		logger.info ("**************************************************");
@@ -301,44 +284,6 @@ public class Application {
 		logger.info ("");
 		logger.info ("Results:");
 		logger.info ("**************************************************");
-		
-		
-		if (calcResultsMap != null && calcResultsMap.size() > 0) {
-
-			List<String> currencyPairs = (List<String>)applicationProperties.get("execution.currencyPairs");
-			int maxLevels = (int)applicationProperties.get("execution.maxLevels");
-			boolean writeResultsToFile = (boolean)applicationProperties.get("main.writeResultsToFile");
-			String resultsPath = (String)applicationProperties.get("main.resultsPath");
-			
-			logger.info (printCurrencyLevelsHeader(maxLevels));
-			
-			if (writeResultsToFile) {
-				path = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HHmmss"))+".csv"));
-				GeneralUtils.writeTextToFile(path, printExecutionParams());
-				GeneralUtils.writeTextToFile(path, printCurrencyLevelsHeader(maxLevels));
-			}
-			
-			for (String currency : currencyPairs) {
-				
-				if (calcResultsMap.containsKey(currency)) {
-					logger.info (printCurrencyLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getLevelResults(), maxLevels));
-					
-					if (writeResultsToFile) {
-						GeneralUtils.writeTextToFile(path, printCurrencyLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getLevelResults(), maxLevels));
-					}
-				} else {
-					logger.info (printCurrencyLevels (currency, null, maxLevels));
-					if (writeResultsToFile) {
-						GeneralUtils.writeTextToFile(path, printCurrencyLevels (currency, null, maxLevels));
-					}
-				}
-			}
-			logger.info ("**************************************************");
-			logger.info("");
-			if (writeResultsToFile) {
-				logger.info("Results written into file: " + path.toString());
-			}
-		}
 	}
 
 	// Print execution parameters
