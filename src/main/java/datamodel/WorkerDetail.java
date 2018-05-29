@@ -15,18 +15,16 @@ public class WorkerDetail implements Serializable {
 	private int poolMaxSize; 
 	private int queueCapacity; 
 	private int timeoutSecs; 
-	private int processTime; 
 	private int retrySleepTime; 
 	private int retryMaxAttempts; 
 	private int initialSleep; 
 	private int monitorSleep;
 	private int refreshAfter;
 
-	private int taskNumber = 0; 
 	private long startTime = 0L; 
 	private long stopTime = 0L;
 	private long totalElapsedTime = 0L; 
-	private int totalExecutions = 0;
+	private long totalExecutions = 0;
 	private long avgExecutionTime = 0L;
 
 	private String csvFormat;
@@ -40,20 +38,17 @@ public class WorkerDetail implements Serializable {
 	 * @param poolMaxSize
 	 * @param queueCapacity
 	 * @param timeoutSecs
-	 * @param processTime
 	 * @param retrySleepTime
 	 * @param retryMaxAttempts
 	 * @param initialSleep
 	 * @param monitorSleep
-	 * @param refreshAfter
-	 * @param taskNumber
 	 * @param startTime
 	 * @param stopTime
 	 * @param elapsedArray
 	 */
 	public WorkerDetail(String uuid, String inetAddres, String inetPort, int poolCoreSize, int poolMaxSize,
-			int queueCapacity, int timeoutSecs, int processTime, int retrySleepTime, int retryMaxAttempts,
-			int initialSleep, int monitorSleep, int refreshAfter, int taskNumber, long startTime) {
+			int queueCapacity, int timeoutSecs, int retrySleepTime, int retryMaxAttempts,
+			int initialSleep, int monitorSleep, long startTime) {
 		this.uuid = uuid;
 		this.inetAddres = inetAddres;
 		this.inetPort = inetPort;
@@ -61,13 +56,10 @@ public class WorkerDetail implements Serializable {
 		this.poolMaxSize = poolMaxSize;
 		this.queueCapacity = queueCapacity;
 		this.timeoutSecs = timeoutSecs;
-		this.processTime = processTime;
 		this.retrySleepTime = retrySleepTime;
 		this.retryMaxAttempts = retryMaxAttempts;
 		this.initialSleep = initialSleep;
 		this.monitorSleep = monitorSleep;
-		this.refreshAfter = refreshAfter;
-		this.taskNumber = taskNumber;
 		this.startTime = startTime;
 	}
 
@@ -122,12 +114,6 @@ public class WorkerDetail implements Serializable {
 	public final void setTimeoutSecs(int timeoutSecs) {
 		this.timeoutSecs = timeoutSecs;
 	}
-	public final int getProcessTime() {
-		return processTime;
-	}
-	public final void setProcessTime(int processTime) {
-		this.processTime = processTime;
-	}
 	public final int getRetrySleepTime() {
 		return retrySleepTime;
 	}
@@ -158,12 +144,6 @@ public class WorkerDetail implements Serializable {
 	public final void setRefreshAter(int refreshAfter) {
 		this.refreshAfter = refreshAfter;
 	}
-	public final int getTaskNumber() {
-		return taskNumber;
-	}
-	public final void setTaskNumber(int taskNumber) {
-		this.taskNumber = taskNumber;
-	}
 	public final long getStartTime() {
 		return startTime;
 	}
@@ -191,7 +171,7 @@ public class WorkerDetail implements Serializable {
 		this.avgExecutionTime = avgExecutionTime;
 	}
 
-	public final int getTotalExecutions() {
+	public final long getTotalExecutions() {
 		return totalExecutions;
 	}
 	
@@ -200,7 +180,7 @@ public class WorkerDetail implements Serializable {
 		return (""+totalExecutions).replaceAll(regex, "");
 	}
 
-	public final void setTotalExecutions(int totalExecutions) {
+	public final void setTotalExecutions(long totalExecutions) {
 		this.totalExecutions = totalExecutions;
 	}
 

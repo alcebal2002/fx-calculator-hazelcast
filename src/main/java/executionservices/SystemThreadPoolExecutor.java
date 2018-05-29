@@ -7,8 +7,6 @@ import java.util.concurrent.TimeUnit;
   
 public class SystemThreadPoolExecutor extends ThreadPoolExecutor { 
         
-//	private long minExecutionTime = Long.MAX_VALUE;
-//    private long maxExecutionTime = 0;
     private long totalExecutionTime = 0;
     private int totalExecutions = 0;
     private long totalCalculations = 0;
@@ -28,8 +26,6 @@ public class SystemThreadPoolExecutor extends ThreadPoolExecutor {
 			totalHistDataLoaded += ((RunnableWorkerThread)r).getTotalHistDataLoaded();
 			totalCalculations += ((RunnableWorkerThread)r).getTotalCalculations();
 			totalResults += ((RunnableWorkerThread)r).getTotalResutls();
-//		    if (elapsedTimeMillis < minExecutionTime) minExecutionTime = elapsedTimeMillis;
-//		    if (elapsedTimeMillis > maxExecutionTime) maxExecutionTime = elapsedTimeMillis;
 	    } finally { 
 	    	super.afterExecute(r, t); 
 	    } 

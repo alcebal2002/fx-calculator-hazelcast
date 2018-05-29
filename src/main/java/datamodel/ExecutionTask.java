@@ -8,6 +8,7 @@ public class ExecutionTask implements Serializable {
 	// Task parameters
 	private int taskId;
 	private String taskType = null;
+	private String currentCurrency = null;
 	private Properties taskParameters;
 	
 	private long creationTimestamp = 0L;
@@ -17,9 +18,10 @@ public class ExecutionTask implements Serializable {
 		this.taskType = taskType;
 	}
 
-	public ExecutionTask(final int taskId, final String taskType, final Properties taskParameters) {
+	public ExecutionTask(final int taskId, final String taskType, final String currentCurrency, final Properties taskParameters) {
 		this.taskId = taskId;
 		this.taskType = taskType;
+		this.currentCurrency = currentCurrency;
 		this.taskParameters = taskParameters;
 		this.creationTimestamp = System.currentTimeMillis();
 	}
@@ -30,6 +32,10 @@ public class ExecutionTask implements Serializable {
 
 	public final String getTaskType() {
 		return this.taskType;
+	}
+
+	public final String getCurrentCurrency() {
+		return this.currentCurrency;
 	}
 
 	public final Properties getTaskParameters() {

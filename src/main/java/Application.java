@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,7 +17,9 @@ import org.slf4j.LoggerFactory;
 import datamodel.CalcResult;
 import datamodel.ExecutionTask;
 import datamodel.FxRate;
+import datamodel.WorkerDetail;
 import utils.ApplicationProperties;
+import utils.Constants;
 import utils.GeneralUtils;
 import utils.HazelcastInstanceUtils;
 
@@ -30,7 +33,7 @@ public class Application {
 	private static long applicationStopTime;	
 	
 	// Application properties
-	private static Properties applicationProperties;
+	private static Properties applicationProperties = new Properties();
 /*
 	private static String historicalDataPath;
 	private static String historicalDataFileExtension;
@@ -60,6 +63,8 @@ public class Application {
 	private static long totalResults;
 	private static long avgExecutionTime;
 	
+	private static long monitorDelay = 10;
+	
 	private static final String applicationId = (""+System.currentTimeMillis());
 	
 	// Lists and Maps
@@ -78,12 +83,14 @@ public class Application {
 		// Print parameters used
 		printParameters ("Start");
 		
-		// Execute workers
-		//executeWorkers ();
+		// Initialize Hazelcast instance
+		HazelcastInstanceUtils.getInstance();
 		
 		// Create Execution Tasks and put them into Hazelacast
 		createAndPublishExecutionTasks();
-        
+ 
+		checkWorkersCompletion ();
+		
 		applicationStopTime = System.currentTimeMillis();
 
 		// Print results
@@ -97,9 +104,6 @@ public class Application {
 
     private static void createAndPublishExecutionTasks () throws Exception {
 
-		// Initialize Hazelcast instance
-		HazelcastInstanceUtils.getInstance();
-
     	logger.info("Putting Execution Tasks into Hazelcast for processing");
     	
     	ExecutionTask executionTask = null;
@@ -108,15 +112,47 @@ public class Application {
 		// For each currencyPair (from properties file) create an Execution Task and put it into Hazelcast task queue for processing
     	for (String currentCurrency : ((List<String>)applicationProperties.get("execution.currencyPairs"))) {
     		taskId++;
-    		executionTask = new ExecutionTask (taskId,"FXRATE",applicationProperties);
-    		HazelcastInstanceUtils.putIntoQueue(HazelcastInstanceUtils.getTaskQueueName(), executionTask);
-    		logger.debug ("Put: " + taskId);
+    		logger.info ("Putting currency " + currentCurrency + " as taskId " + taskId);
+    		executionTask = new ExecutionTask (taskId,"FXRATE",currentCurrency,applicationProperties);
+    		HazelcastInstanceUtils.putIntoQueue(HazelcastInstanceUtils.getTaskQueueName(), executionTask); 		
 		}
 
         logger.info ("Created and Published " + taskId + " execution tasks");
+		HazelcastInstanceUtils.putStopSignalIntoQueue(HazelcastInstanceUtils.getTaskQueueName());
 		
     }
 
+    private static void checkWorkersCompletion () throws Exception {
+    	long monitorDelay = Long.parseLong(applicationProperties.getProperty("main.monitorDelay"));
+    	
+		logger.info ("Waiting " + monitorDelay + " secs to start monitoring");
+		Thread.sleep(monitorDelay*1000);
+		logger.info ("Checking " + HazelcastInstanceUtils.getMonitorMapName() + " every "+monitorDelay+" secs");
+		Thread.sleep(monitorDelay*1000);
+
+		boolean stopMonitoring;
+
+		while ( true ) {
+			stopMonitoring = true;
+
+			Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getMonitorMapName()).entrySet().iterator();
+
+			while (iter.hasNext()) {
+	            Entry<String, Object> entry = iter.next();
+	            if (((WorkerDetail) entry.getValue()).getActiveStatus()) stopMonitoring = false;
+	        }
+			
+			if (stopMonitoring) {
+				logger.info ("All clients are inactive. Stopping monitoring...");
+				break;
+			} else {
+				logger.info ("Keeping the monitoring running every " + monitorDelay + " secs until all the clients are inactive...");
+				Thread.sleep(monitorDelay*1000);
+			}
+		}
+
+    }
+    
     private static void executeWorkers () {
 /*
     	
@@ -179,6 +215,7 @@ public class Application {
     	applicationProperties.put("main.historicalDataSeparator", ApplicationProperties.getStringProperty("main.historicalDataSeparator"));
     	applicationProperties.put("main.writeResultsToFile", ApplicationProperties.getBooleanProperty("main.writeResultsToFile"));
     	applicationProperties.put("main.resultsPath", ApplicationProperties.getStringProperty("main.resultsPath"));
+    	applicationProperties.put("main.monitorDelay", ApplicationProperties.getStringProperty("main.monitorDelay"));
 		
     	applicationProperties.put("main.datasource", ApplicationProperties.getStringProperty("main.datasource"));
     	applicationProperties.put("database.host", ApplicationProperties.getStringProperty("database.host"));
@@ -268,8 +305,10 @@ public class Application {
 		
 		if (calcResultsMap != null && calcResultsMap.size() > 0) {
 
+			List<String> currencyPairs = (List<String>)applicationProperties.get("execution.currencyPairs");
 			int maxLevels = (int)applicationProperties.get("execution.maxLevels");
 			boolean writeResultsToFile = (boolean)applicationProperties.get("main.writeResultsToFile");
+			String resultsPath = (String)applicationProperties.get("main.resultsPath");
 			
 			logger.info (printCurrencyLevelsHeader(maxLevels));
 			
@@ -304,6 +343,14 @@ public class Application {
 
 	// Print execution parameters
 	private static String printExecutionParams() {
+		
+		List<String> currencyPairs = (List<String>)ApplicationProperties.getListProperty("execution.currencyPairs");
+		String startDate = ApplicationProperties.getStringProperty("execution.startDate");
+		String endDate = ApplicationProperties.getStringProperty("execution.endDate");
+		int maxLevels = (int)applicationProperties.get("execution.maxLevels");
+		float increasePercentage = ApplicationProperties.getFloatProperty("execution.increasePercentage");
+		float decreasePercentage = ApplicationProperties.getFloatProperty("execution.decreasePercentage");
+		
 		StringBuilder stringBuilder =  new StringBuilder();
 		stringBuilder.append("currency pairs|"+currencyPairs.toString()+"\n");
 		stringBuilder.append("start date|"+startDate+"\n");

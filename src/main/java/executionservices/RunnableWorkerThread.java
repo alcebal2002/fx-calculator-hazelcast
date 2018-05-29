@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.opencsv.CSVReader;
 
 import datamodel.CalcResult;
+import datamodel.ExecutionTask;
 import datamodel.FxRate;
 import utils.ApplicationProperties;
 import utils.DatabaseUtils;
@@ -25,7 +26,6 @@ public class RunnableWorkerThread implements Runnable {
 
 	private String datasource;
 	private String currentCurrency;
-	private CountDownLatch latch;
 
 	private Map<String, List<FxRate>> historicalDataMap = new HashMap<String, List<FxRate>>();
 	private Map<String, Integer> resultsMap = new HashMap<String, Integer>();
@@ -37,11 +37,10 @@ public class RunnableWorkerThread implements Runnable {
 	private long totalResults;
 
 
-	public RunnableWorkerThread ( final String datasource, final String currentCurrency, Map<String, CalcResult> calcResultsMap, CountDownLatch latch){
-		this.datasource = datasource;
-		this.currentCurrency = currentCurrency;
+	public RunnableWorkerThread ( final ExecutionTask executionTask, Map<String, CalcResult> calcResultsMap){
+		this.datasource = executionTask.getTaskParameters().getProperty("main.datasource");
+		this.currentCurrency = executionTask.getCurrentCurrency();
 		this.calcResultsMap = calcResultsMap;
-		this.latch = latch;
 	}
 	
 	@Override
@@ -87,8 +86,6 @@ public class RunnableWorkerThread implements Runnable {
 				logger.error("No available data for " + currentCurrency);
 			}
 
-			latch.countDown();
-			
 			long stopTime = System.currentTimeMillis(); 
 			elapsedTimeMillis = stopTime - startTime;
 			

@@ -26,23 +26,23 @@ public class HazelcastInstanceUtils {
 	}
 	
 	public static String getTaskQueueName () throws Exception {
-		return ApplicationProperties.getStringProperty(Constants.HZ_TASK_QUEUE_NAME);
+		return Constants.HZ_TASK_QUEUE_NAME;
 	}
 
 	public static String getResultsQueueName () throws Exception {
-		return ApplicationProperties.getStringProperty(Constants.HZ_RESULTS_QUEUE_NAME);
+		return Constants.HZ_RESULTS_QUEUE_NAME;
 	}
 
 	public static String getMonitorMapName () throws Exception {
-		return ApplicationProperties.getStringProperty(Constants.HZ_MONITOR_MAP_NAME);
+		return Constants.HZ_MONITOR_MAP_NAME;
 	}
 
 	public static String getStatusMapName () throws Exception {
-		return ApplicationProperties.getStringProperty(Constants.HZ_STATUS_MAP_NAME);
+		return Constants.HZ_STATUS_MAP_NAME;
 	}
 
 	public static String getStopProcessingSignal () throws Exception {
-		return ApplicationProperties.getStringProperty(Constants.HZ_STOP_PROCESSING_SIGNAL);
+		return Constants.HZ_STOP_PROCESSING_SIGNAL;
 	}
 
 	public static void putStopSignalIntoQueue (final String queueName) throws Exception {

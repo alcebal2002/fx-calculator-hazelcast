@@ -3,6 +3,7 @@ package utils;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,6 +23,14 @@ public class GeneralUtils {
 
 	// Logger
 	private static Logger logger = LoggerFactory.getLogger(GeneralUtils.class);
+	
+    public static String getHostName () {
+    	String result = "unknown";
+        try {
+            result = InetAddress.getLocalHost().getHostName();
+        } catch (Exception ex) {}
+        return result;
+    }
 	
 	public static final Date getDateFromString(final String date, final String format) {
 		Date result = null;

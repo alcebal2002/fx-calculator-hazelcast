@@ -1,15 +1,19 @@
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.mysql.jdbc.Constants;
+import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IQueue;
 
+import datamodel.CalcResult;
 import datamodel.ExecutionTask;
 import datamodel.FxRate;
 import datamodel.WorkerDetail;
@@ -19,6 +23,9 @@ import executionservices.SystemLinkedBlockingQueue;
 import executionservices.SystemMonitorThread;
 import executionservices.SystemThreadPoolExecutor;
 import utils.ApplicationProperties;
+import utils.Constants;
+import utils.GeneralUtils;
+import utils.HazelcastInstanceUtils;
 
 public class Worker {
 
@@ -34,27 +41,28 @@ public class Worker {
 	private static int retryMaxAttempts; 
 	private static int initialSleep; 
 	private static int monitorSleep;
-	private static int refreshAfter;
 	
-	private static int taskNumber = 0;
 	private static String nodeId;
 	private static String localEndPointAddress;
 	private static String localEndPointPort;
+	
+	private static long taskNumber = 0;
+	
+	private static Map<String,CalcResult> calcResultsMap = new HashMap<String,CalcResult>();
 	
 	public static void main(String args[]) throws Exception {
 		
 		logger.info("WorkerPool started");
 		logger.info("Loading properties from " + Constants.APPLICATION_PROPERTIES);
 		
-		poolCoreSize = ApplicationProperties.getIntProperty(Constants.WORKER_POOL_CORESIZE);
-		poolMaxSize = ApplicationProperties.getIntProperty(Constants.WORKER_POOL_MAXSIZE);
-		queueCapacity = ApplicationProperties.getIntProperty(Constants.WORKER_POOL_QUEUE_CAPACITY);
-		timeoutSecs = ApplicationProperties.getIntProperty(Constants.WORKER_POOL_TIMEOUT_SECS);
-		retrySleepTime = ApplicationProperties.getIntProperty(Constants.WORKER_POOL_RETRY_SLEEP_TIME);
-		retryMaxAttempts = ApplicationProperties.getIntProperty(Constants.WORKER_POOL_RETRY_MAX_ATTEMPTS);
-		initialSleep = ApplicationProperties.getIntProperty(Constants.WORKER_POOL_INITIAL_SLEEP);
-		monitorSleep = ApplicationProperties.getIntProperty(Constants.WORKER_POOL_MONITOR_SLEEP);
-		refreshAfter = ApplicationProperties.getIntProperty(Constants.WORKER_POOL_REFRESH_AFTER);
+		poolCoreSize = ApplicationProperties.getIntProperty("workerpool.coreSize");
+		poolMaxSize = ApplicationProperties.getIntProperty("workerpool.maxSize");
+		queueCapacity = ApplicationProperties.getIntProperty("workerpool.queueCapacity");
+		timeoutSecs = ApplicationProperties.getIntProperty("workerpool.timeoutSecs");
+		retrySleepTime = ApplicationProperties.getIntProperty("workerpool.retrySleepTime");
+		retryMaxAttempts = ApplicationProperties.getIntProperty("workerpool.retryMaxAttempts");
+		initialSleep = ApplicationProperties.getIntProperty("workerpool.initialSleep");
+		monitorSleep = ApplicationProperties.getIntProperty("workerpool.monitorSleep");
 
 		logger.info ("Waiting " + initialSleep + " secs to start..."); 
 		Thread.sleep(initialSleep*1000); 
@@ -88,19 +96,16 @@ public class Worker {
 		
 		WorkerDetail workerDetail = new WorkerDetail(
 				nodeId,
-				SystemUtils.getHostName(),
+				GeneralUtils.getHostName(),
 				localEndPointPort,
 				poolCoreSize,
 				poolMaxSize,
 				queueCapacity,
 				timeoutSecs,
-				processTime,
 				retrySleepTime,
 				retryMaxAttempts,
 				initialSleep,
 				monitorSleep,
-				refreshAfter,
-				taskNumber,
 				startTime);
 
 		// Start the monitoring thread 
@@ -112,9 +117,7 @@ public class Worker {
 		
 		// Listen to Hazelcast tasks queue and submit work to the thread pool for each task 
 		IQueue<ExecutionTask> hazelcastTaskQueue = hzClient.getQueue( HazelcastInstanceUtils.getTaskQueueName() );
-		
-		List<FxRate> fxList;
-		
+				
 		while ( true ) {
 			/*
 			 * Option to avoid getting additional tasks from Hazelcast distributed queue if there is no processing capacity available in the ThreadPool 
@@ -123,26 +126,14 @@ public class Worker {
 //				(blockingQueue.remainingCapacity() > 0)) { // For ArrayBlockingQueue
 				(blockingQueue.size() < queueCapacity)) { // For LinkedBlockingQueue 
 				ExecutionTask executionTaskItem = hazelcastTaskQueue.take();
-				logger.debug ("Consumed: " + executionTaskItem.getTaskId() + " from Hazelcast Task Queue");
+				logger.info ("Consumed: " + executionTaskItem.getTaskId() + " from Hazelcast Task Queue");
 				if ( (HazelcastInstanceUtils.getStopProcessingSignal()).equals(executionTaskItem.getTaskType()) ) {
 					logger.info ("Detected " + HazelcastInstanceUtils.getStopProcessingSignal());
 					hzClient.getQueue(HazelcastInstanceUtils.getTaskQueueName()).put(new ExecutionTask(HazelcastInstanceUtils.getStopProcessingSignal()));
 					break;
-				}
-				
-				fxList = (List<FxRate>) HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getHistoricalMapName()).get(executionTaskItem.getTaskId());
-				
-				executorPool.execute(new RunnableWorkerThread(processTime,executionTaskItem,fxList,retrySleepTime,retryMaxAttempts,nodeId));
-				taskNumber = taskNumber + ((List<FxRate>)executionTaskItem.getContent()).size(); 
-				//taskNumber++;
-				
-				// Update WorkerDetail every <refreshAfter> executions
-				if (taskNumber%refreshAfter == 0) {
-					// Update WorkerDetail status to inactive
-					workerDetail.setTotalExecutions(taskNumber);
-					workerDetail.setAvgExecutionTime(executorPool.getAvgExecutionTime());
-					hzClient.getMap(HazelcastInstanceUtils.getMonitorMapName()).put(workerDetail.getUuid(),workerDetail);
-				}
+				}				
+				executorPool.execute(new RunnableWorkerThread(executionTaskItem, calcResultsMap));
+				taskNumber++; 
 			}
 		}
 		logger.info ("Hazelcast consumer Finished");
@@ -195,12 +186,6 @@ public class Worker {
 
 		logger.info ("  - Elapsed time: " + (stopTime - startTime) + " ms - (" + hours + " hrs " + minutes + " min " + seconds + " secs)"); 
 		logger.info ("**************************************************"); 
-		logger.info ("  - Min execution time: " + executorPool.getMinExecutionTime() + " ms"); 
-		logger.info ("  - Max execution time: " + executorPool.getMaxExecutionTime() + " ms"); 
-		logger.info ("  - Avg execution time: " + executorPool.getAvgExecutionTime() + " ms");
-		//logger.info ("  - Executions/second : " + (executorPool.getTotalExecutions() * 1000) / (stopTime - startTime));
-		logger.info ("  - Executions/second : " + (executorPool.getTotalExecutions() * ApplicationProperties.getIntProperty(Constants.CONTROLLER_EXECUTION_TASKS_GROUPING) * 1000) / (stopTime - startTime));
-		logger.info ("**************************************************"); 
 		
 		// Exit application
 		System.exit(0);
@@ -217,12 +202,10 @@ public class Worker {
 		logger.info ("  - queue capacity       : " + queueCapacity); 
 		logger.info ("  - timeout (secs)       : " + timeoutSecs); 
 		logger.info ("  - number of tasks      : " + taskNumber); 
-		logger.info ("  - task process (ms)    : " + processTime); 
 		logger.info ("  - retry sleep (ms)     : " + retrySleepTime); 
 		logger.info ("  - retry max attempts   : " + retryMaxAttempts);
 		logger.info ("  - initial sleep (secs) : " + initialSleep); 
 		logger.info ("  - monitor sleep (secs) : " + monitorSleep); 
-		logger.info ("  - refresh after        : " + refreshAfter);
 		logger.info ("**************************************************");
 	}
 } 
