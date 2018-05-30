@@ -47,6 +47,9 @@ public class Application {
 		// Initialize Hazelcast instance
 		HazelcastInstanceUtils.getInstance();
 		
+		// Wait until user press any key
+		waitForKeyToContinue();
+		
 		// Create Execution Tasks and put them into Hazelacast
 		createAndPublishExecutionTasks();
  
@@ -225,6 +228,19 @@ public class Application {
 		}
 		
 		return (stringBuilder.toString());
+	}
+	
+	private static void waitForKeyToContinue () {
+		logger.info ("");
+		logger.info ("*************************************************************************");
+		logger.info ("Ensure all the Workers are up & running. Then Press Any Key to continue...");
+		logger.info ("*************************************************************************");
+
+		try {
+			System.in.read();
+		} catch(Exception e) {
+			logger.error ("Exception: " + e.getClass() + " - " + e.getMessage());
+		}
 	}
 	
 	// Print currency result levels
