@@ -31,8 +31,6 @@ public class SystemThreadPoolExecutor extends ThreadPoolExecutor {
 	    } 
     } 
     
-//    public long getMinExecutionTime () { return this.minExecutionTime; }
-//    public long getMaxExecutionTime () { return this.maxExecutionTime; }
     public long getTotalExecutionTime () { 
     	return this.totalExecutionTime; 
     }

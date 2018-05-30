@@ -38,7 +38,7 @@ public class RunnableWorkerThread implements Runnable {
 
 
 	public RunnableWorkerThread ( final ExecutionTask executionTask, Map<String, CalcResult> calcResultsMap){
-		this.datasource = executionTask.getTaskParameters().getProperty("main.datasource");
+		this.datasource = ApplicationProperties.getStringProperty("main.datasource");
 		this.currentCurrency = executionTask.getCurrentCurrency();
 		this.calcResultsMap = calcResultsMap;
 	}

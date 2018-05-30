@@ -53,7 +53,9 @@ public class Worker {
 	public static void main(String args[]) throws Exception {
 		
 		logger.info("WorkerPool started");
-		logger.info("Loading properties from " + Constants.APPLICATION_PROPERTIES);
+		
+		// Load properties from file
+		ApplicationProperties.loadApplicationProperties ();
 		
 		poolCoreSize = ApplicationProperties.getIntProperty("workerpool.coreSize");
 		poolMaxSize = ApplicationProperties.getIntProperty("workerpool.maxSize");

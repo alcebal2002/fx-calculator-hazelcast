@@ -33,9 +33,6 @@ public class WorkerDetail implements Serializable {
 	private long avgExecutionTime = 0L;
 	
 	private Map<String,CalcResult> calcResultsMap;
-
-	private String csvFormat;
-
 	
 	/**
 	 * @param uuid
@@ -88,68 +85,35 @@ public class WorkerDetail implements Serializable {
 	public final String getInetAddres() {
 		return inetAddres;
 	}
-	public final void setInetAddres(String inetAddres) {
-		this.inetAddres = inetAddres;
-	}
 	public final String getInetPort() {
 		return inetPort;
-	}
-	public final void setInetPort(String inetPort) {
-		this.inetPort = inetPort;
 	}
 	public final int getPoolCoreSize() {
 		return poolCoreSize;
 	}
-	public final void setPoolCoreSize(int poolCoreSize) {
-		this.poolCoreSize = poolCoreSize;
-	}
 	public final int getPoolMaxSize() {
 		return poolMaxSize;
-	}
-	public final void setPoolMaxSize(int poolMaxSize) {
-		this.poolMaxSize = poolMaxSize;
 	}
 	public final int getQueueCapacity() {
 		return queueCapacity;
 	}
-	public final void setQueueCapacity(int queueCapacity) {
-		this.queueCapacity = queueCapacity;
-	}
 	public final int getTimeoutSecs() {
 		return timeoutSecs;
-	}
-	public final void setTimeoutSecs(int timeoutSecs) {
-		this.timeoutSecs = timeoutSecs;
 	}
 	public final int getRetrySleepTime() {
 		return retrySleepTime;
 	}
-	public final void setRetrySleepTime(int retrySleepTime) {
-		this.retrySleepTime = retrySleepTime;
-	}
 	public final int getRetryMaxAttempts() {
 		return retryMaxAttempts;
-	}
-	public final void setRetryMaxAttempts(int retryMaxAttempts) {
-		this.retryMaxAttempts = retryMaxAttempts;
 	}
 	public final int getInitialSleep() {
 		return initialSleep;
 	}
-	public final void setInitialSleep(int initialSleep) {
-		this.initialSleep = initialSleep;
-	}
 	public final int getMonitorSleep() {
 		return monitorSleep;
 	}
-	public final void setMonitorSleep(int monitorSleep) {
-		this.monitorSleep = monitorSleep;
-	}
 	public final int getRefreshAfter() {
 		return refreshAfter;
-	}
-	public final void setRefreshAter(int refreshAfter) {
-		this.refreshAfter = refreshAfter;
 	}
 	public final long getStartTime() {
 		return startTime;
@@ -232,15 +196,6 @@ public class WorkerDetail implements Serializable {
 	}
 
 	public final String getCsvFormat() {
-		setCsvFormat(toCsvFormat ());
-		return this.csvFormat;
-	}
-	
-	public final void setCsvFormat(String csvFormat) {
-		this.csvFormat = csvFormat;
-	}
-	
-	public final String toCsvFormat () {
 		return  this.getUuid() + ";" +
 				this.getInetAddres() + ";" +
 				this.getInetPort() + ";" +

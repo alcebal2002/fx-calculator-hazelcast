@@ -16,6 +16,7 @@ import datamodel.CalcResult;
 import datamodel.ExecutionTask;
 import datamodel.WorkerDetail;
 import utils.ApplicationProperties;
+import utils.Constants;
 import utils.GeneralUtils;
 import utils.HazelcastInstanceUtils;
 
@@ -28,31 +29,6 @@ public class Application {
 	private static long applicationStartTime;	
 	private static long applicationStopTime;	
 	
-	// Application properties
-	private static Properties applicationProperties = new Properties();
-/*
-	private static String historicalDataPath;
-	private static String historicalDataFileExtension;
-	private static String historicalDataSeparator;
-	private static int printAfter = 0;
-	private static boolean writeResultsToFile = false; 
-	private static String resultsPath;
-	
-	private static String datasource;
-
-	private static String databaseHost;
-	private static String databasePort;
-	private static String databaseName;
-	private static String databaseUser;
-	private static String databasePass;
-	
-	private static List<String> currencyPairs;
-	private static String startDate;
-	private static String endDate;
-	private static float increasePercentage;
-	private static float decreasePercentage;
-	private static int maxLevels;
-*/
 	private static long totalExecutions = 0;
 	private static long totalHistDataLoaded = 0;
 	private static long totalCalculations = 0;
@@ -64,20 +40,17 @@ public class Application {
     	applicationStartTime = System.currentTimeMillis();
 
 		logger.info("Application started");
-		logger.info("Loading application properties from " + ApplicationProperties.getPropertiesFile());
 
 		// Load properties from file
-		loadProperties ();
-    	
-		// Print parameters used
-		printParameters ("Start");
-		
+		ApplicationProperties.loadApplicationProperties ();
+    			
 		// Initialize Hazelcast instance
 		HazelcastInstanceUtils.getInstance();
 		
 		// Create Execution Tasks and put them into Hazelacast
 		createAndPublishExecutionTasks();
  
+		// Wait until all the workers have finished
 		checkWorkersCompletion ();
 		
 		applicationStopTime = System.currentTimeMillis();
@@ -99,10 +72,10 @@ public class Application {
     	int taskId = 0;
 
 		// For each currencyPair (from properties file) create an Execution Task and put it into Hazelcast task queue for processing
-    	for (String currentCurrency : ((List<String>)applicationProperties.get("execution.currencyPairs"))) {
+    	for (String currentCurrency : ApplicationProperties.getListProperty("execution.currencyPairs")) {
     		taskId++;
     		logger.info ("Putting currency " + currentCurrency + " as taskId " + taskId);
-    		executionTask = new ExecutionTask (taskId,"FXRATE",currentCurrency,applicationProperties);
+    		executionTask = new ExecutionTask (taskId,"FXRATE",currentCurrency);
     		HazelcastInstanceUtils.putIntoQueue(HazelcastInstanceUtils.getTaskQueueName(), executionTask); 		
 		}
 
@@ -112,7 +85,7 @@ public class Application {
     }
 
     private static void checkWorkersCompletion () throws Exception {
-    	long monitorDelay = Long.parseLong(applicationProperties.getProperty("main.monitorDelay"));
+    	long monitorDelay = ApplicationProperties.getLongProperty("main.monitorDelay");
     	
 		logger.info ("Waiting " + monitorDelay + " secs to start monitoring");
 		Thread.sleep(monitorDelay*1000);
@@ -139,105 +112,33 @@ public class Application {
 				Thread.sleep(monitorDelay*1000);
 			}
 		}
-
-    }
-    
-
-    private static void loadProperties () {
-    	
-    	applicationProperties.put("main.historicalDataPath", ApplicationProperties.getStringProperty("main.historicalDataPath"));
-    	applicationProperties.put("main.historicalDataFileExtension", ApplicationProperties.getStringProperty("main.historicalDataFileExtension"));
-    	applicationProperties.put("main.historicalDataSeparator", ApplicationProperties.getStringProperty("main.historicalDataSeparator"));
-    	applicationProperties.put("main.writeResultsToFile", ApplicationProperties.getBooleanProperty("main.writeResultsToFile"));
-    	applicationProperties.put("main.resultsPath", ApplicationProperties.getStringProperty("main.resultsPath"));
-    	applicationProperties.put("main.monitorDelay", ApplicationProperties.getStringProperty("main.monitorDelay"));
-		
-    	applicationProperties.put("main.datasource", ApplicationProperties.getStringProperty("main.datasource"));
-    	applicationProperties.put("database.host", ApplicationProperties.getStringProperty("database.host"));
-    	applicationProperties.put("database.port", ApplicationProperties.getStringProperty("database.port"));
-    	applicationProperties.put("main.historicalDataPath", ApplicationProperties.getStringProperty("database.db_name"));
-    	applicationProperties.put("database.username", ApplicationProperties.getStringProperty("database.username"));
-    	applicationProperties.put("database.password", ApplicationProperties.getStringProperty("database.password"));
-
-    	applicationProperties.put("execution.currencyPairs", ApplicationProperties.getListProperty("execution.currencyPairs"));
-    	applicationProperties.put("execution.startDate", ApplicationProperties.getStringProperty("execution.startDate"));
-    	applicationProperties.put("execution.endDate", ApplicationProperties.getStringProperty("execution.endDate"));
-    	applicationProperties.put("execution.increasePercentage", ApplicationProperties.getFloatProperty("execution.increasePercentage"));
-    	applicationProperties.put("execution.decreasePercentage", ApplicationProperties.getFloatProperty("execution.decreasePercentage"));
-    	applicationProperties.put("execution.maxLevels", ApplicationProperties.getIntProperty("execution.maxLevels"));
-    	applicationProperties.put("test.printAfter", ApplicationProperties.getIntProperty("test.printAfter"));
-
-    }
-    
-	// Print execution parameters 
-	private static void printParameters (final String title) {
-		
-/*		
-		logger.info ("");
-		logger.info ("**************************************************"); 
-		logger.info (title + " WorkerPool with the following parameters:"); 
-		logger.info ("**************************************************"); 
-		logger.info ("  - pool core size           : " + poolCoreSize); 
-		logger.info ("  - pool max size            : " + poolMaxSize); 
-		logger.info ("  - queue capacity           : " + queueCapacity); 
-		logger.info ("  - timeout (secs)           : " + timeoutSecs); 
-		logger.info ("  - retry sleep (ms)         : " + retrySleepTime); 
-		logger.info ("  - retry max attempts       : " + retryMaxAttempts);
-		logger.info ("  - initial sleep (secs)     : " + initialSleep); 
-		logger.info ("  - monitor sleep (secs)     : " + monitorSleep); 
-		logger.info ("**************************************************");
-
-		logger.info ("");
-		logger.info ("****************************************************"); 
-		logger.info (title + " FXCalculator with the following parameters:"); 
-		logger.info ("****************************************************"); 
-		logger.info ("  - datasource               : " + datasource);
-		logger.info ("  - hist. data path          : " + historicalDataPath);
-		logger.info ("  - hist. data extension     : " + historicalDataFileExtension);
-		logger.info ("  - hist. data separator     : " + historicalDataSeparator);
-
-		logger.info ("  - database host            : " + databaseHost);
-		logger.info ("  - database port            : " + databasePort);
-		logger.info ("  - database name            : " + databaseName);
-		logger.info ("  - database username        : " + databaseUser);
-		logger.info ("  - database password        : " + databasePass);
-
-		logger.info ("  - currency pairs           : " + currencyPairs.toString());
-		logger.info ("  - start date               : " + startDate);
-		logger.info ("  - end date                 : " + endDate);
-		logger.info ("  - increase percentage      : " + increasePercentage);
-		logger.info ("  - decrease percentage      : " + decreasePercentage);
-		logger.info ("  - max. levels              : " + maxLevels);
-		logger.info ("  - number of records [test] : " + numberOfRecords); 
-		logger.info ("  - print after [test]       : " + printAfter);
-
-		logger.info ("  - write results to file    : " + writeResultsToFile);
-		logger.info ("  - results path             : " + resultsPath);
-		logger.info ("****************************************************");
-		logger.info ("");
-*/
-	}
+    }    
 
 	// Print execution times
 	private static void printResults () throws Exception {
 
 		Path path = null;		
-		List<String> currencyPairs = (List<String>)applicationProperties.get("execution.currencyPairs");
-		int maxLevels = (int)applicationProperties.get("execution.maxLevels");
-		boolean writeResultsToFile = (boolean)applicationProperties.get("main.writeResultsToFile");
-		String resultsPath = (String)applicationProperties.get("main.resultsPath");
+		List<String> currencyPairs = ApplicationProperties.getListProperty("execution.currencyPairs");
+		int maxLevels = ApplicationProperties.getIntProperty("execution.maxLevels");
+		boolean writeResultsToFile = ApplicationProperties.getBooleanProperty("main.writeResultsToFile");
+		String resultsPath = ApplicationProperties.getStringProperty("main.resultsPath");
 
 		Map <String,CalcResult> calcResultsMap = null;
 		
 		Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getMonitorMapName()).entrySet().iterator();
 
+		int numWorkers = 0;
+		
 		while (iter.hasNext()) {
+			numWorkers++;
             Entry<String, Object> entry = iter.next();
             calcResultsMap = ((WorkerDetail) entry.getValue()).getCalculationResults();
             totalExecutions += ((WorkerDetail) entry.getValue()).getTotalExecutions();
             totalHistDataLoaded += ((WorkerDetail) entry.getValue()).getTotalHistoricalDataLoaded();
             totalCalculations += ((WorkerDetail) entry.getValue()).getTotalCalculations();
             totalResults += ((WorkerDetail) entry.getValue()).getTotalResults();
+            avgExecutionTime += ((WorkerDetail) entry.getValue()).getAvgExecutionTime();
+            avgExecutionTime = avgExecutionTime / numWorkers;
             
     		if (calcResultsMap != null && calcResultsMap.size() > 0) {
      			
@@ -292,7 +193,7 @@ public class Application {
 		List<String> currencyPairs = (List<String>)ApplicationProperties.getListProperty("execution.currencyPairs");
 		String startDate = ApplicationProperties.getStringProperty("execution.startDate");
 		String endDate = ApplicationProperties.getStringProperty("execution.endDate");
-		int maxLevels = (int)applicationProperties.get("execution.maxLevels");
+		int maxLevels = ApplicationProperties.getIntProperty("execution.maxLevels");
 		float increasePercentage = ApplicationProperties.getFloatProperty("execution.increasePercentage");
 		float decreasePercentage = ApplicationProperties.getFloatProperty("execution.decreasePercentage");
 		

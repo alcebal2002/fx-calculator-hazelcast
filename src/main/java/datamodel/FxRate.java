@@ -25,7 +25,7 @@ public class FxRate {
 	 * @param low
 	 * @param close
 	 */
-	public FxRate(final int positionId, final String currencyPair, final String conversionDate, final String conversionTime, final float open, final float high, final float low, final float close) 
+	public FxRate (final int positionId, final String currencyPair, final String conversionDate, final String conversionTime, final float open, final float high, final float low, final float close) 
 		throws NumberFormatException {
 		this.currencyPair = currencyPair;
 		this.positionId = positionId;
