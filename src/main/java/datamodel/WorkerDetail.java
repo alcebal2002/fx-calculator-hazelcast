@@ -1,7 +1,6 @@
 package datamodel;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.HashMap;
 import java.util.Map;
 
 public class WorkerDetail implements Serializable {

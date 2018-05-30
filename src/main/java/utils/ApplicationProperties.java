@@ -17,6 +17,10 @@ public class ApplicationProperties {
 
     private static Properties applicationProperties;
 
+    public static Properties getApplicationProperties () {
+    	return applicationProperties;
+    }
+    
     public static String getApplicationPropertiesFile () {
     	return Constants.APPLICATION_PROPERTIES;
     }

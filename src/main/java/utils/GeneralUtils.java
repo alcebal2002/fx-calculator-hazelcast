@@ -47,8 +47,8 @@ public class GeneralUtils {
 
 		boolean exists = false;
 
-		String historicalDataPath = ApplicationProperties.getStringProperty("main.historicalDataPath");
-		String historicalDataFileExtension = ApplicationProperties.getStringProperty("main.historicalDataFileExtension");
+		String historicalDataPath = ApplicationProperties.getStringProperty("worker.historicalDataPath");
+		String historicalDataFileExtension = ApplicationProperties.getStringProperty("worker.historicalDataFileExtension");
 
 		String file = historicalDataPath + currentCurrency + historicalDataFileExtension;
 

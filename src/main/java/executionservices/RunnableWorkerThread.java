@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,12 +24,14 @@ public class RunnableWorkerThread implements Runnable {
 	// Logger
 	private static Logger logger = LoggerFactory.getLogger(RunnableWorkerThread.class);
 
-	private String datasource;
 	private String currentCurrency;
+	private Properties applicationProperties;
 
 	private Map<String, List<FxRate>> historicalDataMap = new HashMap<String, List<FxRate>>();
 	private Map<String, Integer> resultsMap = new HashMap<String, Integer>();
 	private Map<String, CalcResult> calcResultsMap;
+	
+	
 	
 	private long elapsedTimeMillis;
 	private long totalHistDataLoaded;
@@ -38,7 +40,7 @@ public class RunnableWorkerThread implements Runnable {
 
 
 	public RunnableWorkerThread ( final ExecutionTask executionTask, Map<String, CalcResult> calcResultsMap){
-		this.datasource = ApplicationProperties.getStringProperty("main.datasource");
+		this.applicationProperties = executionTask.getTaskParameters();
 		this.currentCurrency = executionTask.getCurrentCurrency();
 		this.calcResultsMap = calcResultsMap;
 	}
@@ -56,11 +58,11 @@ public class RunnableWorkerThread implements Runnable {
 		try {
 			
 			// Load required properties
-			float increase = (1+(ApplicationProperties.getFloatProperty("execution.increasePercentage"))/100);
-			float decrease = (1-(ApplicationProperties.getFloatProperty("execution.decreasePercentage"))/100);
-			int maxLevels = ApplicationProperties.getIntProperty("execution.maxLevels");
-			String startDate = ApplicationProperties.getStringProperty("execution.startDate");
-			String endDate = ApplicationProperties.getStringProperty("execution.endDate");
+			float increase = (1+(Float.parseFloat(applicationProperties.getProperty("application.increasePercentage")))/100);
+			float decrease = (1-(Float.parseFloat(applicationProperties.getProperty("application.decreasePercentage")))/100);
+			int maxLevels = Integer.parseInt(applicationProperties.getProperty("application.maxLevels"));
+			String startDate = applicationProperties.getProperty("application.startDate");
+			String endDate = applicationProperties.getProperty("application.endDate");
 
 			if (checkIfCurrencyExists (currentCurrency)) {
 
@@ -98,7 +100,7 @@ public class RunnableWorkerThread implements Runnable {
 
 		boolean exists = false;
 
-		if ("database".equals(datasource)) {
+		if ("database".equals(applicationProperties.getProperty("application.datasource"))) {
 			exists = DatabaseUtils.checkCurrencyTableExists(currentCurrency);
 		} else {
 			exists = GeneralUtils.checkIfFileExists(currentCurrency);
@@ -174,9 +176,9 @@ public class RunnableWorkerThread implements Runnable {
     	
     	long result = 0;
     	
-    	logger.debug("Data source set to: " + datasource);
+    	logger.debug("Data source set to: " + applicationProperties.getProperty("application.datasource"));
 
-    	if ("database".equals(datasource)) {
+    	if ("database".equals(applicationProperties.getProperty("application.datasource"))) {
     		// Populate historical data from mysql database
     		
     		historicalDataMap = DatabaseUtils.getHistoricalRates(currentCurrency, startDate, endDate);
@@ -190,10 +192,10 @@ public class RunnableWorkerThread implements Runnable {
    	    	int totalCounter = 0;
    	    	int lineNumber = 0;
 
-			String historicalDataPath = ApplicationProperties.getStringProperty("main.historicalDataPath");
-			String historicalDataFileExtension = ApplicationProperties.getStringProperty("main.historicalDataFileExtension");
-			String historicalDataSeparator = ApplicationProperties.getStringProperty("main.historicalDataSeparator");
-			int printAfter = ApplicationProperties.getIntProperty("test.printAfter");
+			String historicalDataPath = ApplicationProperties.getStringProperty("worker.historicalDataPath");
+			String historicalDataFileExtension = ApplicationProperties.getStringProperty("worker.historicalDataFileExtension");
+			String historicalDataSeparator = ApplicationProperties.getStringProperty("worker.historicalDataSeparator");
+			int printAfter = ApplicationProperties.getIntProperty("worker.printAfter");
 
 			String fileName = historicalDataPath + currentCurrency + historicalDataFileExtension;
     		

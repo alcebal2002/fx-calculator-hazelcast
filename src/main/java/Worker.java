@@ -1,6 +1,5 @@
 import java.sql.Timestamp;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -15,7 +14,6 @@ import com.hazelcast.core.IQueue;
 
 import datamodel.CalcResult;
 import datamodel.ExecutionTask;
-import datamodel.FxRate;
 import datamodel.WorkerDetail;
 import executionservices.RejectedExecutionHandlerImpl;
 import executionservices.RunnableWorkerThread;
@@ -23,7 +21,6 @@ import executionservices.SystemLinkedBlockingQueue;
 import executionservices.SystemMonitorThread;
 import executionservices.SystemThreadPoolExecutor;
 import utils.ApplicationProperties;
-import utils.Constants;
 import utils.GeneralUtils;
 import utils.HazelcastInstanceUtils;
 

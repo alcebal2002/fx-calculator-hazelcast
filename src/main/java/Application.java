@@ -72,10 +72,10 @@ public class Application {
     	int taskId = 0;
 
 		// For each currencyPair (from properties file) create an Execution Task and put it into Hazelcast task queue for processing
-    	for (String currentCurrency : ApplicationProperties.getListProperty("execution.currencyPairs")) {
+    	for (String currentCurrency : ApplicationProperties.getListProperty("application.currencyPairs")) {
     		taskId++;
     		logger.info ("Putting currency " + currentCurrency + " as taskId " + taskId);
-    		executionTask = new ExecutionTask (taskId,"FXRATE",currentCurrency);
+    		executionTask = new ExecutionTask (taskId,"FXRATE",currentCurrency,ApplicationProperties.getApplicationProperties());
     		HazelcastInstanceUtils.putIntoQueue(HazelcastInstanceUtils.getTaskQueueName(), executionTask); 		
 		}
 
@@ -85,7 +85,7 @@ public class Application {
     }
 
     private static void checkWorkersCompletion () throws Exception {
-    	long monitorDelay = ApplicationProperties.getLongProperty("main.monitorDelay");
+    	long monitorDelay = ApplicationProperties.getLongProperty("application.monitorDelay");
     	
 		logger.info ("Waiting " + monitorDelay + " secs to start monitoring");
 		Thread.sleep(monitorDelay*1000);
@@ -118,10 +118,10 @@ public class Application {
 	private static void printResults () throws Exception {
 
 		Path path = null;		
-		List<String> currencyPairs = ApplicationProperties.getListProperty("execution.currencyPairs");
-		int maxLevels = ApplicationProperties.getIntProperty("execution.maxLevels");
-		boolean writeResultsToFile = ApplicationProperties.getBooleanProperty("main.writeResultsToFile");
-		String resultsPath = ApplicationProperties.getStringProperty("main.resultsPath");
+		List<String> currencyPairs = ApplicationProperties.getListProperty("application.currencyPairs");
+		int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
+		boolean writeResultsToFile = ApplicationProperties.getBooleanProperty("application.writeResultsToFile");
+		String resultsPath = ApplicationProperties.getStringProperty("application.resultsPath");
 
 		Map <String,CalcResult> calcResultsMap = null;
 		
@@ -190,12 +190,12 @@ public class Application {
 	// Print execution parameters
 	private static String printExecutionParams() {
 		
-		List<String> currencyPairs = (List<String>)ApplicationProperties.getListProperty("execution.currencyPairs");
-		String startDate = ApplicationProperties.getStringProperty("execution.startDate");
-		String endDate = ApplicationProperties.getStringProperty("execution.endDate");
-		int maxLevels = ApplicationProperties.getIntProperty("execution.maxLevels");
-		float increasePercentage = ApplicationProperties.getFloatProperty("execution.increasePercentage");
-		float decreasePercentage = ApplicationProperties.getFloatProperty("execution.decreasePercentage");
+		List<String> currencyPairs = (List<String>)ApplicationProperties.getListProperty("application.currencyPairs");
+		String startDate = ApplicationProperties.getStringProperty("application.startDate");
+		String endDate = ApplicationProperties.getStringProperty("application.endDate");
+		int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
+		float increasePercentage = ApplicationProperties.getFloatProperty("application.increasePercentage");
+		float decreasePercentage = ApplicationProperties.getFloatProperty("application.decreasePercentage");
 		
 		StringBuilder stringBuilder =  new StringBuilder();
 		stringBuilder.append("currency pairs|"+currencyPairs.toString()+"\n");
