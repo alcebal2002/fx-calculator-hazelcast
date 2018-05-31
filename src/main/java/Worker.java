@@ -140,7 +140,7 @@ public class Worker {
 		// Shut down the pool 
 		logger.info ("Shutting down executor pool..."); 
 		executorPool.shutdown(); 
-		logger.info (totalExecutions/*executorPool.getTaskCount()*/ + " tasks. No additional tasks will be accepted"); 
+		logger.info (totalExecutions + " tasks. No additional tasks will be accepted"); 
 
 		// Shut down the monitor thread 
 		while (!executorPool.isTerminated()) { 
@@ -164,7 +164,8 @@ public class Worker {
 		workerDetail.setAvgExecutionTime(executorPool.getAvgExecutionTime());
 		workerDetail.setTotalHistoricalDataLoaded(executorPool.getTotalHistDataLoaded());
 		workerDetail.setTotalCalculations(executorPool.getTotalCalculations());
-		workerDetail.setTotalResults(executorPool.getTotalResults());
+		workerDetail.setTotalBasicResults(executorPool.getTotalBasicResults());
+		workerDetail.setTotalSpreadResults(executorPool.getTotalSpreadResults());
 		hzClient.getMap(HazelcastInstanceUtils.getMonitorMapName()).put(workerDetail.getUuid(),workerDetail);
 		
 		// Shutdown Hazelcast cluster node instance		

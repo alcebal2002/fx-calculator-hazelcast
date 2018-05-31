@@ -28,7 +28,8 @@ public class WorkerDetail implements Serializable {
 	private long totalExecutions = 0;
 	private long totalHistoricalDataLoaded = 0;
 	private long totalCalculations = 0;
-	private long totalResults = 0;
+	private long totalBasicResults = 0;
+	private long totalSpreadResults = 0;
 	private long avgExecutionTime = 0L;
 	
 	private Map<String,CalcResult> calcResultsMap;
@@ -66,133 +67,50 @@ public class WorkerDetail implements Serializable {
 		this.startTime = startTime;
 	}
 
-	public final String getUuid() {
-		return this.uuid;
-	}
-	public final void setNodeId(String uuid) {
-		this.uuid = uuid;
-	}
-	public final boolean getActiveStatus() {
-		return activeStatus;
-	}
-	public final void setActiveStatus(boolean status) {
-		this.activeStatus = status;
-	}
-	public final String getActiveStatusString() {
-		return activeStatus?"Active":"Inactive";
-	}
-	public final String getInetAddres() {
-		return inetAddres;
-	}
-	public final String getInetPort() {
-		return inetPort;
-	}
-	public final int getPoolCoreSize() {
-		return poolCoreSize;
-	}
-	public final int getPoolMaxSize() {
-		return poolMaxSize;
-	}
-	public final int getQueueCapacity() {
-		return queueCapacity;
-	}
-	public final int getTimeoutSecs() {
-		return timeoutSecs;
-	}
-	public final int getRetrySleepTime() {
-		return retrySleepTime;
-	}
-	public final int getRetryMaxAttempts() {
-		return retryMaxAttempts;
-	}
-	public final int getInitialSleep() {
-		return initialSleep;
-	}
-	public final int getMonitorSleep() {
-		return monitorSleep;
-	}
-	public final int getRefreshAfter() {
-		return refreshAfter;
-	}
-	public final long getStartTime() {
-		return startTime;
-	}
-	public final String getStartTimeString() {
-		return ((this.getStartTime()>0L)?(new Timestamp(this.getStartTime()).toString()):" - ");
-	}
-	public final void setStartTime(long startTime) {
-		this.startTime = startTime;
-	}
-	public final long getStopTime() {
-		return stopTime;
-	}
-	public final String getStopTimeString() {
-		return ((this.getStopTime()>0L)?(new Timestamp(this.getStopTime()).toString()):" - ");
-	}
-	public final void setStopTime(long stopTime) {
-		this.stopTime = stopTime;
-	}
-	
-	public final void setCalculationResults(Map<String,CalcResult> calcResults) {
-		this.calcResultsMap = calcResults;
-	}
-
-	public final Map<String,CalcResult> getCalculationResults() {
-		return calcResultsMap;
-	}
-
-	public final long getAvgExecutionTime() {
-		return avgExecutionTime;
-	}
-
-	public final void setAvgExecutionTime(long avgExecutionTime) {
-		this.avgExecutionTime = avgExecutionTime;
-	}
-
-	public final long getTotalCalculations() {
-		return totalCalculations;
-	}
-	
-	public final void setTotalCalculations(long totalCalculations) {
-		this.totalCalculations = totalCalculations;
-	}
-
-	public final long getTotalResults() {
-		return totalResults;
-	}
-	
-	public final void setTotalResults(long totalResults) {
-		this.totalResults = totalResults;
-	}
-
-	public final long getTotalHistoricalDataLoaded() {
-		return totalHistoricalDataLoaded;
-	}
-	
-	public final void setTotalHistoricalDataLoaded(long totalHistoricalDataLoaded) {
-		this.totalHistoricalDataLoaded = totalHistoricalDataLoaded;
-	}
-
-	public final long getTotalExecutions() {
-		return totalExecutions;
-	}
+	public final String getUuid() {	return this.uuid; }
+	public final void setNodeId(String uuid) { this.uuid = uuid; }
+	public final boolean getActiveStatus() { return activeStatus; }
+	public final void setActiveStatus(boolean status) {	this.activeStatus = status;	}
+	public final String getActiveStatusString() { return activeStatus?"Active":"Inactive"; }
+	public final String getInetAddres() { return inetAddres; }
+	public final String getInetPort() {	return inetPort; }
+	public final int getPoolCoreSize() { return poolCoreSize; }
+	public final int getPoolMaxSize() {	return poolMaxSize;	}
+	public final int getQueueCapacity() { return queueCapacity;	}
+	public final int getTimeoutSecs() {	return timeoutSecs;	}
+	public final int getRetrySleepTime() { return retrySleepTime; }
+	public final int getRetryMaxAttempts() { return retryMaxAttempts; }
+	public final int getInitialSleep() { return initialSleep; }
+	public final int getMonitorSleep() { return monitorSleep; }
+	public final int getRefreshAfter() { return refreshAfter; }
+	public final long getStartTime() { return startTime; }
+	public final String getStartTimeString() { return ((this.getStartTime()>0L)?(new Timestamp(this.getStartTime()).toString()):" - ");	}
+	public final void setStartTime(long startTime) { this.startTime = startTime; }
+	public final long getStopTime() { return stopTime; }
+	public final String getStopTimeString() { return ((this.getStopTime()>0L)?(new Timestamp(this.getStopTime()).toString()):" - "); }
+	public final void setStopTime(long stopTime) { this.stopTime = stopTime; }	
+	public final void setCalculationResults(Map<String,CalcResult> calcResults) { this.calcResultsMap = calcResults; }
+	public final Map<String,CalcResult> getCalculationResults() { return calcResultsMap; }
+	public final long getAvgExecutionTime() { return avgExecutionTime; }
+	public final void setAvgExecutionTime(long avgExecutionTime) { this.avgExecutionTime = avgExecutionTime; }
+	public final long getTotalCalculations() { return totalCalculations; }
+	public final void setTotalCalculations(long totalCalculations) { this.totalCalculations = totalCalculations; }
+	public final long getTotalBasicResults() { return totalBasicResults; }
+	public final void setTotalBasicResults(long totalBasicResults) { this.totalBasicResults = totalBasicResults; }
+	public final long getTotalSpreadResults() { return totalSpreadResults; }
+	public final void setTotalSpreadResults(long totalSpreadResults) { this.totalSpreadResults = totalSpreadResults; }
+	public final long getTotalHistoricalDataLoaded() { return totalHistoricalDataLoaded; }
+	public final void setTotalHistoricalDataLoaded(long totalHistoricalDataLoaded) { this.totalHistoricalDataLoaded = totalHistoricalDataLoaded; }
+	public final long getTotalExecutions() { return totalExecutions; }
 	
 	public final String getTotalExecutionsWithoutComma() {
 		String regex = "(?<=\\d),(?=\\d)";
 		return (""+totalExecutions).replaceAll(regex, "");
 	}
 
-	public final void setTotalExecutions(long totalExecutions) {
-		this.totalExecutions = totalExecutions;
-	}
-
-	public final long getTotalElapsedTime() {
-		return totalElapsedTime;
-	}
-
-	public final void setTotalElapsedTime(long totalElapsedTime) {
-		this.totalElapsedTime = totalElapsedTime;
-	}
+	public final void setTotalExecutions(long totalExecutions) { this.totalExecutions = totalExecutions; }
+	public final long getTotalElapsedTime() { return totalElapsedTime; }
+	public final void setTotalElapsedTime(long totalElapsedTime) { this.totalElapsedTime = totalElapsedTime; }
 
 	public final String getCsvFormat() {
 		return  this.getUuid() + ";" +

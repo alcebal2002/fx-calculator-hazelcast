@@ -28,14 +28,16 @@ public class RunnableWorkerThread implements Runnable {
 	private Properties applicationProperties;
 
 	private Map<String, List<FxRate>> historicalDataMap = new HashMap<String, List<FxRate>>();
-	private Map<String, Integer> resultsMap = new HashMap<String, Integer>();
+	private Map<String, Integer> basicResultsMap = new HashMap<String, Integer>();
+	private Map<String, Integer> spreadResultsMap = new HashMap<String, Integer>();
 	private float spread = 0;
 	private Map<String, CalcResult> calcResultsMap;
 	
 	private long elapsedTimeMillis;
-	private long totalHistDataLoaded;
-	private long totalCalculations;
-	private long totalResults;
+	private long totalHistDataLoaded = 0;
+	private long totalCalculations = 0;
+	private long totalBasicResults = 0;
+	private long totalSpreadResults = 0;
 
 
 	public RunnableWorkerThread ( final ExecutionTask executionTask, Map<String, CalcResult> calcResultsMap){
@@ -76,17 +78,18 @@ public class RunnableWorkerThread implements Runnable {
 				
 				logger.info ("Starting calculations for " + currentCurrency);
 				calculationStartTime = System.currentTimeMillis();
-				//totalCalculations = executeCalculations (currentCurrency, increase, decrease, maxLevels);
-				totalCalculations = executeCalculationsWithSpread (currentCurrency, increase, decrease, maxLevels, spread);
+				totalCalculations += executeBasicCalculation (currentCurrency, increase, decrease, maxLevels);
+				totalCalculations += executeSpreadCalculation (currentCurrency, increase, decrease, maxLevels, spread);
 				calculationStopTime = System.currentTimeMillis();
 
-				totalResults = resultsMap.size();
+				totalBasicResults = basicResultsMap.size();
+				totalSpreadResults = spreadResultsMap.size();
 
 				logger.debug ("Populating Calculation Result Map for " + currentCurrency);
 				// Populates the Calculation Result Map
-				calcResultsMap.put(currentCurrency, new CalcResult(currentCurrency, increase, decrease, maxLevels, histDataStartTime, histDataStopTime, totalHistDataLoaded, calculationStartTime, calculationStopTime, totalCalculations, resultsMap));
+				calcResultsMap.put(currentCurrency, new CalcResult(currentCurrency, increase, decrease, maxLevels, spread, histDataStartTime, histDataStopTime, totalHistDataLoaded, calculationStartTime, calculationStopTime, totalCalculations, basicResultsMap, spreadResultsMap));
 
-				logger.info ("Finished calculations for " + currentCurrency + "[" + totalCalculations + "] in " + (calculationStopTime - calculationStartTime) + " ms");
+				logger.info ("Finished calculations for " + currentCurrency + " [" + totalCalculations + "] in " + (calculationStopTime - calculationStartTime) + " ms");
 			} else {
 				logger.error("No available data for " + currentCurrency);
 			}
@@ -112,11 +115,12 @@ public class RunnableWorkerThread implements Runnable {
 	}
 
 	// Executes calculations with Spreads (levels)
-    public long executeCalculationsWithSpread (final String currentCurrency, final float increase, final float decrease, final int maxLevels, final float spread) {
+    public long executeSpreadCalculation (final String currentCurrency, final float increase, final float decrease, final int maxLevels, final float spread) {
     	
     	StringBuilder result =  new StringBuilder();
     	
     	long totalCalculations = 0;
+    	long found = 0;
     	
 		if (historicalDataMap.containsKey(currentCurrency)) {
 
@@ -137,27 +141,37 @@ public class RunnableWorkerThread implements Runnable {
 					if ((targetFxRate.getHigh() > (opening * increase)-spread)) {
 						result.append("S");
 						opening = (opening * increase)-spread;
+						found++;
 					} else if ((targetFxRate.getLow() < (opening * decrease)+spread)) {
 						result.append("B");
-
 						opening = (opening * decrease)+spread;
+						found++;
 					}
 					
 					totalCalculations++;
 
-					if (totalCalculations >= maxLevels) {
+					if (found >= maxLevels) {
+						if (spreadResultsMap.containsKey(result.toString())) {
+							spreadResultsMap.put(result.toString(),spreadResultsMap.get(result.toString())+1);
+						} else {
+							spreadResultsMap.put(result.toString(),1);
+						}
+						result.delete(0, result.length());
+						found = 0;
 						break;
 					}
 
 				}
 			}
+		} else {
+			logger.info("No historical data available for " + currentCurrency + ". Avoid Spread calculation");
 		}
-		logger.info("Calc result: " + result.toString());
+		logger.info("Spread result: " + spreadResultsMap.toString());
 		return totalCalculations;
     }
     
 	// Executes calculations (levels)
-    public long executeCalculations (final String currentCurrency, float increase, float decrease, int maxLevels) {
+    public long executeBasicCalculation (final String currentCurrency, float increase, float decrease, int maxLevels) {
     	
     	long totalCalculations = 0;
     	
@@ -186,10 +200,10 @@ public class RunnableWorkerThread implements Runnable {
 							break;
 						}
 
-						if (resultsMap.containsKey("UP-"+indexUp)) {
-							resultsMap.put("UP-"+indexUp,resultsMap.get("UP-"+indexUp)+1);
+						if (basicResultsMap.containsKey("UP-"+indexUp)) {
+							basicResultsMap.put("UP-"+indexUp,basicResultsMap.get("UP-"+indexUp)+1);
 						} else {
-							resultsMap.put("UP-"+indexUp,1);
+							basicResultsMap.put("UP-"+indexUp,1);
 						}
 
 						previousFound = "UP";
@@ -200,10 +214,10 @@ public class RunnableWorkerThread implements Runnable {
 							break;
 						}
 
-						if (resultsMap.containsKey("DOWN-"+indexDown)) {
-							resultsMap.put("DOWN-"+indexDown,resultsMap.get("DOWN-"+indexDown)+1);
+						if (basicResultsMap.containsKey("DOWN-"+indexDown)) {
+							basicResultsMap.put("DOWN-"+indexDown,basicResultsMap.get("DOWN-"+indexDown)+1);
 						} else {
-							resultsMap.put("DOWN-"+indexDown,1);
+							basicResultsMap.put("DOWN-"+indexDown,1);
 						}
 
 						previousFound = "DOWN";
@@ -213,6 +227,8 @@ public class RunnableWorkerThread implements Runnable {
 					totalCalculations++;
 				}
 			}
+		} else {
+			logger.info("No historical data available for " + currentCurrency + ". Avoid Basic calculation");
 		}
 		return totalCalculations;
     }
@@ -228,7 +244,34 @@ public class RunnableWorkerThread implements Runnable {
     		logger.info (currentCurrency + " -> Spread: " + result);
     		
     	} else {
-    		// not developed yet
+
+   	    	int counter = 0;
+
+			String historicalDataPath = ApplicationProperties.getStringProperty("worker.historicalDataPath");
+			String historicalDataFileExtension = ApplicationProperties.getStringProperty("worker.historicalDataFileExtension");
+			String historicalDataSeparator = ApplicationProperties.getStringProperty("worker.historicalDataSeparator");
+
+			String fileName = historicalDataPath + "pares" + historicalDataFileExtension;
+    		
+        	logger.info("Populating spread data from file (" + fileName + "). Fields separated by " + historicalDataSeparator.charAt(0));
+        	
+        	try {
+        		CSVReader reader = new CSVReader(new FileReader(fileName), historicalDataSeparator.charAt(0));
+    	        String [] nextLine;
+    	        while ((nextLine = reader.readNext()) != null) {
+    	        	counter++;
+    	        	
+    	        	if (currentCurrency.equals(nextLine[1])) {
+    	        		result = Float.parseFloat(nextLine[2]);
+    	        		break;
+    	        	}
+    	        	
+    	       	}
+    	        reader.close();
+    	    	
+        	} catch (Exception ex) {
+        		logger.error ("Exception in file " + fileName + " - line " + counter + " - " + ex.getClass() + " - " + ex.getMessage());
+        	}
     	}
     	return result;
     }
@@ -301,16 +344,9 @@ public class RunnableWorkerThread implements Runnable {
     	return result;
     }
 
-	public long getTotalResutls () {
-		return this.totalResults;
-	}
-	public long getTotalCalculations () {
-		return this.totalCalculations;
-	}
-	public long getTotalHistDataLoaded () {
-		return this.totalHistDataLoaded;
-	}
-	public long getElapsedTimeMillis () {
-		return this.elapsedTimeMillis;
-	}
+	public long getTotalBasicResults () { return this.totalBasicResults; }
+	public long getTotalSpreadResults () { return this.totalSpreadResults; }
+	public long getTotalCalculations () { return this.totalCalculations; }
+	public long getTotalHistDataLoaded () {	return this.totalHistDataLoaded; }
+	public long getElapsedTimeMillis () { return this.elapsedTimeMillis; }
 }

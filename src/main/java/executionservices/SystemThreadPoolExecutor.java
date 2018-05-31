@@ -11,7 +11,8 @@ public class SystemThreadPoolExecutor extends ThreadPoolExecutor {
     private int totalExecutions = 0;
     private long totalCalculations = 0;
     private long totalHistDataLoaded = 0;
-	private long totalResults = 0;
+	private long totalBasicResults = 0;
+	private long totalSpreadResults = 0;
 
     public SystemThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, 
     							BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, RejectedExecutionHandler handler) { 
@@ -25,7 +26,8 @@ public class SystemThreadPoolExecutor extends ThreadPoolExecutor {
 			totalExecutionTime += ((RunnableWorkerThread)r).getElapsedTimeMillis();
 			totalHistDataLoaded += ((RunnableWorkerThread)r).getTotalHistDataLoaded();
 			totalCalculations += ((RunnableWorkerThread)r).getTotalCalculations();
-			totalResults += ((RunnableWorkerThread)r).getTotalResutls();
+			totalBasicResults += ((RunnableWorkerThread)r).getTotalBasicResults();
+			totalSpreadResults += ((RunnableWorkerThread)r).getTotalSpreadResults();
 	    } finally { 
 	    	super.afterExecute(r, t); 
 	    } 
@@ -39,7 +41,8 @@ public class SystemThreadPoolExecutor extends ThreadPoolExecutor {
     }
 	public long getTotalHistDataLoaded () { return this.totalHistDataLoaded; }
 	public long getTotalCalculations () { return this.totalCalculations; }
-	public long getTotalResults () { return this.totalResults; }
+	public long getTotalBasicResults () { return this.totalBasicResults; }
+	public long getTotalSpreadResults () { return this.totalSpreadResults; }
 
     public long getAvgExecutionTime () {
     	long result = 0L;

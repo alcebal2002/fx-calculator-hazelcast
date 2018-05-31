@@ -32,7 +32,8 @@ public class Application {
 	private static long totalExecutions = 0;
 	private static long totalHistDataLoaded = 0;
 	private static long totalCalculations = 0;
-	private static long totalResults = 0;
+	private static long totalBasicResults = 0;
+	private static long totalSpreadResults = 0;
 	private static long avgExecutionTime = 0;
 		
     public static void main (String args[]) throws Exception {
@@ -139,32 +140,35 @@ public class Application {
             totalExecutions += ((WorkerDetail) entry.getValue()).getTotalExecutions();
             totalHistDataLoaded += ((WorkerDetail) entry.getValue()).getTotalHistoricalDataLoaded();
             totalCalculations += ((WorkerDetail) entry.getValue()).getTotalCalculations();
-            totalResults += ((WorkerDetail) entry.getValue()).getTotalResults();
+            totalBasicResults += ((WorkerDetail) entry.getValue()).getTotalBasicResults();
+            totalSpreadResults += ((WorkerDetail) entry.getValue()).getTotalSpreadResults();
             avgExecutionTime += ((WorkerDetail) entry.getValue()).getAvgExecutionTime();
             avgExecutionTime = avgExecutionTime / numWorkers;
             
     		if (calcResultsMap != null && calcResultsMap.size() > 0) {
      			
-    			logger.info (printCurrencyLevelsHeader(maxLevels));
+    			logger.info (printBasicResultsHeader(maxLevels));
     			
     			if (writeResultsToFile) {
     				path = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+".csv"));
     				GeneralUtils.writeTextToFile(path, printExecutionParams());
-    				GeneralUtils.writeTextToFile(path, printCurrencyLevelsHeader(maxLevels));
+    				GeneralUtils.writeTextToFile(path, printBasicResultsHeader(maxLevels));
     			}
     			
     			for (String currency : currencyPairs) {
     				
     				if (calcResultsMap.containsKey(currency)) {
-    					logger.info (printCurrencyLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getLevelResults(), maxLevels));
-    					
+    					logger.info (printBasicResultsLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getBasicResults(), maxLevels));
+       					logger.info (((CalcResult)calcResultsMap.get(currency)).getSpreadResults().toString());
+       				    					
     					if (writeResultsToFile) {
-    						GeneralUtils.writeTextToFile(path, printCurrencyLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getLevelResults(), maxLevels));
+    						GeneralUtils.writeTextToFile(path, printBasicResultsLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getBasicResults(), maxLevels));
+    						GeneralUtils.writeTextToFile(path, ((CalcResult)calcResultsMap.get(currency)).getSpreadResults().toString());
     					}
     				} else {
-    					logger.info (printCurrencyLevels (currency, null, maxLevels));
+    					logger.info (printBasicResultsLevels (currency, null, maxLevels));
     					if (writeResultsToFile) {
-    						GeneralUtils.writeTextToFile(path, printCurrencyLevels (currency, null, maxLevels));
+    						GeneralUtils.writeTextToFile(path, printBasicResultsLevels (currency, null, maxLevels));
     					}
     				}
     			}
@@ -182,7 +186,8 @@ public class Application {
 		logger.info ("  - Avg. execution time      : " + GeneralUtils.printElapsedTime (avgExecutionTime));
 		logger.info ("  - Total historical data    : " + String.format("%,d", totalHistDataLoaded));
 		logger.info ("  - Total calculations       : " + String.format("%,d", totalCalculations)); 
-		logger.info ("  - Total results            : " + String.format("%,d", totalResults));
+		logger.info ("  - Total basic results      : " + String.format("%,d", totalBasicResults));
+		logger.info ("  - Total spread results     : " + String.format("%,d", totalSpreadResults));
 		logger.info ("  - Elapsed time             : " + GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime));
 		logger.info ("**************************************************");
 		logger.info ("");
@@ -212,14 +217,15 @@ public class Application {
 		stringBuilder.append("avg. execution time|"+GeneralUtils.printElapsedTime (avgExecutionTime)+"\n");
 		stringBuilder.append("total historical data|"+String.format("%,d", totalHistDataLoaded)+"\n");
 		stringBuilder.append("total calculations|"+String.format("%,d", totalCalculations)+"\n"); 
-		stringBuilder.append("total results|"+String.format("%,d", totalResults)+"\n");
+		stringBuilder.append("total basic results|"+String.format("%,d", totalBasicResults)+"\n");
+		stringBuilder.append("total spread results|"+String.format("%,d", totalSpreadResults)+"\n");
 		stringBuilder.append("elapsed time|"+GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime)+"\n");
 
 		return (stringBuilder.toString());
 	}
 
 	// Print currency levels header
-	private static String printCurrencyLevelsHeader(final int maxLevels) {
+	private static String printBasicResultsHeader(final int maxLevels) {
 		StringBuilder stringBuilder =  new StringBuilder();
 		stringBuilder.append("CURRENCYPAIR");
 		
@@ -244,7 +250,7 @@ public class Application {
 	}
 	
 	// Print currency result levels
-	private static String printCurrencyLevels (final String currency, final Map<String,Integer> levelsMap, final int maxLevels) {
+	private static String printBasicResultsLevels (final String currency, final Map<String,Integer> levelsMap, final int maxLevels) {
 		
 		StringBuilder stringBuilder = new StringBuilder();
 		
