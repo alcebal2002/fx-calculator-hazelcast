@@ -75,6 +75,50 @@ public class DatabaseUtils {
 		}
 		return resultMap;
 	}
+
+	public static float getSpread (final String currentCurrency) {
+		 
+		Statement stmt = null;
+		String sql = null;
+		ResultSet rs = null;
+
+		float result = 0;
+		
+		try {
+			logger.info ("Retrieving spreads from database");
+			stmt = DatabaseConnection.getInstance().getConnection().createStatement();
+			sql = "SELECT id_par, divisas, spread FROM pares WHERE divisas = '" +  currentCurrency + "' AND spread <> '0.000000' ORDER BY id_par";
+
+			rs = stmt.executeQuery(sql);
+
+			while(rs.next()) {
+				//Retrieve by column name
+				result = rs.getFloat("spread");
+			}
+			rs.close();
+		} catch(Exception e) {
+			//Handle errors for Class.forName
+			logger.error ("Exception: " + e.getClass() + " - " + e.getMessage());
+		} finally {
+			//finally block used to close resources
+			try {
+				if (rs != null) {
+					rs.close();
+				}
+			} catch (SQLException e) {
+				logger.error ("SQLException: " + e.getClass() + " - " + e.getMessage());
+			}
+
+			try {
+				if (stmt != null) {
+					stmt.close();
+				}
+			} catch (SQLException e) {
+				logger.error ("Exception: " + e.getClass() + " - " + e.getMessage());
+			}
+		}
+		return result;
+	}	
 	
 	public static boolean checkCurrencyTableExists (final String currentCurrency) {
 		 

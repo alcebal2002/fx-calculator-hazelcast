@@ -29,9 +29,8 @@ public class RunnableWorkerThread implements Runnable {
 
 	private Map<String, List<FxRate>> historicalDataMap = new HashMap<String, List<FxRate>>();
 	private Map<String, Integer> resultsMap = new HashMap<String, Integer>();
+	private float spread = 0;
 	private Map<String, CalcResult> calcResultsMap;
-	
-	
 	
 	private long elapsedTimeMillis;
 	private long totalHistDataLoaded;
@@ -72,9 +71,13 @@ public class RunnableWorkerThread implements Runnable {
 				histDataStopTime = System.currentTimeMillis();
 				logger.info ("Historical data populated for " + currentCurrency);
 
+				logger.info ("Retrieving spread data for " + currentCurrency);
+				spread = getSpread(currentCurrency);
+				
 				logger.info ("Starting calculations for " + currentCurrency);
 				calculationStartTime = System.currentTimeMillis();
-				totalCalculations = executeCalculations (currentCurrency, increase, decrease, maxLevels);
+				//totalCalculations = executeCalculations (currentCurrency, increase, decrease, maxLevels);
+				totalCalculations = executeCalculationsWithSpread (currentCurrency, increase, decrease, maxLevels, spread);
 				calculationStopTime = System.currentTimeMillis();
 
 				totalResults = resultsMap.size();
@@ -108,7 +111,52 @@ public class RunnableWorkerThread implements Runnable {
 		return exists;
 	}
 
-	// Executes calculations
+	// Executes calculations with Spreads (levels)
+    public long executeCalculationsWithSpread (final String currentCurrency, final float increase, final float decrease, final int maxLevels, final float spread) {
+    	
+    	StringBuilder result =  new StringBuilder();
+    	
+    	long totalCalculations = 0;
+    	
+		if (historicalDataMap.containsKey(currentCurrency)) {
+
+			for (FxRate originalFxRate : historicalDataMap.get(currentCurrency)) {
+				
+				int positionId = originalFxRate.getPositionId();
+				float opening = originalFxRate.getOpen();
+				
+				logger.debug ("Processing " + currentCurrency + "-" + positionId);
+				
+				FxRate targetFxRate = null;
+				
+				for (int i=positionId+1; i<historicalDataMap.get(currentCurrency).size(); i++) {
+					targetFxRate = historicalDataMap.get(currentCurrency).get(i);
+					
+					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
+
+					if ((targetFxRate.getHigh() > (opening * increase)-spread)) {
+						result.append("S");
+						opening = (opening * increase)-spread;
+					} else if ((targetFxRate.getLow() < (opening * decrease)+spread)) {
+						result.append("B");
+
+						opening = (opening * decrease)+spread;
+					}
+					
+					totalCalculations++;
+
+					if (totalCalculations >= maxLevels) {
+						break;
+					}
+
+				}
+			}
+		}
+		logger.info("Calc result: " + result.toString());
+		return totalCalculations;
+    }
+    
+	// Executes calculations (levels)
     public long executeCalculations (final String currentCurrency, float increase, float decrease, int maxLevels) {
     	
     	long totalCalculations = 0;
@@ -168,6 +216,22 @@ public class RunnableWorkerThread implements Runnable {
 		}
 		return totalCalculations;
     }
+    
+    public float getSpread (final String currentCurrency) {
+    	float result = 0;
+
+    	logger.debug("Data source set to: " + applicationProperties.getProperty("application.datasource"));
+    	if ("database".equals(applicationProperties.getProperty("application.datasource"))) {
+    		// Populate spread data from mysql database
+    		result = DatabaseUtils.getSpread(currentCurrency);
+    		
+    		logger.info (currentCurrency + " -> Spread: " + result);
+    		
+    	} else {
+    		// not developed yet
+    	}
+    	return result;
+    }
 	
 	// Populates historical data and puts the objects into historical data list)
     // Depending on the datasource parameter, data could be retrieved from database (mysql) or files
@@ -185,7 +249,7 @@ public class RunnableWorkerThread implements Runnable {
     		
     		if (historicalDataMap != null && historicalDataMap.size() > 0) {
     			// There should be only 1 record in the map corresponding to the currentCurrency
-   	            logger.info (currentCurrency + " -> total records loaded " + historicalDataMap.get(currentCurrency).size());
+   	            logger.info (currentCurrency + " -> total FX records loaded " + historicalDataMap.get(currentCurrency).size());
     		}
     	} else {
 
