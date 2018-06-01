@@ -73,9 +73,6 @@ public class RunnableWorkerThread implements Runnable {
 				histDataStopTime = System.currentTimeMillis();
 				logger.info ("Historical data populated for " + currentCurrency);
 
-				logger.info ("Retrieving spread data for " + currentCurrency);
-				spread = getSpread(currentCurrency);
-				
 				calculationStartTime = System.currentTimeMillis();
 				
 				if ((applicationProperties.getProperty("application.calculations")).toLowerCase().contains("basic")) {
@@ -83,6 +80,8 @@ public class RunnableWorkerThread implements Runnable {
 					totalCalculations += executeBasicCalculation (currentCurrency, increase, decrease, maxLevels);
 				}
 				if ((applicationProperties.getProperty("application.calculations")).toLowerCase().contains("spread")) {
+					logger.info ("Retrieving spread data for " + currentCurrency);
+					spread = getSpread(currentCurrency);
 					logger.info ("Starting spread calculations for " + currentCurrency);
 					totalCalculations += executeSpreadCalculation (currentCurrency, increase, decrease, maxLevels, spread);
 				}
