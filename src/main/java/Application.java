@@ -44,7 +44,10 @@ public class Application {
 
 		// Load properties from file
 		ApplicationProperties.loadApplicationProperties ();
-    			
+
+		// Print parameters used
+		printParameters ("Start");
+		
 		// Initialize Hazelcast instance
 		HazelcastInstanceUtils.getInstance();
 		
@@ -59,6 +62,9 @@ public class Application {
 		
 		applicationStopTime = System.currentTimeMillis();
 
+		// Print parameters used
+		printParameters ("Finished");
+		
 		// Print results
         printResults ();
         
@@ -118,6 +124,33 @@ public class Application {
 		}
     }    
 
+	// Print execution parameters 
+	private static void printParameters (final String title) {
+		logger.info ("");
+		logger.info ("****************************************************"); 
+		logger.info (title + " FXCalculator with the following parameters:"); 
+		logger.info ("****************************************************"); 
+		logger.info ("  - datasource               : " + ApplicationProperties.getStringProperty("application.datasource"));
+		logger.info ("  - database host            : " + ApplicationProperties.getStringProperty("database.host"));
+		logger.info ("  - database port            : " + ApplicationProperties.getStringProperty("database.port"));
+		logger.info ("  - database name            : " + ApplicationProperties.getStringProperty("database.db_name"));
+		logger.info ("  - database username        : " + ApplicationProperties.getStringProperty("database.username"));
+		logger.info ("  - database password        : " + ApplicationProperties.getStringProperty("database.password"));
+
+		logger.info ("  - currency pairs           : " + ApplicationProperties.getListProperty("application.currencyPairs").toString());
+		logger.info ("  - start date               : " + ApplicationProperties.getStringProperty("application.startDate"));
+		logger.info ("  - end date                 : " + ApplicationProperties.getStringProperty("application.endDate"));
+		logger.info ("  - increase percentage      : " + ApplicationProperties.getStringProperty("application.increasePercentage"));
+		logger.info ("  - decrease percentage      : " + ApplicationProperties.getStringProperty("application.decreasePercentage"));
+		logger.info ("  - max. levels              : " + ApplicationProperties.getStringProperty("application.maxLevels"));
+		logger.info ("  - calculations             : " + ApplicationProperties.getListProperty("application.calculations").toString());
+
+		logger.info ("  - write results to file    : " + ApplicationProperties.getStringProperty("application.writeResultsToFile"));
+		logger.info ("  - results path             : " + ApplicationProperties.getStringProperty("application.resultsPath"));
+		logger.info ("****************************************************");
+		logger.info ("");
+	}
+    
 	// Print execution times
 	private static void printResults () throws Exception {
 
@@ -145,6 +178,21 @@ public class Application {
             avgExecutionTime += ((WorkerDetail) entry.getValue()).getAvgExecutionTime();
             avgExecutionTime = avgExecutionTime / numWorkers;
             
+    		logger.info ("");
+    		logger.info ("Total figures:");
+    		logger.info ("**************************************************");
+    		logger.info ("  - Total executions         : " + String.format("%,d", totalExecutions));
+    		logger.info ("  - Avg. execution time      : " + GeneralUtils.printElapsedTime (avgExecutionTime));
+    		logger.info ("  - Total historical data    : " + String.format("%,d", totalHistDataLoaded));
+    		logger.info ("  - Total calculations       : " + String.format("%,d", totalCalculations)); 
+    		logger.info ("  - Total basic results      : " + String.format("%,d", totalBasicResults));
+    		logger.info ("  - Total spread results     : " + String.format("%,d", totalSpreadResults));
+    		logger.info ("  - Elapsed time             : " + GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime));
+    		logger.info ("**************************************************");
+    		logger.info ("");
+    		logger.info ("Results:");
+    		logger.info ("**************************************************");
+
     		if (calcResultsMap != null && calcResultsMap.size() > 0) {
      			
     			logger.info (printBasicResultsHeader(maxLevels));
@@ -179,20 +227,6 @@ public class Application {
     			}
     		}            
         }
-		logger.info ("");
-		logger.info ("Total figures:");
-		logger.info ("**************************************************");
-		logger.info ("  - Total executions         : " + String.format("%,d", totalExecutions));
-		logger.info ("  - Avg. execution time      : " + GeneralUtils.printElapsedTime (avgExecutionTime));
-		logger.info ("  - Total historical data    : " + String.format("%,d", totalHistDataLoaded));
-		logger.info ("  - Total calculations       : " + String.format("%,d", totalCalculations)); 
-		logger.info ("  - Total basic results      : " + String.format("%,d", totalBasicResults));
-		logger.info ("  - Total spread results     : " + String.format("%,d", totalSpreadResults));
-		logger.info ("  - Elapsed time             : " + GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime));
-		logger.info ("**************************************************");
-		logger.info ("");
-		logger.info ("Results:");
-		logger.info ("**************************************************");
 	}
 
 	// Print execution parameters

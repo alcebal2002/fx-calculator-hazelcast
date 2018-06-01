@@ -123,10 +123,9 @@ public class RunnableWorkerThread implements Runnable {
 	// Executes calculations with Spreads (levels)
     public long executeSpreadCalculation (final String currentCurrency, final float increase, final float decrease, final int maxLevels, final float spread) {
     	
-    	StringBuilder result =  new StringBuilder();
-    	
     	long totalCalculations = 0;
-    	long found = 0;
+    	StringBuilder result;
+    	long found;
     	
 		if (historicalDataMap.containsKey(currentCurrency)) {
 
@@ -138,6 +137,8 @@ public class RunnableWorkerThread implements Runnable {
 				logger.debug ("Processing " + currentCurrency + "-" + positionId);
 				
 				FxRate targetFxRate = null;
+		    	result =  new StringBuilder();
+		    	found = 0;
 				
 				for (int i=positionId+1; i<historicalDataMap.get(currentCurrency).size(); i++) {
 					targetFxRate = historicalDataMap.get(currentCurrency).get(i);
@@ -156,13 +157,12 @@ public class RunnableWorkerThread implements Runnable {
 					
 					totalCalculations++;
 
-					if (found >= maxLevels) {
+					if (found == maxLevels) {
 						if (spreadResultsMap.containsKey(result.toString())) {
 							spreadResultsMap.put(result.toString(),spreadResultsMap.get(result.toString())+1);
 						} else {
 							spreadResultsMap.put(result.toString(),1);
 						}
-						result.delete(0, result.length());
 						found = 0;
 						break;
 					}
