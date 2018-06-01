@@ -199,6 +199,7 @@ public class Application {
 	private static String printExecutionParams() {
 		
 		List<String> currencyPairs = (List<String>)ApplicationProperties.getListProperty("application.currencyPairs");
+		List<String> calculations = (List<String>)ApplicationProperties.getListProperty("application.calculations");
 		String startDate = ApplicationProperties.getStringProperty("application.startDate");
 		String endDate = ApplicationProperties.getStringProperty("application.endDate");
 		int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
@@ -212,6 +213,7 @@ public class Application {
 		stringBuilder.append("increase percentage|"+increasePercentage+"\n");
 		stringBuilder.append("decrease percentage|"+decreasePercentage+"\n");
 		stringBuilder.append("max. levels|"+maxLevels+"\n");
+		stringBuilder.append("calculations|"+calculations+"\n");
 		stringBuilder.append("Results"+"\n");
 		stringBuilder.append("total executions|"+String.format("%,d", totalExecutions)+"\n");
 		stringBuilder.append("avg. execution time|"+GeneralUtils.printElapsedTime (avgExecutionTime)+"\n");
