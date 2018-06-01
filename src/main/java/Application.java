@@ -194,30 +194,53 @@ public class Application {
     		logger.info ("**************************************************");
 
     		if (calcResultsMap != null && calcResultsMap.size() > 0) {
-     			
+
+    			logger.info("Basic calculation results");
+
     			logger.info (printBasicResultsHeader(maxLevels));
     			
     			if (writeResultsToFile) {
     				path = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+".csv"));
     				GeneralUtils.writeTextToFile(path, printExecutionParams());
+    				GeneralUtils.writeTextToFile(path, "Basic calculation results");
     				GeneralUtils.writeTextToFile(path, printBasicResultsHeader(maxLevels));
     			}
-    			
+
+    			// Print basic calculation results
     			for (String currency : currencyPairs) {
     				
     				if (calcResultsMap.containsKey(currency)) {
     					logger.info (printBasicResultsLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getBasicResults(), maxLevels));
-       					logger.info (((CalcResult)calcResultsMap.get(currency)).getSpreadResults().toString());
        				    					
     					if (writeResultsToFile) {
     						GeneralUtils.writeTextToFile(path, printBasicResultsLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getBasicResults(), maxLevels));
-    						GeneralUtils.writeTextToFile(path, ((CalcResult)calcResultsMap.get(currency)).getSpreadResults().toString());
-    					}
+     					}
     				} else {
     					logger.info (printBasicResultsLevels (currency, null, maxLevels));
     					if (writeResultsToFile) {
     						GeneralUtils.writeTextToFile(path, printBasicResultsLevels (currency, null, maxLevels));
     					}
+    				}
+    			}
+
+    			logger.info("Spread calculation results");
+    			
+				if (writeResultsToFile) {
+					GeneralUtils.writeTextToFile(path, "\nSpread calculation results");
+				}
+    			// Print spread calculation results
+    			for (String currency : currencyPairs) {
+    				
+    				if (calcResultsMap.containsKey(currency)) {
+       					logger.info (((CalcResult)calcResultsMap.get(currency)).getSpreadResults().toString());
+       				    					
+    					if (writeResultsToFile) {
+    						Iterator<Entry<String, Integer>> calcResults = ((CalcResult)calcResultsMap.get(currency)).getSpreadResults().entrySet().iterator();   						
+    						while (calcResults.hasNext()) {
+    							Entry<String, Integer> calcEntry = calcResults.next();
+       							GeneralUtils.writeTextToFile(path, currency + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
+    						}
+     					}
     				}
     			}
     			logger.info ("**************************************************");

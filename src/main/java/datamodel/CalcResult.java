@@ -24,6 +24,7 @@ public class CalcResult implements Serializable {
 		this.increase = increase;
 		this.decrease = decrease;
 		this.maxLevels = maxLevels;
+		this.spread = spread;
 		this.histDataStartTime = histDataStartTime;
 		this.histDataStopTime = histDataStopTime;
 		this.totalHistDataLoaded = totalHistDataLoaded;

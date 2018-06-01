@@ -244,13 +244,12 @@ public class RunnableWorkerThread implements Runnable {
 
     	logger.debug("Data source set to: " + applicationProperties.getProperty("application.datasource"));
     	if ("database".equals(applicationProperties.getProperty("application.datasource"))) {
+    		logger.debug("Retrieving spread value for " + currentCurrency + " from database");
     		// Populate spread data from mysql database
-    		result = DatabaseUtils.getSpread(currentCurrency);
-    		
-    		logger.info (currentCurrency + " -> Spread: " + result);
-    		
+    		result = DatabaseUtils.getSpread(currentCurrency);  		
     	} else {
 
+    		logger.debug("Retrieving spread value for " + currentCurrency + " from file");
    	    	int counter = 0;
 
 			String historicalDataPath = ApplicationProperties.getStringProperty("worker.historicalDataPath");
@@ -258,9 +257,7 @@ public class RunnableWorkerThread implements Runnable {
 			String historicalDataSeparator = ApplicationProperties.getStringProperty("worker.historicalDataSeparator");
 
 			String fileName = historicalDataPath + "pares" + historicalDataFileExtension;
-    		
-        	logger.info("Populating spread data from file (" + fileName + "). Fields separated by " + historicalDataSeparator.charAt(0));
-        	
+    		        	
         	try {
         		CSVReader reader = new CSVReader(new FileReader(fileName), historicalDataSeparator.charAt(0));
     	        String [] nextLine;
@@ -279,6 +276,9 @@ public class RunnableWorkerThread implements Runnable {
         		logger.error ("Exception in file " + fileName + " - line " + counter + " - " + ex.getClass() + " - " + ex.getMessage());
         	}
     	}
+    	
+   		logger.info (currentCurrency + " -> Spread: " + result);
+
     	return result;
     }
 	
