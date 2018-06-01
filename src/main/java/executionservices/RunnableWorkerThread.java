@@ -76,10 +76,17 @@ public class RunnableWorkerThread implements Runnable {
 				logger.info ("Retrieving spread data for " + currentCurrency);
 				spread = getSpread(currentCurrency);
 				
-				logger.info ("Starting calculations for " + currentCurrency);
 				calculationStartTime = System.currentTimeMillis();
-				totalCalculations += executeBasicCalculation (currentCurrency, increase, decrease, maxLevels);
-				totalCalculations += executeSpreadCalculation (currentCurrency, increase, decrease, maxLevels, spread);
+				
+				if ((applicationProperties.getProperty("application.calculations")).toLowerCase().contains("basic")) {
+					logger.info ("Starting basic calculations for " + currentCurrency);
+					totalCalculations += executeBasicCalculation (currentCurrency, increase, decrease, maxLevels);
+				}
+				if ((applicationProperties.getProperty("application.calculations")).toLowerCase().contains("spread")) {
+					logger.info ("Starting spread calculations for " + currentCurrency);
+					totalCalculations += executeSpreadCalculation (currentCurrency, increase, decrease, maxLevels, spread);
+				}
+				
 				calculationStopTime = System.currentTimeMillis();
 
 				totalBasicResults = basicResultsMap.size();
