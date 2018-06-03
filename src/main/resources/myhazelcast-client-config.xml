@@ -21,7 +21,7 @@
                   xmlns="http://www.hazelcast.com/schema/client-config">
     <network>
         <cluster-members>
-            <address>172.20.11.78</address>
+            <address>192.168.1.137</address>
         </cluster-members>
     </network>
 </hazelcast-client>

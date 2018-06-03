@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,6 @@ import datamodel.CalcResult;
 import datamodel.ExecutionTask;
 import datamodel.WorkerDetail;
 import utils.ApplicationProperties;
-import utils.Constants;
 import utils.GeneralUtils;
 import utils.HazelcastInstanceUtils;
 
@@ -48,11 +46,14 @@ public class Application {
 		// Print parameters used
 		printParameters ("Start");
 		
+		// Check if result directory exists if application.writeResultsToFile is set to true
+		GeneralUtils.checkResultsPath();
+		
 		// Initialize Hazelcast instance
 		HazelcastInstanceUtils.getInstance();
 		
 		// Wait until user press any key
-		waitForKeyToContinue();
+		GeneralUtils.waitForKeyToContinue();
 		
 		// Create Execution Tasks and put them into Hazelacast
 		createAndPublishExecutionTasks();
@@ -72,8 +73,7 @@ public class Application {
 		// Exit application
 		System.exit(0);
     }
-
-
+    
     private static void createAndPublishExecutionTasks () throws Exception {
 
     	logger.info("Putting Execution Tasks into Hazelcast for processing");
@@ -294,20 +294,7 @@ public class Application {
 		
 		return (stringBuilder.toString());
 	}
-	
-	private static void waitForKeyToContinue () {
-		logger.info ("");
-		logger.info ("*************************************************************************");
-		logger.info ("Ensure all the Workers are up & running. Then Press Any Key to continue...");
-		logger.info ("*************************************************************************");
-
-		try {
-			System.in.read();
-		} catch(Exception e) {
-			logger.error ("Exception: " + e.getClass() + " - " + e.getMessage());
-		}
-	}
-	
+		
 	// Print currency result levels
 	private static String printBasicResultsLevels (final String currency, final Map<String,Integer> levelsMap, final int maxLevels) {
 		

@@ -8,7 +8,7 @@
         <join>
             <multicast enabled="false"/>
             <tcp-ip enabled="true" connection-timeout-seconds="10">
-				<member>172.20.11.78</member>
+				<member>192.168.1.137</member>
 			</tcp-ip>
 			<aws enabled="false"/>
         </join>

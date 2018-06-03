@@ -43,6 +43,19 @@ public class GeneralUtils {
 		return result;
 	}
 
+	public static void waitForKeyToContinue () {
+		logger.info ("");
+		logger.info ("*************************************************************************");
+		logger.info ("Ensure all the Workers are up & running. Then Press Any Key to continue...");
+		logger.info ("*************************************************************************");
+
+		try {
+			System.in.read();
+		} catch (Exception e) {
+			logger.error ("Exception: " + e.getClass() + " - " + e.getMessage());
+		}
+	}
+	
 	public static boolean checkIfFileExists (final String currentCurrency) {
 
 		boolean exists = false;
@@ -56,11 +69,33 @@ public class GeneralUtils {
 		if(f.exists() && !f.isDirectory()) {
 			exists = true;
 		}
-
 		return exists;
-
 	}
 
+    public static void checkResultsPath() throws Exception {
+    	
+    	if (ApplicationProperties.getBooleanProperty("application.writeResultsToFile")) {
+        	logger.info("Checking if results directory exists (" + ApplicationProperties.getStringProperty("application.resultsPath") + ")");
+
+        	if (!GeneralUtils.checkIfDirectoryExists(ApplicationProperties.getStringProperty("application.resultsPath"))) {
+    			throw (new Exception("Results directory (" + ApplicationProperties.getStringProperty("application.resultsPath") + " does not exist. Please check !"));
+    		} else {
+    			logger.info ("Results Path exists");
+    		}
+    	}
+    }
+
+	public static boolean checkIfDirectoryExists (final String directory) {
+
+		boolean exists = false;
+
+		File f = new File(directory);
+		if(f.exists() && f.isDirectory()) {
+			exists = true;
+		}
+		return exists;
+	}
+	
 	public static List<String> getFilesFromPath (final String path, final String extension) {
 		List<String> filesList = new ArrayList<String>();
 		File dir = new File(path);
@@ -92,7 +127,6 @@ public class GeneralUtils {
 
 		return (millis + " ms - (" + hours + " hrs " + minutes + " min " + seconds + " secs)");
 	}
-
 	
 	// Wirte text to file 
 	public static void writeTextToFile (final Path path, final String text) {
