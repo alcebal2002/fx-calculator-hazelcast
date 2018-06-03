@@ -1,5 +1,5 @@
 # Application
-java -Dhazelcast.config=myhazelcast.xml -jar fx-calculator-hazelcast.jar
+java -Dhazelcast.config=myhazelcast.xml -cp .;./fx-calculator-hazelcast.jar Application
 
 # Worker
 java -Dhazelcast.client.config=myhazelcast-client-config.xml -cp .;./fx-calculator-hazelcast.jar Worker
