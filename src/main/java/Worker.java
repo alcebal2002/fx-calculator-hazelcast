@@ -218,6 +218,7 @@ public class Worker {
 				result = true;
 			} catch (Exception e) {
 				logger.error("Exception. Unable to create Hazelcast client instance. Attempt [" + i + "/" + retryMaxAttempts + "]. Checking again after " + retrySleepTime + " secs");
+				logger.error("Exception details: " + e.getClass() + " - " + e.getMessage());
 				Thread.sleep(retrySleepTime*1000);
 			}
 		}
