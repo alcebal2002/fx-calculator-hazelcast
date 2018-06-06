@@ -31,7 +31,7 @@ public class DatabaseUtils {
 			logger.info ("Retrieving historical rates from database for " + currentCurrency);
 			stmt = DatabaseConnection.getInstance().getConnection().createStatement();
 			sql = "SELECT * FROM historico_" + currentCurrency + " WHERE fecha >= STR_TO_DATE('" + startDate + "','%Y-%m-%d') AND fecha <= STR_TO_DATE('" + endDate + "','%Y-%m-%d') ORDER BY fecha ASC, hora ASC";
-
+			logger.info("Executing query: " + sql);
 			rs = stmt.executeQuery(sql);
 
 			int positionId = 0;
@@ -88,7 +88,7 @@ public class DatabaseUtils {
 			logger.info ("Retrieving spreads from database");
 			stmt = DatabaseConnection.getInstance().getConnection().createStatement();
 			sql = "SELECT id_par, divisas, spread FROM pares WHERE divisas = '" +  currentCurrency + "' AND spread <> '0.000000' ORDER BY id_par";
-
+			logger.info("Executing query: " + sql);
 			rs = stmt.executeQuery(sql);
 
 			while(rs.next()) {
