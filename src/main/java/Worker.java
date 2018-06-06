@@ -212,7 +212,7 @@ public class Worker {
 		
 		boolean result = false;
 		
-		for (int i=0; i<retryMaxAttempts; i++) {
+		for (int i=0; (i<retryMaxAttempts) && (!result); i++) {
 			try {
 				hzClient = HazelcastClient.newHazelcastClient();
 				result = true;
