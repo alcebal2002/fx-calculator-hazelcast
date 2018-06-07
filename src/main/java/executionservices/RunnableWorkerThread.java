@@ -40,7 +40,7 @@ public class RunnableWorkerThread implements Runnable {
 	private long totalSpreadResults = 0;
 
 
-	public RunnableWorkerThread ( final ExecutionTask executionTask, Map<String, CalcResult> calcResultsMap){
+	public RunnableWorkerThread (final ExecutionTask executionTask, Map<String, CalcResult> calcResultsMap){
 		this.applicationProperties = executionTask.getTaskParameters();
 		this.currentCurrency = executionTask.getCurrentCurrency();
 		this.calcResultsMap = calcResultsMap;
