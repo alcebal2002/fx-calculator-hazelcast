@@ -30,7 +30,7 @@
     </head>
     <body>
 	<#assign currentStatus = statusMap["status"]>
-	
+	<#assign totalTasks = statusMap["totalTasks"]>
 	
 <div class="row">
 	<div class="column" id="canvas-holder" style="width:40%">
@@ -73,9 +73,10 @@
 			</tr>
 	</#list>
 	<#if totalWorkers gt 0>
-	  <#assign averageExecutionTime = averageExecutionTime / totalExecuted>
+	  <#if totalExecuted gt 0>
+	    <#assign averageExecutionTime = averageExecutionTime / totalExecuted>
+	  </#if>
 	</#if>
-
 			<tr>
 				<td><b>${totalWorkers}</b></td>
 				<td colspan="4">&nbsp;</td>
@@ -119,7 +120,7 @@
 		options: {
 		  elements: {
 			  center: {
-			  text: '${totalExecuted}',
+			  text: '${totalExecuted} / ${totalTasks}',
 			  color: '#36A2EB', //Default black
 			  fontStyle: 'Helvetica', //Default Arial
 			  sidePadding: 15 //Default 20 (as a percentage)

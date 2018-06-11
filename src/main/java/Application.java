@@ -102,6 +102,9 @@ public class Application {
     		HazelcastInstanceUtils.putIntoQueue(HazelcastInstanceUtils.getTaskQueueName(), executionTask); 		
 		}
 
+    	// Set total execution task
+    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalTasks", taskId);
+    	
         logger.info ("Created and Published " + taskId + " execution tasks");
 		HazelcastInstanceUtils.putStopSignalIntoQueue(HazelcastInstanceUtils.getTaskQueueName());
 		
