@@ -24,4 +24,11 @@ public class Constants {
 	
 	// Stop process signal
 	public static final String HZ_STOP_PROCESSING_SIGNAL = "STOP_PROCESSING_SIGNAL";
+	
+	// Spark messages
+	public static final String SPARK_WELCOME_MESSAGE = "Welcome to Spark !";
+	public static final String SPARK_BYE_MESSAGE = "Go away!";
+	
+	// Chart.js
+	public static final String[] CHART_DATA_COLORS = {"red","orange","yellow","green","blue","purple","grey"};
 }

@@ -15,6 +15,7 @@ import datamodel.CalcResult;
 import datamodel.ExecutionTask;
 import datamodel.WorkerDetail;
 import utils.ApplicationProperties;
+import utils.Constants;
 import utils.GeneralUtils;
 import utils.HazelcastInstanceUtils;
 
@@ -51,16 +52,28 @@ public class Application {
 		
 		// Initialize Hazelcast instance
 		HazelcastInstanceUtils.getInstance();
+
+		// Set status to Starting...
+		HazelcastInstanceUtils.setStatus(Constants.HZ_STATUS_STARTING_APPLICATION);
 		
 		// Wait until user press any key
 		GeneralUtils.waitForKeyToContinue();
 		
+		// Set status to Publishing tasks...
+		HazelcastInstanceUtils.setStatus(Constants.HZ_STATUS_PUBLISHING_TASKS);
+
 		// Create Execution Tasks and put them into Hazelacast
 		createAndPublishExecutionTasks();
  
+		// Set status to Waiting for workers to finish...
+		HazelcastInstanceUtils.setStatus(Constants.HZ_STATUS_WAITING_WORKERS);
+
 		// Wait until all the workers have finished
 		checkWorkersCompletion ();
 		
+		// Set status to Process completed...
+		HazelcastInstanceUtils.setStatus(Constants.HZ_STATUS_PROCESS_COMPLETED);
+
 		applicationStopTime = System.currentTimeMillis();
 
 		// Print parameters used
