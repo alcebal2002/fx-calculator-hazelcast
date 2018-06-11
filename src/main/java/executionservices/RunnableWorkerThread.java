@@ -30,7 +30,6 @@ public class RunnableWorkerThread implements Runnable {
 	private Map<String, List<FxRate>> historicalDataMap = new HashMap<String, List<FxRate>>();
 	private Map<String, Integer> basicResultsMap = new HashMap<String, Integer>();
 	private Map<String, Integer> spreadResultsMap = new HashMap<String, Integer>();
-	private float spread = 0;
 	private Map<String, CalcResult> calcResultsMap;
 	
 	private long elapsedTimeMillis;
@@ -58,18 +57,17 @@ public class RunnableWorkerThread implements Runnable {
 		
 		try {
 			
-			// Load required properties
+			// Calculates required properties based on the application properties retrieved from the execution task
 			float increase = (1+(Float.parseFloat(applicationProperties.getProperty("application.increasePercentage")))/100);
 			float decrease = (1-(Float.parseFloat(applicationProperties.getProperty("application.decreasePercentage")))/100);
 			int maxLevels = Integer.parseInt(applicationProperties.getProperty("application.maxLevels"));
-			String startDate = applicationProperties.getProperty("application.startDate");
-			String endDate = applicationProperties.getProperty("application.endDate");
-
-			if (checkIfCurrencyExists (currentCurrency)) {
+			float spread = 0;
+			
+			if (checkIfCurrencyExists ()) {
 
 				logger.info ("Populating historical data for " + currentCurrency);
 				histDataStartTime = System.currentTimeMillis();
-				totalHistDataLoaded = populateHistoricalFxData(currentCurrency,startDate,endDate);
+				totalHistDataLoaded = populateHistoricalFxData(currentCurrency,applicationProperties);
 				histDataStopTime = System.currentTimeMillis();
 				logger.info ("Historical data populated for " + currentCurrency);
 
@@ -81,7 +79,7 @@ public class RunnableWorkerThread implements Runnable {
 				}
 				if ((applicationProperties.getProperty("application.calculations")).toLowerCase().contains("spread")) {
 					logger.info ("Retrieving spread data for " + currentCurrency);
-					spread = getSpread(currentCurrency);
+					spread = getSpread(currentCurrency,applicationProperties);
 					logger.info ("Starting spread calculations for " + currentCurrency);
 					totalCalculations += executeSpreadCalculation (currentCurrency, increase, decrease, maxLevels, spread);
 				}
@@ -108,14 +106,14 @@ public class RunnableWorkerThread implements Runnable {
 		}
 	}
 
-	public boolean checkIfCurrencyExists (final String currentCurrency) {
+	public boolean checkIfCurrencyExists () {
 
 		boolean exists = false;
 
 		if ("database".equals(applicationProperties.getProperty("application.datasource"))) {
-			exists = DatabaseUtils.checkCurrencyTableExists(currentCurrency);
+			exists = DatabaseUtils.checkCurrencyTableExists(currentCurrency,applicationProperties);
 		} else {
-			exists = GeneralUtils.checkIfFileExists(currentCurrency);
+			exists = GeneralUtils.checkIfFileExists(currentCurrency, applicationProperties);
 		}
 		return exists;
 	}
@@ -239,22 +237,22 @@ public class RunnableWorkerThread implements Runnable {
 		return totalCalculations;
     }
     
-    public float getSpread (final String currentCurrency) {
+    public float getSpread (final String currentCurrency, final Properties applicationProperties) {
     	float result = 0;
 
     	logger.debug("Data source set to: " + applicationProperties.getProperty("application.datasource"));
     	if ("database".equals(applicationProperties.getProperty("application.datasource"))) {
     		logger.debug("Retrieving spread value for " + currentCurrency + " from database");
     		// Populate spread data from mysql database
-    		result = DatabaseUtils.getSpread(currentCurrency);  		
+    		result = DatabaseUtils.getSpread(currentCurrency, applicationProperties);  		
     	} else {
 
     		logger.debug("Retrieving spread value for " + currentCurrency + " from file");
    	    	int counter = 0;
 
-			String historicalDataPath = ApplicationProperties.getStringProperty("worker.historicalDataPath");
-			String historicalDataFileExtension = ApplicationProperties.getStringProperty("worker.historicalDataFileExtension");
-			String historicalDataSeparator = ApplicationProperties.getStringProperty("worker.historicalDataSeparator");
+			String historicalDataPath = applicationProperties.getProperty("worker.historicalDataPath");
+			String historicalDataFileExtension = applicationProperties.getProperty("worker.historicalDataFileExtension");
+			String historicalDataSeparator = applicationProperties.getProperty("worker.historicalDataSeparator");
 
 			String fileName = historicalDataPath + "pares" + historicalDataFileExtension;
     		        	
@@ -285,16 +283,18 @@ public class RunnableWorkerThread implements Runnable {
 	// Populates historical data and puts the objects into historical data list)
     // Depending on the datasource parameter, data could be retrieved from database (mysql) or files
     // FX Historical Data format: conversionDate,conversionTime,open,high,low,close
-    public long populateHistoricalFxData (final String currentCurrency, final String startDate, final String endDate) {
+    public long populateHistoricalFxData (final String currentCurrency, final Properties applicationProperties) {
     	
     	long result = 0;
     	
-    	logger.debug("Data source set to: " + applicationProperties.getProperty("application.datasource"));
+    	logger.info("Data source set to: " + applicationProperties.getProperty("application.datasource"));
 
     	if ("database".equals(applicationProperties.getProperty("application.datasource"))) {
-    		// Populate historical data from mysql database
     		
-    		historicalDataMap = DatabaseUtils.getHistoricalRates(currentCurrency, startDate, endDate);
+    		// Gets properties from task item properties
+    		
+    		// Populate historical data from mysql database
+    		historicalDataMap = DatabaseUtils.getHistoricalRates(currentCurrency, applicationProperties);
     		
     		if (historicalDataMap != null && historicalDataMap.size() > 0) {
     			// There should be only 1 record in the map corresponding to the currentCurrency
@@ -305,6 +305,7 @@ public class RunnableWorkerThread implements Runnable {
    	    	int totalCounter = 0;
    	    	int lineNumber = 0;
 
+   	    	// Gets properties from application.properties file   	    	
 			String historicalDataPath = ApplicationProperties.getStringProperty("worker.historicalDataPath");
 			String historicalDataFileExtension = ApplicationProperties.getStringProperty("worker.historicalDataFileExtension");
 			String historicalDataSeparator = ApplicationProperties.getStringProperty("worker.historicalDataSeparator");
@@ -319,7 +320,7 @@ public class RunnableWorkerThread implements Runnable {
     	        String [] nextLine;
     	        while ((nextLine = reader.readNext()) != null) {
     	        	
-    	        	FxRate fxRate = new FxRate (currentCurrency,nextLine,totalCounter,startDate,endDate);
+    	        	FxRate fxRate = new FxRate (currentCurrency,nextLine,totalCounter,applicationProperties.getProperty("application.startDate"),applicationProperties.getProperty("application.endDate"));
     	        	
     	        	// Check if the fxRate has been created or excluded due to the date filtering
     	        	if (currentCurrency.equals(fxRate.getCurrencyPair())) {

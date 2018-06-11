@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -56,12 +57,12 @@ public class GeneralUtils {
 		}
 	}
 	
-	public static boolean checkIfFileExists (final String currentCurrency) {
+	public static boolean checkIfFileExists (final String currentCurrency, final Properties appliationProperties) {
 
 		boolean exists = false;
 
-		String historicalDataPath = ApplicationProperties.getStringProperty("worker.historicalDataPath");
-		String historicalDataFileExtension = ApplicationProperties.getStringProperty("worker.historicalDataFileExtension");
+		String historicalDataPath = appliationProperties.getProperty("worker.historicalDataPath");
+		String historicalDataFileExtension = appliationProperties.getProperty("worker.historicalDataFileExtension");
 
 		String file = historicalDataPath + currentCurrency + historicalDataFileExtension;
 

@@ -3,6 +3,7 @@ package utils;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,15 +36,15 @@ public class DatabaseConnection {
         return connection;
     }
 
-    public static DatabaseConnection getInstance() throws SQLException {
+    public static DatabaseConnection getInstance(final Properties applicationProperties) throws SQLException {
     	
         if ((instance == null) || (instance.getConnection().isClosed())) {
         	
-    		databaseHost = ApplicationProperties.getStringProperty("database.host");
-    		databasePort = ApplicationProperties.getStringProperty("database.port");
-    		databaseName = ApplicationProperties.getStringProperty("database.db_name");
-    		databaseUser = ApplicationProperties.getStringProperty("database.username");
-    		databasePass = ApplicationProperties.getStringProperty("database.password");
+    		databaseHost = applicationProperties.getProperty("database.host");
+    		databasePort = applicationProperties.getProperty("database.port");
+    		databaseName = applicationProperties.getProperty("database.db_name");
+    		databaseUser = applicationProperties.getProperty("database.username");
+    		databasePass = applicationProperties.getProperty("database.password");
     		
     		databaseUrl = databaseUrl.replaceAll("<host>", databaseHost).replaceAll("<port>", databasePort).replaceAll("<name>", databaseName);
 

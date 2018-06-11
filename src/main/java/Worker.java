@@ -32,16 +32,6 @@ public class Worker {
 	// Hazelcast client
 	private static HazelcastInstance hzClient;
 	
-	// Worker parameters 
-	private static int poolCoreSize;
-	private static int poolMaxSize; 
-	private static int queueCapacity; 
-	private static int timeoutSecs; 
-	private static int retrySleepTime; 
-	private static int retryMaxAttempts; 
-	private static int initialSleep; 
-	private static int monitorSleep;
-	
 	private static String nodeId;
 	private static String localEndPointAddress;
 	private static String localEndPointPort;
@@ -54,11 +44,11 @@ public class Worker {
 		
 		logger.info("WorkerPool started");
 		
-		// Load worker properties
-		loadWorkerProperties();
+		// Load properties from file
+		ApplicationProperties.loadApplicationProperties ();
 		
-		logger.info ("Waiting " + initialSleep + " secs to start..."); 
-		Thread.sleep(initialSleep*1000); 
+		logger.info ("Waiting " + ApplicationProperties.getIntProperty("workerpool.initialSleep") + " secs to start..."); 
+		Thread.sleep(ApplicationProperties.getIntProperty("workerpool.initialSleep")*1000); 
 
 		printParameters ("Started");
 
@@ -78,7 +68,10 @@ public class Worker {
 			SystemLinkedBlockingQueue<Runnable> blockingQueue = new SystemLinkedBlockingQueue<Runnable>();		
 			
 			// Creating the ThreadPoolExecutor 
-			SystemThreadPoolExecutor executorPool = new SystemThreadPoolExecutor(poolCoreSize, poolMaxSize, timeoutSecs, TimeUnit.SECONDS, blockingQueue, threadFactory, rejectionHandler); 
+			SystemThreadPoolExecutor executorPool = new SystemThreadPoolExecutor(ApplicationProperties.getIntProperty("workerpool.coreSize"), 
+																				 ApplicationProperties.getIntProperty("workerpool.maxSize"), 
+																				 ApplicationProperties.getIntProperty("workerpool.timeoutSecs"),
+																				 TimeUnit.SECONDS, blockingQueue, threadFactory, rejectionHandler); 
 			
 			// Create cluster node object
 			long startTime = System.currentTimeMillis();
@@ -92,18 +85,18 @@ public class Worker {
 					nodeId,
 					GeneralUtils.getHostName(),
 					localEndPointPort,
-					poolCoreSize,
-					poolMaxSize,
-					queueCapacity,
-					timeoutSecs,
-					retrySleepTime,
-					retryMaxAttempts,
-					initialSleep,
-					monitorSleep,
+					ApplicationProperties.getIntProperty("workerpool.coreSize"),
+					ApplicationProperties.getIntProperty("workerpool.maxSize"),
+					ApplicationProperties.getIntProperty("workerpool.queueCapacity"),
+					ApplicationProperties.getIntProperty("workerpool.timeoutSecs"),
+					ApplicationProperties.getIntProperty("workerpool.retrySleepTime"),
+					ApplicationProperties.getIntProperty("workerpool.retryMaxAttempts"),
+					ApplicationProperties.getIntProperty("workerpool.initialSleep"),
+					ApplicationProperties.getIntProperty("workerpool.monitorSleep"),
 					startTime);
 
 			// Start the monitoring thread 
-			SystemMonitorThread monitor = new SystemMonitorThread(executorPool, monitorSleep, nodeId); 
+			SystemMonitorThread monitor = new SystemMonitorThread(executorPool, ApplicationProperties.getIntProperty("workerpool.monitorSleep"), nodeId); 
 			Thread monitorThread = new Thread(monitor); 
 			monitorThread.start(); 
 
@@ -118,9 +111,9 @@ public class Worker {
 				 */
 				if ((executorPool.getActiveCount() < executorPool.getMaximumPoolSize()) ||
 //					(blockingQueue.remainingCapacity() > 0)) { // For ArrayBlockingQueue
-					(blockingQueue.size() < queueCapacity)) { // For LinkedBlockingQueue 
+					(blockingQueue.size() < ApplicationProperties.getIntProperty("workerpool.queueCapacity"))) { // For LinkedBlockingQueue 
 					ExecutionTask executionTaskItem = hazelcastTaskQueue.take();
-					logger.info ("Consumed Execution Task from Hazelcast Task Queue");
+					logger.info ("Consumed Execution Task " + executionTaskItem.getTaskId() + " from Hazelcast Task Queue");
 					if ( (HazelcastInstanceUtils.getStopProcessingSignal()).equals(executionTaskItem.getTaskType()) ) {
 						logger.info ("Detected " + HazelcastInstanceUtils.getStopProcessingSignal());
 						hzClient.getQueue(HazelcastInstanceUtils.getTaskQueueName()).put(new ExecutionTask(HazelcastInstanceUtils.getStopProcessingSignal()));
@@ -140,7 +133,7 @@ public class Worker {
 			// Shut down the monitor thread 
 			while (!executorPool.isTerminated()) { 
 				logger.debug ("Waiting for all the Executor to terminate"); 
-				Thread.sleep(monitorSleep*1000); 
+				Thread.sleep(ApplicationProperties.getIntProperty("workerpool.monitorSleep")*1000); 
 			} 
 
 			logger.info ("Executor terminated"); 
@@ -192,34 +185,20 @@ public class Worker {
 		System.exit(0);
 	}
 	
-	private static void loadWorkerProperties () {
-		// Load properties from file
-		ApplicationProperties.loadApplicationProperties ();
-		
-		poolCoreSize = ApplicationProperties.getIntProperty("workerpool.coreSize");
-		poolMaxSize = ApplicationProperties.getIntProperty("workerpool.maxSize");
-		queueCapacity = ApplicationProperties.getIntProperty("workerpool.queueCapacity");
-		timeoutSecs = ApplicationProperties.getIntProperty("workerpool.timeoutSecs");
-		retrySleepTime = ApplicationProperties.getIntProperty("workerpool.retrySleepTime");
-		retryMaxAttempts = ApplicationProperties.getIntProperty("workerpool.retryMaxAttempts");
-		initialSleep = ApplicationProperties.getIntProperty("workerpool.initialSleep");
-		monitorSleep = ApplicationProperties.getIntProperty("workerpool.monitorSleep");
-	}
-	
 	// Creates Hazelcast client instance
 	// Retries <retryMaxAttempts> times after <retrySleepTime> delay
 	private static boolean createHazelcastClientInstance () throws Exception{
 		
 		boolean result = false;
 		
-		for (int i=0; (i<retryMaxAttempts) && (!result); i++) {
+		for (int i=0; (i<ApplicationProperties.getIntProperty("workerpool.retryMaxAttempts")) && (!result); i++) {
 			try {
 				hzClient = HazelcastClient.newHazelcastClient();
 				result = true;
 			} catch (Exception e) {
-				logger.error("Exception. Unable to create Hazelcast client instance. Attempt [" + i + "/" + retryMaxAttempts + "]. Checking again after " + retrySleepTime + " secs");
+				logger.error("Exception. Unable to create Hazelcast client instance. Attempt [" + i + "/" + ApplicationProperties.getIntProperty("workerpool.retryMaxAttempts") + "]. Checking again after " + ApplicationProperties.getIntProperty("workerpool.retrySleepTime") + " secs");
 				logger.error("Exception details: " + e.getClass() + " - " + e.getMessage());
-				Thread.sleep(retrySleepTime*1000);
+				Thread.sleep(ApplicationProperties.getIntProperty("workerpool.retrySleepTime")*1000);
 			}
 		}
 		return result;
@@ -231,15 +210,15 @@ public class Worker {
 		logger.info ("**************************************************"); 
 		logger.info (title + " WorkerPool with the following parameters:"); 
 		logger.info ("**************************************************"); 
-		logger.info ("  - pool core size       : " + poolCoreSize); 
-		logger.info ("  - pool max size        : " + poolMaxSize); 
-		logger.info ("  - queue capacity       : " + queueCapacity); 
-		logger.info ("  - timeout (secs)       : " + timeoutSecs); 
+		logger.info ("  - pool core size       : " + ApplicationProperties.getIntProperty("workerpool.coreSize")); 
+		logger.info ("  - pool max size        : " + ApplicationProperties.getIntProperty("workerpool.maxSize")); 
+		logger.info ("  - queue capacity       : " + ApplicationProperties.getIntProperty("workerpool.queueCapacity")); 
+		logger.info ("  - timeout (secs)       : " + ApplicationProperties.getIntProperty("workerpool.timeoutSecs")); 
 		logger.info ("  - number of tasks      : " + totalExecutions); 
-		logger.info ("  - retry sleep (secs)   : " + retrySleepTime); 
-		logger.info ("  - retry max attempts   : " + retryMaxAttempts);
-		logger.info ("  - initial sleep (secs) : " + initialSleep); 
-		logger.info ("  - monitor sleep (secs) : " + monitorSleep); 
+		logger.info ("  - retry sleep (secs)   : " + ApplicationProperties.getIntProperty("workerpool.retrySleepTime")); 
+		logger.info ("  - retry max attempts   : " + ApplicationProperties.getIntProperty("workerpool.retryMaxAttempts"));
+		logger.info ("  - initial sleep (secs) : " + ApplicationProperties.getIntProperty("workerpool.initialSleep")); 
+		logger.info ("  - monitor sleep (secs) : " + ApplicationProperties.getIntProperty("workerpool.monitorSleep")); 
 		logger.info ("**************************************************");
 	}
 } 

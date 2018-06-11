@@ -29,10 +29,6 @@ public class HazelcastInstanceUtils {
 		return Constants.HZ_TASK_QUEUE_NAME;
 	}
 
-	public static String getResultsQueueName () throws Exception {
-		return Constants.HZ_RESULTS_QUEUE_NAME;
-	}
-
 	public static String getMonitorMapName () throws Exception {
 		return Constants.HZ_MONITOR_MAP_NAME;
 	}
@@ -62,10 +58,6 @@ public class HazelcastInstanceUtils {
 		return getInstance().getQueue(getTaskQueueName());
 	}
 	
-	public static IQueue<Object> getResultsQueue () throws Exception {
-		return getInstance().getQueue(getResultsQueueName());
-	}
-
 	public static IList<Object> getList (final String listName) {
 		return getInstance().getList(listName);
 	}

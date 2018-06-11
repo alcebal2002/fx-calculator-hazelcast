@@ -8,7 +8,6 @@ public class Constants {
 	// Queue instance names
 	
 	public static final String HZ_TASK_QUEUE_NAME = "taskQueue";
-	public static final String HZ_RESULTS_QUEUE_NAME = "resultsQueue";
 
 	// List instance names
 	
@@ -17,10 +16,9 @@ public class Constants {
 	public static final String HZ_STATUS_MAP_NAME = "statusMap";
 	public static final String HZ_STATUS_ENTRY_KEY = "status";
 	
-	public static final String HZ_STATUS_LOADING_HISTORICAL_DATA = "Loading Historical Data";
+	public static final String HZ_STATUS_STARTING_APPLICATION = "Starting Application";
 	public static final String HZ_STATUS_PUBLISHING_TASKS = "Publishing Tasks";
-	public static final String HZ_STATUS_WAITING_TO_START_MONITORING = "Waiting to start Monitoring";
-	public static final String HZ_STATUS_PROCESSING_TASKS = "Processing Tasks";
+	public static final String HZ_STATUS_WAITING_WORKERS = "Waiting for Workers to finish processing";
 	public static final String HZ_STATUS_SHUTTING_DOWN = "Shutting down";
 	public static final String HZ_STATUS_PROCESS_COMPLETED = "Process Completed";
 	

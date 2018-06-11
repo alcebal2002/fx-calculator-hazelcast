@@ -255,8 +255,8 @@ public class Application {
 	// Print execution parameters
 	private static String printExecutionParams() {
 		
-		List<String> currencyPairs = (List<String>)ApplicationProperties.getListProperty("application.currencyPairs");
-		List<String> calculations = (List<String>)ApplicationProperties.getListProperty("application.calculations");
+		List<String> currencyPairs = ApplicationProperties.getListProperty("application.currencyPairs");
+		List<String> calculations = ApplicationProperties.getListProperty("application.calculations");
 		String startDate = ApplicationProperties.getStringProperty("application.startDate");
 		String endDate = ApplicationProperties.getStringProperty("application.endDate");
 		int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");

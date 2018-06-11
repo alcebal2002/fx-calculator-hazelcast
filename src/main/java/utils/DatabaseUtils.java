@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,7 @@ public class DatabaseUtils {
 	private static Logger logger = LoggerFactory.getLogger(DatabaseUtils.class);
 	
 
-	public static Map<String,List<FxRate>> getHistoricalRates (final String currentCurrency, final String startDate, final String endDate) {
+	public static Map<String,List<FxRate>> getHistoricalRates (final String currentCurrency, final Properties applicationProperties) {
  
 		Statement stmt = null;
 		String sql = null;
@@ -29,8 +30,8 @@ public class DatabaseUtils {
 		
 		try {
 			logger.info ("Retrieving historical rates from database for " + currentCurrency);
-			stmt = DatabaseConnection.getInstance().getConnection().createStatement();
-			sql = "SELECT * FROM historico_" + currentCurrency + " WHERE fecha >= STR_TO_DATE('" + startDate + "','%Y-%m-%d') AND fecha <= STR_TO_DATE('" + endDate + "','%Y-%m-%d') ORDER BY fecha ASC, hora ASC";
+			stmt = DatabaseConnection.getInstance(applicationProperties).getConnection().createStatement();
+			sql = "SELECT * FROM historico_" + currentCurrency + " WHERE fecha >= STR_TO_DATE('" + applicationProperties.getProperty("application.startDate") + "','%Y-%m-%d') AND fecha <= STR_TO_DATE('" + applicationProperties.getProperty("application.startDate") + "','%Y-%m-%d') ORDER BY fecha ASC, hora ASC";
 			logger.info("Executing query: " + sql);
 			rs = stmt.executeQuery(sql);
 
@@ -76,7 +77,7 @@ public class DatabaseUtils {
 		return resultMap;
 	}
 
-	public static float getSpread (final String currentCurrency) {
+	public static float getSpread (final String currentCurrency, final Properties applicationProperties) {
 		 
 		Statement stmt = null;
 		String sql = null;
@@ -86,7 +87,7 @@ public class DatabaseUtils {
 		
 		try {
 			logger.info ("Retrieving spreads from database");
-			stmt = DatabaseConnection.getInstance().getConnection().createStatement();
+			stmt = DatabaseConnection.getInstance(applicationProperties).getConnection().createStatement();
 			sql = "SELECT id_par, divisas, spread FROM pares WHERE divisas = '" +  currentCurrency + "' AND spread <> '0.000000' ORDER BY id_par";
 			logger.info("Executing query: " + sql);
 			rs = stmt.executeQuery(sql);
@@ -120,7 +121,7 @@ public class DatabaseUtils {
 		return result;
 	}	
 	
-	public static boolean checkCurrencyTableExists (final String currentCurrency) {
+	public static boolean checkCurrencyTableExists (final String currentCurrency, final Properties applicationProperties) {
 		 
 		Statement stmt = null;
 		String sql = null;
@@ -131,7 +132,7 @@ public class DatabaseUtils {
 		try {
 			logger.info ("Checking if currency table exists for " + currentCurrency);
 			
-			stmt = DatabaseConnection.getInstance().getConnection().createStatement();
+			stmt = DatabaseConnection.getInstance(applicationProperties).getConnection().createStatement();
 			
 			sql = "SELECT UPPER(SUBSTRING(table_name, 11)) as 'currency' FROM information_schema.TABLES WHERE table_name like 'historico_" + currentCurrency + "' AND data_length > 0";
 			logger.info("Executing query: " + sql);
