@@ -20,7 +20,6 @@ public class WorkerDetail implements Serializable {
 	private int retryMaxAttempts; 
 	private int initialSleep; 
 	private int monitorSleep;
-	private int refreshAfter;
 
 	private long startTime = 0L; 
 	private long stopTime = 0L;
@@ -82,7 +81,6 @@ public class WorkerDetail implements Serializable {
 	public final int getRetryMaxAttempts() { return retryMaxAttempts; }
 	public final int getInitialSleep() { return initialSleep; }
 	public final int getMonitorSleep() { return monitorSleep; }
-	public final int getRefreshAfter() { return refreshAfter; }
 	public final long getStartTime() { return startTime; }
 	public final String getStartTimeString() { return ((this.getStartTime()>0L)?(new Timestamp(this.getStartTime()).toString()):" - ");	}
 	public final void setStartTime(long startTime) { this.startTime = startTime; }
