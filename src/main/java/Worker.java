@@ -104,7 +104,11 @@ public class Worker {
 			
 			// Listen to Hazelcast tasks queue and submit work to the thread pool for each task 
 			IQueue<ExecutionTask> hazelcastTaskQueue = hzClient.getQueue( HazelcastInstanceUtils.getTaskQueueName() );
-					
+			
+			// Create cluster node object
+			long refreshTime = System.currentTimeMillis();
+			logger.info ("Refreshing Hazelcast WorkerDetail status after " + ApplicationProperties.getIntProperty("workerpool.refreshAfter") + " secs");
+						
 			while ( true ) {
 				/*
 				 * Option to avoid getting additional tasks from Hazelcast distributed queue if there is no processing capacity available in the ThreadPool 
@@ -121,6 +125,13 @@ public class Worker {
 					}				
 					executorPool.execute(new RunnableWorkerThread(executionTaskItem, calcResultsMap));
 					totalExecutions++; 
+				}
+				
+				if ((System.currentTimeMillis()) - refreshTime > (ApplicationProperties.getIntProperty("workerpool.refreshAfter")*1000)) {
+					refreshTime = System.currentTimeMillis();
+					workerDetail.setRefreshTime(refreshTime);
+					hzClient.getMap(HazelcastInstanceUtils.getMonitorMapName()).put(workerDetail.getUuid(),workerDetail);
+					logger.debug ("Updated Hazelcast WorkerDetail refreshTime");
 				}
 			}
 			logger.info ("Hazelcast consumer Finished");

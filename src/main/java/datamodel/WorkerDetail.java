@@ -10,6 +10,7 @@ public class WorkerDetail implements Serializable {
 	private String inetAddres;
 	private String inetPort;
 	private boolean activeStatus = true;
+	private long refreshTime = System.currentTimeMillis();
 	
 	// Start up parameters
 	private int poolCoreSize;
@@ -55,6 +56,7 @@ public class WorkerDetail implements Serializable {
 		this.uuid = uuid;
 		this.inetAddres = inetAddres;
 		this.inetPort = inetPort;
+		
 		this.poolCoreSize = poolCoreSize;
 		this.poolMaxSize = poolMaxSize;
 		this.queueCapacity = queueCapacity;
@@ -73,6 +75,8 @@ public class WorkerDetail implements Serializable {
 	public final String getActiveStatusString() { return activeStatus?"Active":"Inactive"; }
 	public final String getInetAddres() { return inetAddres; }
 	public final String getInetPort() {	return inetPort; }
+	public final long getRefreshTime() {	return refreshTime; }
+	public final void setRefreshTime (long refreshTime) { this.refreshTime = refreshTime; }
 	public final int getPoolCoreSize() { return poolCoreSize; }
 	public final int getPoolMaxSize() {	return poolMaxSize;	}
 	public final int getQueueCapacity() { return queueCapacity;	}
