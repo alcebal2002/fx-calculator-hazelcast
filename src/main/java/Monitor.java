@@ -20,10 +20,10 @@ import utils.ApplicationProperties;
 import utils.Constants;
 import utils.HazelcastInstanceUtils;
 
-public class SparkMain {
+public class Monitor {
 
 	// Logger
-	private static Logger logger = LoggerFactory.getLogger(SparkMain.class);
+	private static Logger logger = LoggerFactory.getLogger(Monitor.class);
 
 	@SuppressWarnings("deprecation")
 	private static Configuration freemarkerConfig = new Configuration();
@@ -35,7 +35,7 @@ public class SparkMain {
 		// Load properties from file
 		ApplicationProperties.loadApplicationProperties ();
 		
-		freemarkerConfig.setClassForTemplateLoading(SparkMain.class, ApplicationProperties.getStringProperty("spark.templatePath"));
+		freemarkerConfig.setClassForTemplateLoading(Monitor.class, ApplicationProperties.getStringProperty("spark.templatePath"));
 
 		Spark.staticFileLocation(ApplicationProperties.getStringProperty("spark.publicPath"));
 		HazelcastInstance hzClient = HazelcastClient.newHazelcastClient();
