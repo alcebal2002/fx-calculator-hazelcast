@@ -34,6 +34,9 @@ public class Application {
 	private static long totalBasicResults = 0;
 	private static long totalSpreadResults = 0;
 	private static long avgExecutionTime = 0;
+	
+	private static Path resultFilePath = null;		
+
 		
     public static void main (String args[]) throws Exception {
 
@@ -79,8 +82,14 @@ public class Application {
 		// Print parameters used
 		printParameters ("Finished");
 		
-		// Print results
-        printResults ();
+		// Print results in the log
+        printResultsToLog ();
+        
+		// Print results in the output file
+        printResultsToFile ();	
+        
+        // Put results into Hazelcast - statusMap
+        updateHazelcastResults();
         
 		logger.info("Application finished");
 		// Exit application
@@ -167,14 +176,10 @@ public class Application {
 		logger.info ("");
 	}
     
-	// Print execution times
-	private static void printResults () throws Exception {
+	// Print results to log
+	private static void printResultsToLog () throws Exception {
 
-		Path path = null;		
-		List<String> currencyPairs = ApplicationProperties.getListProperty("application.currencyPairs");
 		int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
-		boolean writeResultsToFile = ApplicationProperties.getBooleanProperty("application.writeResultsToFile");
-		String resultsPath = ApplicationProperties.getStringProperty("application.resultsPath");
 
 		Map <String,CalcResult> calcResultsMap = null;
 		
@@ -194,80 +199,101 @@ public class Application {
             avgExecutionTime += ((WorkerDetail) entry.getValue()).getAvgExecutionTime();
             avgExecutionTime = avgExecutionTime / numWorkers;
             
-    		logger.info ("");
-    		logger.info ("Total figures:");
-    		logger.info ("**************************************************");
-    		logger.info ("  - Total executions         : " + String.format("%,d", totalExecutions));
-    		logger.info ("  - Avg. execution time      : " + GeneralUtils.printElapsedTime (avgExecutionTime));
-    		logger.info ("  - Total historical data    : " + String.format("%,d", totalHistDataLoaded));
-    		logger.info ("  - Total calculations       : " + String.format("%,d", totalCalculations)); 
-    		logger.info ("  - Total basic results      : " + String.format("%,d", totalBasicResults));
-    		logger.info ("  - Total spread results     : " + String.format("%,d", totalSpreadResults));
-    		logger.info ("  - Elapsed time             : " + GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime));
-    		logger.info ("**************************************************");
-    		logger.info ("");
-    		logger.info ("Results:");
-    		logger.info ("**************************************************");
-
     		if (calcResultsMap != null && calcResultsMap.size() > 0) {
 
-    			logger.info("Basic calculation results");
+    			logger.info(((WorkerDetail) entry.getValue()).getInetAddres() + ":" + ((WorkerDetail) entry.getValue()).getInetPort() + " - Executed: " + ((WorkerDetail) entry.getValue()).getTotalExecutions()  + " - Calculations: " + ((WorkerDetail) entry.getValue()).getTotalCalculations());
 
     			logger.info (printBasicResultsHeader(maxLevels));
-    			
-    			if (writeResultsToFile) {
-    				path = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+".csv"));
-    				GeneralUtils.writeTextToFile(path, printExecutionParams());
-    				GeneralUtils.writeTextToFile(path, "Basic calculation results");
-    				GeneralUtils.writeTextToFile(path, printBasicResultsHeader(maxLevels));
-    			}
 
-    			// Print basic calculation results
-    			for (String currency : currencyPairs) {
-    				
-    				if (calcResultsMap.containsKey(currency)) {
-    					logger.info (printBasicResultsLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getBasicResults(), maxLevels));
-       				    					
-    					if (writeResultsToFile) {
-    						GeneralUtils.writeTextToFile(path, printBasicResultsLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getBasicResults(), maxLevels));
-     					}
-    				} else {
-    					logger.info (printBasicResultsLevels (currency, null, maxLevels));
-    					if (writeResultsToFile) {
-    						GeneralUtils.writeTextToFile(path, printBasicResultsLevels (currency, null, maxLevels));
-    					}
+    			Iterator<Entry<String, CalcResult>> calcResultIter = calcResultsMap.entrySet().iterator();
+    			Entry<String, CalcResult> calcResultEntry;
+    			
+    			while (calcResultIter.hasNext()) {
+    				calcResultEntry = calcResultIter.next();
+					if (calcResultEntry.getValue().getBasicResults() != null) {
+						logger.info (printBasicResultsLevels (calcResultEntry.getValue().getCurrencyPair(), calcResultEntry.getValue().getBasicResults(), maxLevels));
+					}
+					if (calcResultEntry.getValue().getSpreadResults() != null) {
+						logger.info (calcResultEntry.getValue().getSpreadResults().toString());						
+					}
+    			}
+    			    			
+    			logger.info ("**************************************************");
+    			logger.info("");
+    		}            
+        }
+		logger.info ("");
+		logger.info ("Total figures:");
+		logger.info ("**************************************************");
+		logger.info ("  - Total executions         : " + String.format("%,d", totalExecutions));
+		logger.info ("  - Avg. execution time      : " + GeneralUtils.printElapsedTime (avgExecutionTime));
+		logger.info ("  - Total historical data    : " + String.format("%,d", totalHistDataLoaded));
+		logger.info ("  - Total calculations       : " + String.format("%,d", totalCalculations)); 
+		logger.info ("  - Total basic results      : " + String.format("%,d", totalBasicResults));
+		logger.info ("  - Total spread results     : " + String.format("%,d", totalSpreadResults));
+		logger.info ("  - Elapsed time             : " + GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime));
+		logger.info ("**************************************************");
+		logger.info ("");
+	}
+
+	// Print results to file
+	private static void printResultsToFile () throws Exception {
+
+        if (ApplicationProperties.getBooleanProperty("application.writeResultsToFile")) {
+	
+			List<String> currencyPairs = ApplicationProperties.getListProperty("application.currencyPairs");
+			int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
+			String resultsPath = ApplicationProperties.getStringProperty("application.resultsPath");
+	
+			Map <String,CalcResult> calcResultsMap = null;
+			
+			Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getMonitorMapName()).entrySet().iterator();
+	
+			int numWorkers = 0;
+			
+			while (iter.hasNext()) {
+				numWorkers++;
+	            Entry<String, Object> entry = iter.next();
+	            calcResultsMap = ((WorkerDetail) entry.getValue()).getCalculationResults();
+	            
+	    		if (calcResultsMap != null && calcResultsMap.size() > 0) {
+	
+    				if (numWorkers == 1) {
+    					resultFilePath = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+".csv"));
+    					GeneralUtils.writeTextToFile(resultFilePath, printExecutionParams());
     				}
-    			}
+    				GeneralUtils.writeTextToFile(resultFilePath, ((WorkerDetail) entry.getValue()).getInetAddres() + ":" + ((WorkerDetail) entry.getValue()).getInetPort() + " - Basic calculation results");
+    				GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsHeader(maxLevels));
+	
+	    			// Print basic calculation results
+	    			for (String currency : currencyPairs) {
+	    				
+	    				if (calcResultsMap.containsKey(currency)) {
+	    					GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getBasicResults(), maxLevels));
+	    				} else {
+    						GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsLevels (currency, null, maxLevels));
+	    				}
+	    			}
 
-    			logger.info("Spread calculation results");
-    			
-				if (writeResultsToFile) {
-					GeneralUtils.writeTextToFile(path, "\nSpread calculation results");
-				}
-    			// Print spread calculation results
-    			for (String currency : currencyPairs) {
-    				
-    				if (calcResultsMap.containsKey(currency)) {
-       					logger.info (((CalcResult)calcResultsMap.get(currency)).getSpreadResults().toString());
-       				    					
-    					if (writeResultsToFile) {
+	    			GeneralUtils.writeTextToFile(resultFilePath, ((WorkerDetail) entry.getValue()).getInetAddres() + ":" + ((WorkerDetail) entry.getValue()).getInetPort() + " - \nSpread calculation results");
+
+	    			// Print spread calculation results
+	    			for (String currency : currencyPairs) {
+	    				
+	    				if (calcResultsMap.containsKey(currency)) {
     						Iterator<Entry<String, Integer>> calcResults = ((CalcResult)calcResultsMap.get(currency)).getSpreadResults().entrySet().iterator();   						
     						while (calcResults.hasNext()) {
     							Entry<String, Integer> calcEntry = calcResults.next();
-       							GeneralUtils.writeTextToFile(path, currency + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
+       							GeneralUtils.writeTextToFile(resultFilePath, currency + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
     						}
-     					}
-    				}
-    			}
-    			logger.info ("**************************************************");
-    			logger.info("");
-    			if (writeResultsToFile) {
-    				logger.info("Results written into file: " + path.toString());
-    			}
-    		}            
+	    				}
+	    			}
+	    		}            
+	        }
+			logger.info("Results written into file: " + resultFilePath.toString());
         }
 	}
-
+	
 	// Print execution parameters
 	private static String printExecutionParams() {
 		
@@ -347,5 +373,16 @@ public class Application {
 		}
 		
 		return (currency + "|" + stringBuilder.toString());
+	}
+	
+	private static void updateHazelcastResults () throws Exception {
+    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalExecutions", String.format("%,d", totalExecutions));
+    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "avgExecutionTime", GeneralUtils.printElapsedTime (avgExecutionTime));
+    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalHistDataLoaded", String.format("%,d", totalHistDataLoaded));
+    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalCalculations", String.format("%,d", totalCalculations));
+    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalBasicResults", String.format("%,d", totalBasicResults));
+    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalSpreadResults", String.format("%,d", totalSpreadResults));
+    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "elapsedTime", GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime));
+    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "resultFilePath", resultFilePath.toString());
 	}
 }
