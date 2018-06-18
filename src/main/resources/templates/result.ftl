@@ -30,8 +30,7 @@
     </head>
     <body>
 	<#assign currentStatus = statusMap["status"]>
-	<#assign totalTasks = statusMap["totalTasks"]>
-	
+	<#assign totalTasks = statusMap["totalTasks"]>	
 <div class="row">
 	<div class="column" id="canvas-holder" style="width:40%">
 		<canvas id="chart-area"></canvas>
@@ -87,6 +86,55 @@
 			<tr><td colspan="8">&nbsp;</td></tr>
 		</tbody>
 	  </table>
+	  
+	  <#if !refreshPage>
+		<#assign totalExecutions = statusMap["totalExecutions"]>
+		<#assign avgExecutionTime = statusMap["avgExecutionTime"]>
+		<#assign totalHistDataLoaded = statusMap["totalHistDataLoaded"]>
+		<#assign totalCalculations = statusMap["totalCalculations"]>
+		<#assign totalBasicResults = statusMap["totalBasicResults"]>
+		<#assign totalSpreadResults = statusMap["totalSpreadResults"]>
+		<#assign elapsedTime = statusMap["elapsedTime"]>
+		<#assign resultFilePath = statusMap["resultFilePath"]>
+	  	<table>
+	  		<tr>
+	  			<td>totalTasks</td>
+	  			<td>${totalTasks}</td>
+	  		</tr>
+	  		<tr>
+	  			<td>totalExecutions</td>
+	  			<td>${totalExecutions}</td>
+	  		</tr>
+	  		<tr>
+	  			<td>avgExecutionTime</td>
+	  			<td>${avgExecutionTime}</td>
+	  		</tr>
+	  		<tr>
+	  			<td>totalHistDataLoaded</td>
+	  			<td>${totalHistDataLoaded}</td>
+	  		</tr>
+	  		<tr>
+	  			<td>totalCalculations</td>
+	  			<td>${totalCalculations}</td>
+	  		</tr>
+	  		<tr>
+	  			<td>totalBasicResults</td>
+	  			<td>${totalBasicResults}</td>
+	  		</tr>
+	  		<tr>
+	  			<td>totalSpreadResults</td>
+	  			<td>${totalSpreadResults}</td>
+	  		</tr>
+	  		<tr>
+	  			<td>elapsedTime</td>
+	  			<td>${elapsedTime}</td>
+	  		</tr>
+	  		<tr>
+	  			<td>resultFilePath</td>
+	  			<td>${resultFilePath}</td>
+	  		</tr>
+	  	</table>
+	  </#if>	  
   </div>
 </div>
 
