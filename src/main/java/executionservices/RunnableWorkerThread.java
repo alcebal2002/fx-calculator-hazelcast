@@ -30,6 +30,7 @@ public class RunnableWorkerThread implements Runnable {
 	private Map<String, List<FxRate>> historicalDataMap = new HashMap<String, List<FxRate>>();
 	private Map<String, Integer> basicResultsMap = new HashMap<String, Integer>();
 	private Map<String, Integer> spreadResultsMap = new HashMap<String, Integer>();
+	private Map<String, Integer> c1212ResultsMap = new HashMap<String, Integer>();
 	private Map<String, CalcResult> calcResultsMap;
 	
 	private long elapsedTimeMillis;
@@ -37,7 +38,7 @@ public class RunnableWorkerThread implements Runnable {
 	private long totalCalculations = 0;
 	private long totalBasicResults = 0;
 	private long totalSpreadResults = 0;
-
+	private long total1212Results = 0;
 
 	public RunnableWorkerThread (final ExecutionTask executionTask, Map<String, CalcResult> calcResultsMap){
 		this.applicationProperties = executionTask.getTaskParameters();
@@ -61,6 +62,7 @@ public class RunnableWorkerThread implements Runnable {
 			float increase = (1+(Float.parseFloat(applicationProperties.getProperty("application.increasePercentage")))/100);
 			float decrease = (1-(Float.parseFloat(applicationProperties.getProperty("application.decreasePercentage")))/100);
 			int maxLevels = Integer.parseInt(applicationProperties.getProperty("application.maxLevels"));
+			int maxFirstIterations = Integer.parseInt(applicationProperties.getProperty("application.maxFirstIterations"));
 			float spread = 0;
 			
 			if (checkIfCurrencyExists ()) {
@@ -83,17 +85,27 @@ public class RunnableWorkerThread implements Runnable {
 					logger.info ("Starting spread calculations for " + currentCurrency);
 					totalCalculations += executeSpreadCalculation (currentCurrency, increase, decrease, maxLevels, spread);
 				}
+				if ((applicationProperties.getProperty("application.calculations")).toLowerCase().contains("1212")) {
+					logger.info ("Retrieving spread data for " + currentCurrency);
+					spread = getSpread(currentCurrency,applicationProperties);
+					logger.info ("Starting 1212 calculations for " + currentCurrency);
+					totalCalculations += execute1212Calculation (currentCurrency, increase, decrease, maxLevels, spread, maxFirstIterations);
+				}
 				
 				calculationStopTime = System.currentTimeMillis();
 
 				totalBasicResults = basicResultsMap.size();
 				totalSpreadResults = spreadResultsMap.size();
+				total1212Results = c1212ResultsMap.size();
 
 				logger.debug ("Populating Calculation Result Map for " + currentCurrency);
 				// Populates the Calculation Result Map
 				calcResultsMap.put(currentCurrency, new CalcResult(currentCurrency, increase, decrease, maxLevels, spread, histDataStartTime, histDataStopTime, totalHistDataLoaded, calculationStartTime, calculationStopTime, totalCalculations, basicResultsMap, spreadResultsMap));
 
 				logger.info ("Finished calculations for " + currentCurrency + " [" + totalCalculations + "] in " + (calculationStopTime - calculationStartTime) + " ms");
+	
+				logger.info ("1212 Results: " + c1212ResultsMap.toString());
+			
 			} else {
 				logger.error("No available data for " + currentCurrency);
 			}
@@ -175,7 +187,7 @@ public class RunnableWorkerThread implements Runnable {
     }
     
 	// Executes calculations (levels)
-    public long executeBasicCalculation (final String currentCurrency, float increase, float decrease, int maxLevels) {
+    public long executeBasicCalculation (final String currentCurrency, final float increase, final float decrease, final int maxLevels) {
     	
     	long totalCalculations = 0;
     	
@@ -236,7 +248,108 @@ public class RunnableWorkerThread implements Runnable {
 		}
 		return totalCalculations;
     }
+
+	// Executes calculations (levels)
+    public long execute1212Calculation (final String currentCurrency, final float firstPercentage, final float secondPercentage, final int maxLevels, final float spread, final int maxFirstIterations) {
+    	
+    	long totalCalculations = 0;
+    	float firstIncrease = (1+(firstPercentage)/100);
+    	float firstDecrease = (1-(firstPercentage)/100);
+    	float secondIncrease = (1+(secondPercentage)/100);
+    	float secondDecrease = (1-(secondPercentage)/100);
+    	
+		if (historicalDataMap.containsKey(currentCurrency)) {
+
+			for (FxRate originalFxRate : historicalDataMap.get(currentCurrency)) {
+				
+				int positionId = originalFxRate.getPositionId();
+				float opening = originalFxRate.getOpen();
+				
+				logger.debug ("Processing " + currentCurrency + "-" + positionId);
+				
+				FxRate targetFxRate = null;
+				String firstFound = "";
+				String secondFound = "";
+				
+				long totalFound = 0;
+
+				for (int i=positionId+1; i<historicalDataMap.get(currentCurrency).size(); i++) {
+					targetFxRate = historicalDataMap.get(currentCurrency).get(i);
+
+					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
+					
+					if (totalFound < maxFirstIterations) {
+						if (targetFxRate.getHigh() > (opening * firstIncrease) - spread) {
+							if (("UP").equals(firstFound)) {
+								break;
+							}
+
+							if (c1212ResultsMap.containsKey(""+totalFound)) {
+								c1212ResultsMap.put(""+totalFound,c1212ResultsMap.get(""+totalFound)+1);
+							} else {
+								c1212ResultsMap.put(""+totalFound,1);
+							}
+							
+							totalFound++;
+							firstFound = "UP";
+							opening = (opening * firstIncrease) - spread;
+						} else if (targetFxRate.getLow() < (opening * firstDecrease) + spread) {
+							if (("DOWN").equals(firstFound)) {
+								break;
+							}
+
+							if (c1212ResultsMap.containsKey(""+totalFound)) {
+								c1212ResultsMap.put(""+totalFound,c1212ResultsMap.get(""+totalFound)+1);
+							} else {
+								c1212ResultsMap.put(""+totalFound,1);
+							}
+
+							totalFound++;
+							firstFound = "DOWN";
+							opening = (opening * firstDecrease) + spread;
+						}
+						
+					} else {
+						if (targetFxRate.getHigh() > (opening * secondIncrease) - spread) {
+							if ((("UP").equals(firstFound) && ("").equals(secondFound)) || (("UP").equals(secondFound))) {
+								break;
+							}
+
+							if (c1212ResultsMap.containsKey(""+totalFound)) {
+								c1212ResultsMap.put(""+totalFound,c1212ResultsMap.get(""+totalFound)+1);
+							} else {
+								c1212ResultsMap.put(""+totalFound,1);
+							}
+
+							totalFound++;
+							secondFound = "UP";
+							opening = (opening * secondIncrease) - spread;
+						} else if (targetFxRate.getLow() < (opening * secondDecrease) + spread) {
+							if ((("DOWN").equals(firstFound) && ("").equals(secondFound)) || (("DOWN").equals(secondFound))) {
+								break;
+							}
+
+							if (c1212ResultsMap.containsKey(""+totalFound)) {
+								c1212ResultsMap.put(""+totalFound,c1212ResultsMap.get(""+totalFound)+1);
+							} else {
+								c1212ResultsMap.put(""+totalFound,1);
+							}
+
+							totalFound++;
+							secondFound = "DOWN";
+							opening = (opening * secondDecrease) + spread;
+						}						
+					}
+					totalCalculations++;
+				}
+			}
+		} else {
+			logger.info("No historical data available for " + currentCurrency + ". Avoid 1212 calculation");
+		}
+		return totalCalculations;
+    }
     
+
     public float getSpread (final String currentCurrency, final Properties applicationProperties) {
     	float result = 0;
 
