@@ -100,12 +100,10 @@ public class RunnableWorkerThread implements Runnable {
 
 				logger.debug ("Populating Calculation Result Map for " + currentCurrency);
 				// Populates the Calculation Result Map
-				calcResultsMap.put(currentCurrency, new CalcResult(currentCurrency, increase, decrease, maxLevels, spread, histDataStartTime, histDataStopTime, totalHistDataLoaded, calculationStartTime, calculationStopTime, totalCalculations, basicResultsMap, spreadResultsMap));
+				calcResultsMap.put(currentCurrency, new CalcResult(currentCurrency, increase, decrease, maxLevels, maxFirstIterations, spread, histDataStartTime, histDataStopTime, totalHistDataLoaded, calculationStartTime, calculationStopTime, totalCalculations, basicResultsMap, spreadResultsMap, c1212ResultsMap));
 
 				logger.info ("Finished calculations for " + currentCurrency + " [" + totalCalculations + "] in " + (calculationStopTime - calculationStartTime) + " ms");
-	
-				logger.info ("1212 Results: " + c1212ResultsMap.toString());
-			
+				
 			} else {
 				logger.error("No available data for " + currentCurrency);
 			}
@@ -168,11 +166,7 @@ public class RunnableWorkerThread implements Runnable {
 					totalCalculations++;
 
 					if (found == maxLevels) {
-						if (spreadResultsMap.containsKey(result.toString())) {
-							spreadResultsMap.put(result.toString(),spreadResultsMap.get(result.toString())+1);
-						} else {
-							spreadResultsMap.put(result.toString(),1);
-						}
+						increaseMapCounter (spreadResultsMap, result.toString());
 						found = 0;
 						break;
 					}
@@ -184,6 +178,14 @@ public class RunnableWorkerThread implements Runnable {
 		}
 		logger.info("Spread result: " + spreadResultsMap.toString());
 		return totalCalculations;
+    }
+    
+    public void increaseMapCounter (Map<String, Integer> resultMap, final String keyString) {
+		if (resultMap.containsKey(keyString)) {
+			resultMap.put(keyString,resultMap.get(keyString)+1);
+		} else {
+			resultMap.put(keyString,1);
+		}
     }
     
 	// Executes calculations (levels)
@@ -216,11 +218,7 @@ public class RunnableWorkerThread implements Runnable {
 							break;
 						}
 
-						if (basicResultsMap.containsKey("UP-"+indexUp)) {
-							basicResultsMap.put("UP-"+indexUp,basicResultsMap.get("UP-"+indexUp)+1);
-						} else {
-							basicResultsMap.put("UP-"+indexUp,1);
-						}
+						increaseMapCounter (basicResultsMap, ("UP-"+indexUp));
 
 						previousFound = "UP";
 						opening = opening * increase;
@@ -230,11 +228,7 @@ public class RunnableWorkerThread implements Runnable {
 							break;
 						}
 
-						if (basicResultsMap.containsKey("DOWN-"+indexDown)) {
-							basicResultsMap.put("DOWN-"+indexDown,basicResultsMap.get("DOWN-"+indexDown)+1);
-						} else {
-							basicResultsMap.put("DOWN-"+indexDown,1);
-						}
+						increaseMapCounter (basicResultsMap, ("DOWN-"+indexUp));
 
 						previousFound = "DOWN";
 						opening = opening * decrease;
@@ -271,26 +265,22 @@ public class RunnableWorkerThread implements Runnable {
 				String firstFound = "";
 				String secondFound = "";
 				
-				long totalFound = 0;
+				long changeCounter = 0;
 
 				for (int i=positionId+1; i<historicalDataMap.get(currentCurrency).size(); i++) {
 					targetFxRate = historicalDataMap.get(currentCurrency).get(i);
 
 					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
 					
-					if (totalFound < maxFirstIterations) {
+					if (changeCounter < maxFirstIterations) {
 						if (targetFxRate.getHigh() > (opening * firstIncrease) - spread) {
 							if (("UP").equals(firstFound)) {
 								break;
 							}
 
-							if (c1212ResultsMap.containsKey(""+totalFound)) {
-								c1212ResultsMap.put(""+totalFound,c1212ResultsMap.get(""+totalFound)+1);
-							} else {
-								c1212ResultsMap.put(""+totalFound,1);
-							}
+							increaseMapCounter (c1212ResultsMap, (""+changeCounter));
 							
-							totalFound++;
+							changeCounter++;
 							firstFound = "UP";
 							opening = (opening * firstIncrease) - spread;
 						} else if (targetFxRate.getLow() < (opening * firstDecrease) + spread) {
@@ -298,13 +288,9 @@ public class RunnableWorkerThread implements Runnable {
 								break;
 							}
 
-							if (c1212ResultsMap.containsKey(""+totalFound)) {
-								c1212ResultsMap.put(""+totalFound,c1212ResultsMap.get(""+totalFound)+1);
-							} else {
-								c1212ResultsMap.put(""+totalFound,1);
-							}
+							increaseMapCounter (c1212ResultsMap, (""+changeCounter));
 
-							totalFound++;
+							changeCounter++;
 							firstFound = "DOWN";
 							opening = (opening * firstDecrease) + spread;
 						}
@@ -315,13 +301,9 @@ public class RunnableWorkerThread implements Runnable {
 								break;
 							}
 
-							if (c1212ResultsMap.containsKey(""+totalFound)) {
-								c1212ResultsMap.put(""+totalFound,c1212ResultsMap.get(""+totalFound)+1);
-							} else {
-								c1212ResultsMap.put(""+totalFound,1);
-							}
+							increaseMapCounter (c1212ResultsMap, (""+changeCounter));
 
-							totalFound++;
+							changeCounter++;
 							secondFound = "UP";
 							opening = (opening * secondIncrease) - spread;
 						} else if (targetFxRate.getLow() < (opening * secondDecrease) + spread) {
@@ -329,13 +311,9 @@ public class RunnableWorkerThread implements Runnable {
 								break;
 							}
 
-							if (c1212ResultsMap.containsKey(""+totalFound)) {
-								c1212ResultsMap.put(""+totalFound,c1212ResultsMap.get(""+totalFound)+1);
-							} else {
-								c1212ResultsMap.put(""+totalFound,1);
-							}
+							increaseMapCounter (c1212ResultsMap, (""+changeCounter));
 
-							totalFound++;
+							changeCounter++;
 							secondFound = "DOWN";
 							opening = (opening * secondDecrease) + spread;
 						}						
@@ -466,6 +444,7 @@ public class RunnableWorkerThread implements Runnable {
 
 	public long getTotalBasicResults () { return this.totalBasicResults; }
 	public long getTotalSpreadResults () { return this.totalSpreadResults; }
+	public long getTotal1212Results () { return this.total1212Results; }
 	public long getTotalCalculations () { return this.totalCalculations; }
 	public long getTotalHistDataLoaded () {	return this.totalHistDataLoaded; }
 	public long getElapsedTimeMillis () { return this.elapsedTimeMillis; }

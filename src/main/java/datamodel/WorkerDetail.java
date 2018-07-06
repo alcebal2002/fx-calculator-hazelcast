@@ -30,6 +30,7 @@ public class WorkerDetail implements Serializable {
 	private long totalCalculations = 0;
 	private long totalBasicResults = 0;
 	private long totalSpreadResults = 0;
+	private long total1212Results = 0;
 	private long avgExecutionTime = 0L;
 	
 	private Map<String,CalcResult> calcResultsMap;
@@ -101,6 +102,8 @@ public class WorkerDetail implements Serializable {
 	public final void setTotalBasicResults(long totalBasicResults) { this.totalBasicResults = totalBasicResults; }
 	public final long getTotalSpreadResults() { return totalSpreadResults; }
 	public final void setTotalSpreadResults(long totalSpreadResults) { this.totalSpreadResults = totalSpreadResults; }
+	public final long getTotal1212Results() { return total1212Results; }
+	public final void setTotal1212Results(long total1212Results) { this.total1212Results = total1212Results; }
 	public final long getTotalHistoricalDataLoaded() { return totalHistoricalDataLoaded; }
 	public final void setTotalHistoricalDataLoaded(long totalHistoricalDataLoaded) { this.totalHistoricalDataLoaded = totalHistoricalDataLoaded; }
 	public final long getTotalExecutions() { return totalExecutions; }
