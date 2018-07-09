@@ -256,6 +256,8 @@ public class RunnableWorkerThread implements Runnable {
     	float firstDecrease = (1-(firstPercentage)/100);
     	float secondIncrease = (1+(secondPercentage)/100);
     	float secondDecrease = (1-(secondPercentage)/100);
+    	float selectedIncrease = firstIncrease;
+    	float selectedDecrease = firstDecrease;
     	
 		if (historicalDataMap.containsKey(currentCurrency)) {
 
@@ -267,57 +269,44 @@ public class RunnableWorkerThread implements Runnable {
 				logger.debug ("Processing " + currentCurrency + "-" + positionId);
 				
 				FxRate targetFxRate = null;
-				String firstFound = "";
-				String secondFound = "";
+				String previous = "";
 				
-				long changeCounter = 0;
+				long changeCounter = 1;
 
 				for (int i=positionId+1; i<historicalDataMap.get(currentCurrency).size(); i++) {
 					targetFxRate = historicalDataMap.get(currentCurrency).get(i);
 
 					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
 					
-					if (changeCounter < maxFirstIterations) {
-						if (targetFxRate.getHigh() > (opening * firstIncrease) - spread) {
-							if (("UP").equals(firstFound)) {
-								break;
-							}
-							increaseMapCounter (c1212ResultsMap, ("UP-"+changeCounter));
-							
-							changeCounter++;
-							firstFound = "UP";
-							opening = (opening * firstIncrease) - spread;
-						} else if (targetFxRate.getLow() < (opening * firstDecrease) + spread) {
-							if (("DOWN").equals(firstFound)) {
-								break;
-							}
-							increaseMapCounter (c1212ResultsMap, ("DOWN-"+changeCounter));
+					// No need to continue if maxLevels have been exceeded
+					if (changeCounter > maxLevels) {
+						break;
+					}
 
-							changeCounter++;
-							firstFound = "DOWN";
-							opening = (opening * firstDecrease) + spread;
+					// Avoid assigning all the time. Just once
+					if (changeCounter == maxFirstIterations + 1) {
+						selectedIncrease = secondIncrease;
+				    	selectedDecrease = secondDecrease;
+					}
+					
+					if (targetFxRate.getHigh() > (opening * selectedIncrease) - spread) {
+						if (("UP").equals(previous)) {
+							break;
 						}
+						increaseMapCounter (c1212ResultsMap, ("UP-"+changeCounter));
 						
-					} else {
-						if (targetFxRate.getHigh() > (opening * secondIncrease) - spread) {
-							if ((("UP").equals(firstFound) && ("").equals(secondFound)) || (("UP").equals(secondFound))) {
-								break;
-							}
-							increaseMapCounter (c1212ResultsMap, ("UP-"+changeCounter));
+						changeCounter++;
+						previous = "UP";
+						opening = (opening * selectedIncrease) - spread;
+					} else if (targetFxRate.getLow() < (opening * selectedDecrease) + spread) {
+						if (("DOWN").equals(previous)) {
+							break;
+						}
+						increaseMapCounter (c1212ResultsMap, ("DOWN-"+changeCounter));
 
-							changeCounter++;
-							secondFound = "UP";
-							opening = (opening * secondIncrease) - spread;
-						} else if (targetFxRate.getLow() < (opening * secondDecrease) + spread) {
-							if ((("DOWN").equals(firstFound) && ("").equals(secondFound)) || (("DOWN").equals(secondFound))) {
-								break;
-							}
-							increaseMapCounter (c1212ResultsMap, ("DOWN-"+changeCounter));
-
-							changeCounter++;
-							secondFound = "DOWN";
-							opening = (opening * secondDecrease) + spread;
-						}						
+						changeCounter++;
+						previous = "DOWN";
+						opening = (opening * selectedDecrease) + spread;
 					}
 					totalCalculations++;
 				}
