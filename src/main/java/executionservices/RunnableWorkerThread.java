@@ -277,8 +277,7 @@ public class RunnableWorkerThread implements Runnable {
 							if (("UP").equals(firstFound)) {
 								break;
 							}
-
-							increaseMapCounter (c1212ResultsMap, (""+changeCounter));
+							increaseMapCounter (c1212ResultsMap, ("UP-"+changeCounter));
 							
 							changeCounter++;
 							firstFound = "UP";
@@ -287,8 +286,7 @@ public class RunnableWorkerThread implements Runnable {
 							if (("DOWN").equals(firstFound)) {
 								break;
 							}
-
-							increaseMapCounter (c1212ResultsMap, (""+changeCounter));
+							increaseMapCounter (c1212ResultsMap, ("DOWN-"+changeCounter));
 
 							changeCounter++;
 							firstFound = "DOWN";
@@ -300,8 +298,7 @@ public class RunnableWorkerThread implements Runnable {
 							if ((("UP").equals(firstFound) && ("").equals(secondFound)) || (("UP").equals(secondFound))) {
 								break;
 							}
-
-							increaseMapCounter (c1212ResultsMap, (""+changeCounter));
+							increaseMapCounter (c1212ResultsMap, ("UP-"+changeCounter));
 
 							changeCounter++;
 							secondFound = "UP";
@@ -310,8 +307,7 @@ public class RunnableWorkerThread implements Runnable {
 							if ((("DOWN").equals(firstFound) && ("").equals(secondFound)) || (("DOWN").equals(secondFound))) {
 								break;
 							}
-
-							increaseMapCounter (c1212ResultsMap, (""+changeCounter));
+							increaseMapCounter (c1212ResultsMap, ("DOWN-"+changeCounter));
 
 							changeCounter++;
 							secondFound = "DOWN";

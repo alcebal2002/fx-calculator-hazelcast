@@ -302,9 +302,9 @@ public class Application {
 	    			for (String currency : currencyPairs) {
 	    				
 	    				if (calcResultsMap.containsKey(currency)) {
-	    					GeneralUtils.writeTextToFile(resultFilePath, print1212ResultsLevels (currency, ((CalcResult)calcResultsMap.get(currency)).get1212Results(), maxLevels));
+	    					GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsLevels (currency, ((CalcResult)calcResultsMap.get(currency)).get1212Results(), maxLevels));
 	    				} else {
-    						GeneralUtils.writeTextToFile(resultFilePath, print1212ResultsLevels (currency, null, maxLevels));
+    						GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsLevels (currency, null, maxLevels));
 	    				}
 	    			}
 
@@ -395,7 +395,8 @@ public class Application {
 		
 		return (currency + "|" + stringBuilder.toString());
 	}
-	
+
+/*	
 	// Print currency result levels
 	private static String print1212ResultsLevels (final String currency, final Map<String,Integer> levelsMap, final int maxLevels) {
 		
@@ -433,7 +434,7 @@ public class Application {
 		
 		return (currency + "|" + stringBuilder.toString());		
 	}
-
+*/
 	
 	private static void updateHazelcastResults () throws Exception {
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalExecutions", String.format("%,d", totalExecutions));
