@@ -59,8 +59,8 @@ public class RunnableWorkerThread implements Runnable {
 		try {
 			
 			// Calculates required properties based on the application properties retrieved from the execution task
-			float increase = (1+(Float.parseFloat(applicationProperties.getProperty("application.increasePercentage")))/100);
-			float decrease = (1-(Float.parseFloat(applicationProperties.getProperty("application.decreasePercentage")))/100);
+			float increasePercentage = Float.parseFloat(applicationProperties.getProperty("application.increasePercentage"));
+			float decreasePercentage = Float.parseFloat(applicationProperties.getProperty("application.decreasePercentage"));
 			int maxLevels = Integer.parseInt(applicationProperties.getProperty("application.maxLevels"));
 			int maxFirstIterations = Integer.parseInt(applicationProperties.getProperty("application.maxFirstIterations"));
 			float spread = 0;
@@ -77,19 +77,19 @@ public class RunnableWorkerThread implements Runnable {
 				
 				if ((applicationProperties.getProperty("application.calculations")).toLowerCase().contains("basic")) {
 					logger.info ("Starting basic calculations for " + currentCurrency);
-					totalCalculations += executeBasicCalculation (currentCurrency, increase, decrease, maxLevels);
+					totalCalculations += executeBasicCalculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels);
 				}
 				if ((applicationProperties.getProperty("application.calculations")).toLowerCase().contains("spread")) {
 					logger.info ("Retrieving spread data for " + currentCurrency);
 					spread = getSpread(currentCurrency,applicationProperties);
 					logger.info ("Starting spread calculations for " + currentCurrency);
-					totalCalculations += executeSpreadCalculation (currentCurrency, increase, decrease, maxLevels, spread);
+					totalCalculations += executeSpreadCalculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels, spread);
 				}
 				if ((applicationProperties.getProperty("application.calculations")).toLowerCase().contains("1212")) {
 					logger.info ("Retrieving spread data for " + currentCurrency);
 					spread = getSpread(currentCurrency,applicationProperties);
 					logger.info ("Starting 1212 calculations for " + currentCurrency);
-					totalCalculations += execute1212Calculation (currentCurrency, increase, decrease, maxLevels, spread, maxFirstIterations);
+					totalCalculations += execute1212Calculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels, spread, maxFirstIterations);
 				}
 				
 				calculationStopTime = System.currentTimeMillis();
@@ -100,7 +100,7 @@ public class RunnableWorkerThread implements Runnable {
 
 				logger.debug ("Populating Calculation Result Map for " + currentCurrency);
 				// Populates the Calculation Result Map
-				calcResultsMap.put(currentCurrency, new CalcResult(currentCurrency, increase, decrease, maxLevels, maxFirstIterations, spread, histDataStartTime, histDataStopTime, totalHistDataLoaded, calculationStartTime, calculationStopTime, totalCalculations, basicResultsMap, spreadResultsMap, c1212ResultsMap));
+				calcResultsMap.put(currentCurrency, new CalcResult(currentCurrency, increasePercentage, decreasePercentage, maxLevels, maxFirstIterations, spread, histDataStartTime, histDataStopTime, totalHistDataLoaded, calculationStartTime, calculationStopTime, totalCalculations, basicResultsMap, spreadResultsMap, c1212ResultsMap));
 
 				logger.info ("Finished calculations for " + currentCurrency + " [" + totalCalculations + "] in " + (calculationStopTime - calculationStartTime) + " ms");
 				
@@ -129,9 +129,12 @@ public class RunnableWorkerThread implements Runnable {
 	}
 
 	// Executes calculations with Spreads (levels)
-    public long executeSpreadCalculation (final String currentCurrency, final float increase, final float decrease, final int maxLevels, final float spread) {
+    public long executeSpreadCalculation (final String currentCurrency, final float increasePercentage, final float decreasePercentage, final int maxLevels, final float spread) {
     	
     	long totalCalculations = 0;
+		float increase = (1+(increasePercentage)/100);
+    	float decrease = (1-(decreasePercentage)/100);
+		
     	StringBuilder result;
     	long found;
     	
@@ -189,9 +192,11 @@ public class RunnableWorkerThread implements Runnable {
     }
     
 	// Executes calculations (levels)
-    public long executeBasicCalculation (final String currentCurrency, final float increase, final float decrease, final int maxLevels) {
+    public long executeBasicCalculation (final String currentCurrency, final float increasePercentage, final float decreasePercentage, final int maxLevels) {
     	
     	long totalCalculations = 0;
+		float increase = (1+(increasePercentage)/100);
+    	float decrease = (1-(decreasePercentage)/100);
     	
 		if (historicalDataMap.containsKey(currentCurrency)) {
 
