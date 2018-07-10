@@ -1,6 +1,4 @@
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -12,7 +10,6 @@ import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IQueue;
 
-import datamodel.CalcResult;
 import datamodel.ExecutionTask;
 import datamodel.WorkerDetail;
 import executionservices.RejectedExecutionHandlerImpl;
@@ -37,8 +34,6 @@ public class Worker {
 	private static String localEndPointPort;
 	
 	private static long totalExecutions = 0;
-	
-	private static Map<String,CalcResult> calcResultsMap = new HashMap<String,CalcResult>();
 	
 	public static void main(String args[]) throws Exception {
 		
@@ -123,7 +118,7 @@ public class Worker {
 						hzClient.getQueue(HazelcastInstanceUtils.getTaskQueueName()).put(new ExecutionTask(HazelcastInstanceUtils.getStopProcessingSignal()));
 						break;
 					}				
-					executorPool.execute(new RunnableWorkerThread(executionTaskItem, calcResultsMap));
+					executorPool.execute(new RunnableWorkerThread(executionTaskItem));
 					totalExecutions++; 
 				}
 				
@@ -155,11 +150,11 @@ public class Worker {
 			logger.info ("Shutting down monitor thread... done"); 
 
 			// Update WorkerDetails status to inactive
-			workerDetail.setCalculationResults(calcResultsMap);
 			workerDetail.setActiveStatus(false);
 			workerDetail.setStopTime(stopTime);
 			workerDetail.setTotalElapsedTime((stopTime - startTime));
 			workerDetail.setTotalExecutions(totalExecutions);
+			workerDetail.setCalculationResults(executorPool.getCalcResultsMap());
 			workerDetail.setAvgExecutionTime(executorPool.getAvgExecutionTime());
 			workerDetail.setTotalHistoricalDataLoaded(executorPool.getTotalHistDataLoaded());
 			workerDetail.setTotalCalculations(executorPool.getTotalCalculations());

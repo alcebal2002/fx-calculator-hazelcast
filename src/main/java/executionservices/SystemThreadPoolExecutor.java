@@ -1,13 +1,18 @@
 package executionservices;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit; 
+import java.util.concurrent.TimeUnit;
+
+import datamodel.CalcResult; 
   
 public class SystemThreadPoolExecutor extends ThreadPoolExecutor { 
         
-    private long totalExecutionTime = 0;
+	private Map<String,CalcResult> calcResultsMap = new HashMap<String,CalcResult>();
+	private long totalExecutionTime = 0;
     private int totalExecutions = 0;
     private long totalCalculations = 0;
     private long totalHistDataLoaded = 0;
@@ -24,6 +29,8 @@ public class SystemThreadPoolExecutor extends ThreadPoolExecutor {
             
 	    try {
 	    	totalExecutions++;
+	    	
+	    	calcResultsMap.putAll(((RunnableWorkerThread)r).getCalcResultsMap());
 			totalExecutionTime += ((RunnableWorkerThread)r).getElapsedTimeMillis();
 			totalHistDataLoaded += ((RunnableWorkerThread)r).getTotalHistDataLoaded();
 			totalCalculations += ((RunnableWorkerThread)r).getTotalCalculations();
@@ -33,14 +40,11 @@ public class SystemThreadPoolExecutor extends ThreadPoolExecutor {
 	    } finally { 
 	    	super.afterExecute(r, t); 
 	    } 
-    } 
+    }
     
-    public long getTotalExecutionTime () { 
-    	return this.totalExecutionTime; 
-    }
-    public long getTotalExecutions () { 
-    	return this.totalExecutions; 
-    }
+    public Map<String,CalcResult> getCalcResultsMap () { return this.calcResultsMap; }
+    public long getTotalExecutionTime () { return this.totalExecutionTime; }
+    public long getTotalExecutions () { return this.totalExecutions; }
 	public long getTotalHistDataLoaded () { return this.totalHistDataLoaded; }
 	public long getTotalCalculations () { return this.totalCalculations; }
 	public long getTotalBasicResults () { return this.totalBasicResults; }

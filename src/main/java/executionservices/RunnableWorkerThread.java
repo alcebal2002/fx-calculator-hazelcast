@@ -31,26 +31,20 @@ public class RunnableWorkerThread implements Runnable {
 	private Map<String, Integer> basicResultsMap = new HashMap<String, Integer>();
 	private Map<String, Integer> spreadResultsMap = new HashMap<String, Integer>();
 	private Map<String, Integer> c1212ResultsMap = new HashMap<String, Integer>();
-	private Map<String, CalcResult> calcResultsMap;
+	private Map<String, CalcResult> calcResultsMap = new HashMap<String,CalcResult>();
 	
 	private long elapsedTimeMillis;
 	private long totalHistDataLoaded = 0;
 	private long totalCalculations = 0;
-	private long totalBasicResults = 0;
-	private long totalSpreadResults = 0;
-	private long total1212Results = 0;
 
-	public RunnableWorkerThread (final ExecutionTask executionTask, Map<String, CalcResult> calcResultsMap){
+	public RunnableWorkerThread (final ExecutionTask executionTask){
 		this.applicationProperties = executionTask.getTaskParameters();
 		this.currentCurrency = executionTask.getCurrentCurrency();
-		this.calcResultsMap = calcResultsMap;
 	}
 	
 	@Override
 	public void run() {
 		
-		long histDataStartTime;	
-		long histDataStopTime;
 		long calculationStartTime;
 		long calculationStopTime;
 
@@ -68,9 +62,7 @@ public class RunnableWorkerThread implements Runnable {
 			if (checkIfCurrencyExists ()) {
 
 				logger.info ("Populating historical data for " + currentCurrency);
-				histDataStartTime = System.currentTimeMillis();
 				totalHistDataLoaded = populateHistoricalFxData(currentCurrency,applicationProperties);
-				histDataStopTime = System.currentTimeMillis();
 				logger.info ("Historical data populated for " + currentCurrency);
 
 				calculationStartTime = System.currentTimeMillis();
@@ -94,13 +86,9 @@ public class RunnableWorkerThread implements Runnable {
 				
 				calculationStopTime = System.currentTimeMillis();
 
-				totalBasicResults = basicResultsMap.size();
-				totalSpreadResults = spreadResultsMap.size();
-				total1212Results = c1212ResultsMap.size();
-
 				logger.debug ("Populating Calculation Result Map for " + currentCurrency);
 				// Populates the Calculation Result Map
-				calcResultsMap.put(currentCurrency, new CalcResult(currentCurrency, increasePercentage, decreasePercentage, maxLevels, maxFirstIterations, spread, histDataStartTime, histDataStopTime, totalHistDataLoaded, calculationStartTime, calculationStopTime, totalCalculations, basicResultsMap, spreadResultsMap, c1212ResultsMap));
+				calcResultsMap.put(currentCurrency, new CalcResult(currentCurrency, basicResultsMap, spreadResultsMap, c1212ResultsMap));
 
 				logger.info ("Finished calculations for " + currentCurrency + " [" + totalCalculations + "] in " + (calculationStopTime - calculationStartTime) + " ms");
 				
@@ -437,9 +425,10 @@ public class RunnableWorkerThread implements Runnable {
     	return result;
     }
 
-	public long getTotalBasicResults () { return this.totalBasicResults; }
-	public long getTotalSpreadResults () { return this.totalSpreadResults; }
-	public long getTotal1212Results () { return this.total1212Results; }
+	public Map<String, CalcResult> getCalcResultsMap () { return calcResultsMap; }
+    public long getTotalBasicResults () { return basicResultsMap.size(); }
+	public long getTotalSpreadResults () { return spreadResultsMap.size(); }
+	public long getTotal1212Results () { return c1212ResultsMap.size(); }
 	public long getTotalCalculations () { return this.totalCalculations; }
 	public long getTotalHistDataLoaded () {	return this.totalHistDataLoaded; }
 	public long getElapsedTimeMillis () { return this.elapsedTimeMillis; }
