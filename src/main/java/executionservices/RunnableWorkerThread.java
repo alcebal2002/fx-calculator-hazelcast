@@ -215,9 +215,9 @@ public class RunnableWorkerThread implements Runnable {
 
 				for (int i=positionId+1; i<historicalDataMap.get(currentCurrency).size(); i++) {
 					targetFxRate = historicalDataMap.get(currentCurrency).get(i);
-					
-					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
 
+					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
+					
 					if ((targetFxRate.getHigh() > (opening * increase)) && (indexUp <= maxLevels)) {
 						if (("DOWN").equals(previousFound)) {
 							break;
@@ -239,7 +239,13 @@ public class RunnableWorkerThread implements Runnable {
 						opening = opening * decrease;
 						indexDown++;
 					}
+					
 					totalCalculations++;
+
+					// No need to continue if maxLevels have been exceeded
+					if (indexUp > maxLevels && indexDown > maxLevels) {
+						break;
+					}
 				}
 			}
 		} else {
@@ -275,13 +281,7 @@ public class RunnableWorkerThread implements Runnable {
 
 				for (int i=positionId+1; i<historicalDataMap.get(currentCurrency).size(); i++) {
 					targetFxRate = historicalDataMap.get(currentCurrency).get(i);
-
 					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
-					
-					// No need to continue if maxLevels have been exceeded
-					if (changeCounter > maxLevels) {
-						break;
-					}
 
 					// Avoid assigning all the time. Just once
 					if (changeCounter == maxFirstIterations + 1) {
@@ -309,6 +309,11 @@ public class RunnableWorkerThread implements Runnable {
 						opening = (opening * selectedDecrease) + spread;
 					}
 					totalCalculations++;
+
+					// No need to continue if maxLevels have been exceeded
+					if (changeCounter > maxLevels) {
+						break;
+					}
 				}
 			}
 		} else {
