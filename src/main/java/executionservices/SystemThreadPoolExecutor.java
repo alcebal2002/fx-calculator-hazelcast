@@ -19,6 +19,7 @@ public class SystemThreadPoolExecutor extends ThreadPoolExecutor {
 	private long totalBasicResults = 0;
 	private long totalSpreadResults = 0;
 	private long total1212Results = 0;
+	private long total1234Results = 0;
 
     public SystemThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, 
     							BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, RejectedExecutionHandler handler) { 
@@ -37,6 +38,7 @@ public class SystemThreadPoolExecutor extends ThreadPoolExecutor {
 			totalBasicResults += ((RunnableWorkerThread)r).getTotalBasicResults();
 			totalSpreadResults += ((RunnableWorkerThread)r).getTotalSpreadResults();
 			total1212Results += ((RunnableWorkerThread)r).getTotal1212Results();
+			total1234Results += ((RunnableWorkerThread)r).getTotal1234Results();
 	    } finally { 
 	    	super.afterExecute(r, t); 
 	    } 
@@ -50,6 +52,7 @@ public class SystemThreadPoolExecutor extends ThreadPoolExecutor {
 	public long getTotalBasicResults () { return this.totalBasicResults; }
 	public long getTotalSpreadResults () { return this.totalSpreadResults; }
 	public long getTotal1212Results () { return this.total1212Results; }
+	public long getTotal1234Results () { return this.total1234Results; }
 
     public long getAvgExecutionTime () {
     	long result = 0L;

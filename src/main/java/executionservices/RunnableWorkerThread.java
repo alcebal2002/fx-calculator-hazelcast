@@ -31,6 +31,7 @@ public class RunnableWorkerThread implements Runnable {
 	private Map<String, Integer> basicResultsMap = new HashMap<String, Integer>();
 	private Map<String, Integer> spreadResultsMap = new HashMap<String, Integer>();
 	private Map<String, Integer> c1212ResultsMap = new HashMap<String, Integer>();
+	private Map<String, Integer> c1234ResultsMap = new HashMap<String, Integer>();
 	private Map<String, CalcResult> calcResultsMap = new HashMap<String,CalcResult>();
 	
 	private long elapsedTimeMillis;
@@ -67,28 +68,31 @@ public class RunnableWorkerThread implements Runnable {
 
 				calculationStartTime = System.currentTimeMillis();
 				
+				logger.info ("Retrieving spread data for " + currentCurrency);
+				spread = getSpread(currentCurrency,applicationProperties);
+
 				if ((applicationProperties.getProperty("application.calculations")).toLowerCase().contains("basic")) {
 					logger.info ("Starting basic calculations for " + currentCurrency);
 					totalCalculations += executeBasicCalculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels);
 				}
 				if ((applicationProperties.getProperty("application.calculations")).toLowerCase().contains("spread")) {
-					logger.info ("Retrieving spread data for " + currentCurrency);
-					spread = getSpread(currentCurrency,applicationProperties);
 					logger.info ("Starting spread calculations for " + currentCurrency);
 					totalCalculations += executeSpreadCalculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels, spread);
 				}
 				if ((applicationProperties.getProperty("application.calculations")).toLowerCase().contains("1212")) {
-					logger.info ("Retrieving spread data for " + currentCurrency);
-					spread = getSpread(currentCurrency,applicationProperties);
 					logger.info ("Starting 1212 calculations for " + currentCurrency);
 					totalCalculations += execute1212Calculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels, spread, maxFirstIterations);
+				}
+				if ((applicationProperties.getProperty("application.calculations")).toLowerCase().contains("1234")) {
+					logger.info ("Starting 1234 calculations for " + currentCurrency);
+					totalCalculations += execute1234Calculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels, spread, maxFirstIterations);
 				}
 				
 				calculationStopTime = System.currentTimeMillis();
 
 				logger.debug ("Populating Calculation Result Map for " + currentCurrency);
 				// Populates the Calculation Result Map
-				calcResultsMap.put(currentCurrency, new CalcResult(currentCurrency, basicResultsMap, spreadResultsMap, c1212ResultsMap));
+				calcResultsMap.put(currentCurrency, new CalcResult(currentCurrency, basicResultsMap, spreadResultsMap, c1212ResultsMap, c1234ResultsMap));
 
 				logger.info ("Finished calculations for " + currentCurrency + " [" + totalCalculations + "] in " + (calculationStopTime - calculationStartTime) + " ms");
 				
@@ -179,7 +183,7 @@ public class RunnableWorkerThread implements Runnable {
 		}
     }
     
-	// Executes calculations (levels)
+	// Executes Basic calculations (levels)
     public long executeBasicCalculation (final String currentCurrency, final float increasePercentage, final float decreasePercentage, final int maxLevels) {
     	
     	long totalCalculations = 0;
@@ -221,7 +225,7 @@ public class RunnableWorkerThread implements Runnable {
 							break;
 						}
 
-						increaseMapCounter (basicResultsMap, ("DOWN-"+indexUp));
+						increaseMapCounter (basicResultsMap, ("DOWN-"+indexDown));
 
 						previousFound = "DOWN";
 						opening = opening * decrease;
@@ -242,7 +246,7 @@ public class RunnableWorkerThread implements Runnable {
 		return totalCalculations;
     }
 
-	// Executes calculations (levels)
+	// Executes 1212 calculations (levels)
     public long execute1212Calculation (final String currentCurrency, final float firstPercentage, final float secondPercentage, final int maxLevels, final float spread, final int maxFirstIterations) {
     	
     	long totalCalculations = 0;
@@ -263,7 +267,7 @@ public class RunnableWorkerThread implements Runnable {
 				logger.debug ("Processing " + currentCurrency + "-" + positionId);
 				
 				FxRate targetFxRate = null;
-				String previous = "";
+				String previousFound = "";
 				
 				long changeCounter = 1;
 
@@ -278,22 +282,22 @@ public class RunnableWorkerThread implements Runnable {
 					}
 					
 					if (targetFxRate.getHigh() > (opening * selectedIncrease) - spread) {
-						if (("UP").equals(previous)) {
+						if (("UP").equals(previousFound)) {
 							break;
 						}
 						increaseMapCounter (c1212ResultsMap, ("UP-"+changeCounter));
 						
 						changeCounter++;
-						previous = "UP";
+						previousFound = "UP";
 						opening = (opening * selectedIncrease) - spread;
 					} else if (targetFxRate.getLow() < (opening * selectedDecrease) + spread) {
-						if (("DOWN").equals(previous)) {
+						if (("DOWN").equals(previousFound)) {
 							break;
 						}
 						increaseMapCounter (c1212ResultsMap, ("DOWN-"+changeCounter));
 
 						changeCounter++;
-						previous = "DOWN";
+						previousFound = "DOWN";
 						opening = (opening * selectedDecrease) + spread;
 					}
 					totalCalculations++;
@@ -310,6 +314,74 @@ public class RunnableWorkerThread implements Runnable {
 		return totalCalculations;
     }
     
+	// Executes 1234 calculations (levels)
+    public long execute1234Calculation (final String currentCurrency, final float firstPercentage, final float secondPercentage, final int maxLevels, final float spread, final int maxFirstIterations) {
+    	
+    	long totalCalculations = 0;
+    	float firstIncrease = (1+(firstPercentage)/100);
+    	float firstDecrease = (1-(firstPercentage)/100);
+    	float secondIncrease = (1+(secondPercentage)/100);
+    	float secondDecrease = (1-(secondPercentage)/100);
+    	float selectedIncrease = firstIncrease;
+    	float selectedDecrease = firstDecrease;
+    	
+		if (historicalDataMap.containsKey(currentCurrency)) {
+
+			for (FxRate originalFxRate : historicalDataMap.get(currentCurrency)) {
+				
+				int positionId = originalFxRate.getPositionId();
+				float opening = originalFxRate.getOpen();
+				
+				logger.debug ("Processing " + currentCurrency + "-" + positionId);
+				
+				FxRate targetFxRate = null;
+				String previousFound = "";
+				
+				int indexUp = 1;
+				int indexDown = 1;
+
+				for (int i=positionId+1; i<historicalDataMap.get(currentCurrency).size(); i++) {
+					targetFxRate = historicalDataMap.get(currentCurrency).get(i);
+					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
+
+					// Avoid assigning all the time. Just once
+					if ((indexUp > maxFirstIterations) && (indexDown > maxFirstIterations)) {
+						selectedIncrease = secondIncrease;
+				    	selectedDecrease = secondDecrease;
+					}
+					
+					if ((targetFxRate.getHigh() > (opening * selectedIncrease) - spread)  && (indexUp <= maxLevels)) {
+						if (("DOWN").equals(previousFound)) {
+							break;
+						}
+						increaseMapCounter (c1234ResultsMap, ("UP-"+indexUp));
+						
+						indexUp++;
+						previousFound = "UP";
+						opening = (opening * selectedIncrease) - spread;
+					} else if ((targetFxRate.getLow() < (opening * selectedDecrease) + spread) && (indexDown <= maxLevels)) {
+						if (("UP").equals(previousFound)) {
+							break;
+						}
+						increaseMapCounter (c1234ResultsMap, ("DOWN-"+indexDown));
+
+						indexDown++;
+						previousFound = "DOWN";
+						opening = (opening * selectedDecrease) + spread;
+					}
+					totalCalculations++;
+
+					// No need to continue if maxLevels have been exceeded
+					if (indexUp > maxLevels && indexDown > maxLevels) {
+						break;
+					}
+				}
+			}
+		} else {
+			logger.info("No historical data available for " + currentCurrency + ". Avoid 1234 calculation");
+		}
+		return totalCalculations;
+    }
 
     public float getSpread (final String currentCurrency, final Properties applicationProperties) {
     	float result = 0;
@@ -429,6 +501,7 @@ public class RunnableWorkerThread implements Runnable {
     public long getTotalBasicResults () { return basicResultsMap.size(); }
 	public long getTotalSpreadResults () { return spreadResultsMap.size(); }
 	public long getTotal1212Results () { return c1212ResultsMap.size(); }
+	public long getTotal1234Results () { return c1234ResultsMap.size(); }
 	public long getTotalCalculations () { return this.totalCalculations; }
 	public long getTotalHistDataLoaded () {	return this.totalHistDataLoaded; }
 	public long getElapsedTimeMillis () { return this.elapsedTimeMillis; }
