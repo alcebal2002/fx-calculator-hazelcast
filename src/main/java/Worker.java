@@ -161,6 +161,7 @@ public class Worker {
 			workerDetail.setTotalBasicResults(executorPool.getTotalBasicResults());
 			workerDetail.setTotalSpreadResults(executorPool.getTotalSpreadResults());
 			workerDetail.setTotal1212Results(executorPool.getTotal1212Results());
+			workerDetail.setTotal1234Results(executorPool.getTotal1234Results());
 			hzClient.getMap(HazelcastInstanceUtils.getMonitorMapName()).put(workerDetail.getUuid(),workerDetail);
 			
 			// Shutdown Hazelcast cluster node instance		
