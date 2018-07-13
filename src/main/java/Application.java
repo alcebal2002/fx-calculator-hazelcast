@@ -34,6 +34,7 @@ public class Application {
 	private static long totalBasicResults = 0;
 	private static long totalSpreadResults = 0;
 	private static long total1212Results = 0;
+	private static long total1234Results = 0;
 	private static long avgExecutionTime = 0;
 	
 	private static Path resultFilePath = null;		
@@ -198,6 +199,7 @@ public class Application {
             totalBasicResults += ((WorkerDetail) entry.getValue()).getTotalBasicResults();
             totalSpreadResults += ((WorkerDetail) entry.getValue()).getTotalSpreadResults();
             total1212Results += ((WorkerDetail) entry.getValue()).getTotal1212Results();
+            total1234Results += ((WorkerDetail) entry.getValue()).getTotal1234Results();
             avgExecutionTime += ((WorkerDetail) entry.getValue()).getAvgExecutionTime();
             avgExecutionTime = avgExecutionTime / numWorkers;
             
@@ -221,6 +223,9 @@ public class Application {
 					if (calcResultEntry.getValue().get1212Results() != null) {
 						logger.info (calcResultEntry.getValue().get1212Results().toString());						
 					}
+					if (calcResultEntry.getValue().get1234Results() != null) {
+						logger.info (calcResultEntry.getValue().get1234Results().toString());						
+					}
     			}
     			    			
     			logger.info ("**************************************************");
@@ -237,6 +242,7 @@ public class Application {
 		logger.info ("  - Total basic results      : " + String.format("%,d", totalBasicResults));
 		logger.info ("  - Total spread results     : " + String.format("%,d", totalSpreadResults));
 		logger.info ("  - Total 1212 results       : " + String.format("%,d", total1212Results));
+		logger.info ("  - Total 1234 results       : " + String.format("%,d", total1234Results));
 		logger.info ("  - Elapsed time             : " + GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime));
 		logger.info ("**************************************************");
 		logger.info ("");
@@ -308,6 +314,19 @@ public class Application {
 	    				}
 	    			}
 
+    				GeneralUtils.writeTextToFile(resultFilePath, ((WorkerDetail) entry.getValue()).getInetAddres() + ":" + ((WorkerDetail) entry.getValue()).getInetPort() + " - 1234 calculation results");
+    				GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsHeader(maxLevels));
+	
+	    			// Print 1234 calculation results
+	    			for (String currency : currencyPairs) {
+	    				
+	    				if (calcResultsMap.containsKey(currency)) {
+	    					GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsLevels (currency, ((CalcResult)calcResultsMap.get(currency)).get1234Results(), maxLevels));
+	    				} else {
+    						GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsLevels (currency, null, maxLevels));
+	    				}
+	    			}
+
 	    		}            
 	        }
 			logger.info("Results written into file: " + resultFilePath.toString());
@@ -341,6 +360,7 @@ public class Application {
 		stringBuilder.append("total basic results|"+String.format("%,d", totalBasicResults)+"\n");
 		stringBuilder.append("total spread results|"+String.format("%,d", totalSpreadResults)+"\n");
 		stringBuilder.append("total 1212 results|"+String.format("%,d", total1212Results)+"\n");
+		stringBuilder.append("total 1234 results|"+String.format("%,d", total1234Results)+"\n");
 		stringBuilder.append("elapsed time|"+GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime)+"\n");
 
 		return (stringBuilder.toString());
@@ -444,6 +464,7 @@ public class Application {
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalBasicResults", String.format("%,d", totalBasicResults));
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalSpreadResults", String.format("%,d", totalSpreadResults));
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "total1212Results", String.format("%,d", total1212Results));
+    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "total1234Results", String.format("%,d", total1234Results));
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "elapsedTime", GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime));
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "resultFilePath", resultFilePath.toString());
 	}
