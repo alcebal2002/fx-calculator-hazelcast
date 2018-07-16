@@ -162,7 +162,6 @@ public class RunnableWorkerThread implements Runnable {
 
 					if (found == maxLevels) {
 						increaseMapCounter (spreadResultsMap, result.toString());
-						found = 0;
 						break;
 					}
 
