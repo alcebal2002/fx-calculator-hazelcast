@@ -25,4 +25,10 @@ public class CalculationResult implements Serializable {
 	public final void setTotalHistoricalDataLoaded(long totalHistoricalDataLoaded) { this.totalHistoricalDataLoaded = totalHistoricalDataLoaded;}
 	public final long getTotalCalculations() { return totalCalculations; }
 	public final void setTotalCalculations(long totalCalculations) { this.totalCalculations = totalCalculations;}
+	
+	public final String getTotalCalculationsWithoutComma() {
+		String regex = "(?<=\\d),(?=\\d)";
+		return (""+this.totalCalculations).replaceAll(regex, "");
+	}
+
 } 
