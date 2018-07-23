@@ -13,10 +13,10 @@ import com.hazelcast.core.IQueue;
 import datamodel.ExecutionTask;
 import datamodel.WorkerDetail;
 import executionservices.RejectedExecutionHandlerImpl;
-import executionservices.RunnableWorkerThread;
 import executionservices.SystemLinkedBlockingQueue;
 import executionservices.SystemMonitorThread;
 import executionservices.SystemThreadPoolExecutor;
+import runnables.RunnableThreadBasic;
 import utils.ApplicationProperties;
 import utils.GeneralUtils;
 import utils.HazelcastInstanceUtils;
@@ -98,8 +98,7 @@ public class Worker {
 //			hzClient.getMap(HazelcastInstanceUtils.getMonitorMapName()).put(workerDetail.getUuid(),workerDetail);
 			
 			// Listen to Hazelcast tasks queue and submit work to the thread pool for each task 
-			IQueue<ExecutionTask> hazelcastTaskQueue = hzClient.getQueue( HazelcastInstanceUtils.getTaskQueueName() );
-			
+			IQueue<ExecutionTask> hazelcastTaskQueue = hzClient.getQueue( HazelcastInstanceUtils.getTaskQueueName() );		
 /*
 			long refreshTime = System.currentTimeMillis();
 			logger.info ("Refreshing Hazelcast WorkerDetail status after " + ApplicationProperties.getIntProperty("workerpool.refreshAfter") + " secs");
@@ -118,7 +117,7 @@ public class Worker {
 						hzClient.getQueue(HazelcastInstanceUtils.getTaskQueueName()).put(new ExecutionTask(HazelcastInstanceUtils.getStopProcessingSignal()));
 						break;
 					}				
-					executorPool.execute(new RunnableWorkerThread(executionTaskItem));
+					executorPool.execute(new RunnableThreadBasic(executionTaskItem));
 					totalExecutions++; 
 				}
 /*				

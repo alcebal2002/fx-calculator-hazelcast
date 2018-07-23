@@ -15,6 +15,14 @@ public class CalculationResult implements Serializable {
 	public CalculationResult() {
 	}
 	
+	public CalculationResult(final long startTime, final long stopTime, final long totalHistoricalDataLoaded, final long totalCalculations, final Map<String,Integer> resultsMap) {
+		this.startTime = startTime;
+		this.stopTime = stopTime;
+		this.totalHistoricalDataLoaded = totalHistoricalDataLoaded;
+		this.totalCalculations = totalCalculations;
+		this.resultsMap = resultsMap;
+	}
+	
 	public final Map<String,Integer> getResultsMap() { return resultsMap; }
 	public final void setResultsMap (Map<String,Integer> resultsMap) { this.resultsMap = resultsMap; }
 	public final long getStartTime() { return startTime; }

@@ -1,4 +1,4 @@
-package executionservices;
+package runnables;
 
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -19,10 +19,10 @@ import utils.ApplicationProperties;
 import utils.DatabaseUtils;
 import utils.GeneralUtils;
 
-public class RunnableWorkerThread implements Runnable {
+public class RunnableThread1212 implements Runnable {
 
 	// Logger
-	private static Logger logger = LoggerFactory.getLogger(RunnableWorkerThread.class);
+	private static Logger logger = LoggerFactory.getLogger(RunnableThread1212.class);
 
 	private String currentCurrency;
 	private Properties applicationProperties;
@@ -38,7 +38,7 @@ public class RunnableWorkerThread implements Runnable {
 	private long totalHistDataLoaded = 0;
 	private long totalCalculations = 0;
 
-	public RunnableWorkerThread (final ExecutionTask executionTask){
+	public RunnableThread1212 (final ExecutionTask executionTask){
 		this.applicationProperties = executionTask.getTaskParameters();
 		this.currentCurrency = executionTask.getCurrentCurrency();
 	}

@@ -7,7 +7,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import datamodel.CalcResult; 
+import datamodel.CalcResult;
+import runnables.RunnableThreadBasic; 
   
 public class SystemThreadPoolExecutor extends ThreadPoolExecutor { 
         
@@ -31,14 +32,14 @@ public class SystemThreadPoolExecutor extends ThreadPoolExecutor {
 	    try {
 	    	totalExecutions++;
 	    	
-	    	calcResultsMap.putAll(((RunnableWorkerThread)r).getCalcResultsMap());
-			totalExecutionTime += ((RunnableWorkerThread)r).getElapsedTimeMillis();
-			totalHistDataLoaded += ((RunnableWorkerThread)r).getTotalHistDataLoaded();
-			totalCalculations += ((RunnableWorkerThread)r).getTotalCalculations();
-			totalBasicResults += ((RunnableWorkerThread)r).getTotalBasicResults();
-			totalSpreadResults += ((RunnableWorkerThread)r).getTotalSpreadResults();
-			total1212Results += ((RunnableWorkerThread)r).getTotal1212Results();
-			total1234Results += ((RunnableWorkerThread)r).getTotal1234Results();
+	    	calcResultsMap.putAll(((RunnableThreadBasic)r).getCalcResultsMap());
+			totalExecutionTime += ((RunnableThreadBasic)r).getElapsedTimeMillis();
+			totalHistDataLoaded += ((RunnableThreadBasic)r).getTotalHistDataLoaded();
+			totalCalculations += ((RunnableThreadBasic)r).getTotalCalculations();
+			totalBasicResults += ((RunnableThreadBasic)r).getTotalBasicResults();
+			totalSpreadResults += ((RunnableThreadBasic)r).getTotalSpreadResults();
+			total1212Results += ((RunnableThreadBasic)r).getTotal1212Results();
+			total1234Results += ((RunnableThreadBasic)r).getTotal1234Results();
 	    } finally { 
 	    	super.afterExecute(r, t); 
 	    } 
