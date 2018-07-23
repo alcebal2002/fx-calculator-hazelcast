@@ -7,31 +7,29 @@ public class ExecutionTask implements Serializable {
 	private static final long serialVersionUID = 1L;
 	// Task parameters
 	private int taskId;
-	private String taskType = null;
+	private String calculationMethodology = null;
 	private String currentCurrency = null;
 	private Properties taskParameters;
 	
-	private long creationTimestamp = 0L;
-	private long elapsedExecutionTime = 0L;
+	private CalculationResult calculationResult;
 
-	public ExecutionTask(String taskType) {
-		this.taskType = taskType;
+	public ExecutionTask(String stopSignal) {
+		this.calculationMethodology = stopSignal;
 	}
 
-	public ExecutionTask(final int taskId, final String taskType, final String currentCurrency, final Properties taskParameters) {
+	public ExecutionTask(final int taskId, final String calculationMethodology, final String currentCurrency, final Properties taskParameters) {
 		this.taskId = taskId;
-		this.taskType = taskType;
+		this.calculationMethodology = calculationMethodology;
 		this.currentCurrency = currentCurrency;
 		this.taskParameters = taskParameters;
-		this.creationTimestamp = System.currentTimeMillis();
 	}
 
 	public final int getTaskId() {
 		return this.taskId;
 	}
 
-	public final String getTaskType() {
-		return this.taskType;
+	public final String getCalculationMethodology() {
+		return this.calculationMethodology;
 	}
 
 	public final String getCurrentCurrency() {
@@ -42,13 +40,11 @@ public class ExecutionTask implements Serializable {
 		return taskParameters;
 	}
 	
-	public final long getCreationTimestamp() {
-		return creationTimestamp;
+	public final CalculationResult getCalculationResult () {
+		return calculationResult;
 	}
-	public final long getElapsedExecutionTime() {
-		return elapsedExecutionTime;
-	}
-	public final void setElapsedExecutionTime (long elapsedTime) {
-		this.elapsedExecutionTime = elapsedTime;
+
+	public final void setCalculationResult (CalculationResult calculationResult) {
+		this.calculationResult = calculationResult;
 	}
 } 
