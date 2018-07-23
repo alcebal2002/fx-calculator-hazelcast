@@ -87,7 +87,7 @@
 		</tbody>
 	  </table>
 	  
-	  <#if refreshPage>
+	  <#if !refreshPage>
 		<#assign totalExecutions = statusMap["totalExecutions"]>
 		<#assign avgExecutionTime = statusMap["avgExecutionTime"]>
 		<#assign totalHistDataLoaded = statusMap["totalHistDataLoaded"]>
