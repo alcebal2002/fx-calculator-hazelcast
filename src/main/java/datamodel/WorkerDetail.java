@@ -22,6 +22,7 @@ public class WorkerDetail implements Serializable {
 
 	private long startTime = 0L; 
 	private long stopTime = 0L;
+	private long totalElapsedTime = 0L;
 	
 	/**
 	 * @param uuid
@@ -76,6 +77,9 @@ public class WorkerDetail implements Serializable {
 	public final long getStopTime() { return stopTime; }
 	public final String getStopTimeString() { return ((this.getStopTime()>0L)?(new Timestamp(this.getStopTime()).toString()):" - "); }
 	public final void setStopTime(long stopTime) { this.stopTime = stopTime; }	
+	public final long getTotalElapsedTime() { return totalElapsedTime; }
+	public final String getTotalElapsedTimeString() { return ((this.getTotalElapsedTime()>0L)?(new Timestamp(this.getTotalElapsedTime()).toString()):" - "); }
+	public final void setTotalElapsedTime(long totalElapsedTime) { this.totalElapsedTime = totalElapsedTime; }	
 
 	public final String getCsvFormat() {
 		return  this.getUuid() + ";" +
