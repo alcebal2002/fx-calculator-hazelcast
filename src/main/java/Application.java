@@ -1,8 +1,4 @@
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.DecimalFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -31,11 +27,6 @@ public class Application {
 	private static long totalExecutions = 0;
 	private static long totalHistDataLoaded = 0;
 	private static long totalCalculations = 0;
-	private static long totalBasicResults = 0;
-	private static long totalSpreadResults = 0;
-	private static long total1212Results = 0;
-	private static long total1234Results = 0;
-	private static long avgExecutionTime = 0;
 	
 	private static Path resultFilePath = null;		
 
@@ -88,7 +79,7 @@ public class Application {
         printResultsToLog ();
         
 		// Print results in the output file
-        printResultsToFile ();	
+//        printResultsToFile ();	
         
         // Put results into Hazelcast - statusMap
         updateHazelcastResults();
@@ -128,7 +119,7 @@ public class Application {
     	
 		logger.info ("Waiting " + monitorDelay + " secs to start monitoring");
 		Thread.sleep(monitorDelay*1000);
-		logger.info ("Checking " + HazelcastInstanceUtils.getWorkersMapName() + " every "+monitorDelay+" secs");
+		logger.info ("Checking " + HazelcastInstanceUtils.getWorkersMapName() + " every " + monitorDelay + " secs");
 		Thread.sleep(monitorDelay*1000);
 
 		boolean stopMonitoring;
@@ -183,70 +174,31 @@ public class Application {
 	// Print results to log
 	private static void printResultsToLog () throws Exception {
 
-		int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
-
-		Map <String,CalculationResult> resultsMap = null;
+		Map<String,Integer> resultsMap = null;
 		
 		Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getResultsMapName()).entrySet().iterator();
 
-		int numWorkers = 0;
-		
 		while (iter.hasNext()) {
-			numWorkers++;
             Entry<String, Object> entry = iter.next();
-/*
-            resultsMap = ((WorkerDetail) entry.getValue()).getCalculationResults();
-            totalExecutions += ((WorkerDetail) entry.getValue()).getTotalExecutions();
-            totalHistDataLoaded += ((WorkerDetail) entry.getValue()).getTotalHistoricalDataLoaded();
-            totalCalculations += ((WorkerDetail) entry.getValue()).getTotalCalculations();
-            totalBasicResults += ((WorkerDetail) entry.getValue()).getTotalBasicResults();
-            totalSpreadResults += ((WorkerDetail) entry.getValue()).getTotalSpreadResults();
-            total1212Results += ((WorkerDetail) entry.getValue()).getTotal1212Results();
-            total1234Results += ((WorkerDetail) entry.getValue()).getTotal1234Results();
-            avgExecutionTime += ((WorkerDetail) entry.getValue()).getAvgExecutionTime();
-            avgExecutionTime = avgExecutionTime / numWorkers;
 
-    		if (calcResultsMap != null && calcResultsMap.size() > 0) {
+            totalExecutions++;
+            totalHistDataLoaded += (((ExecutionTask) entry.getValue()).getCalculationResult()).getTotalHistoricalDataLoaded();
+            totalCalculations += (((ExecutionTask) entry.getValue()).getCalculationResult()).getTotalCalculations();
 
-    			logger.info(((WorkerDetail) entry.getValue()).getInetAddres() + ":" + ((WorkerDetail) entry.getValue()).getInetPort() + " - Executed: " + ((WorkerDetail) entry.getValue()).getTotalExecutions()  + " - Calculations: " + ((WorkerDetail) entry.getValue()).getTotalCalculations());
+            resultsMap = ((ExecutionTask) entry.getValue()).getCalculationResult().getResultsMap();
 
-    			logger.info (printBasicResultsHeader(maxLevels));
+            if (resultsMap != null && resultsMap.size() > 0) {
 
-    			Iterator<Entry<String, CalcResult>> calcResultIter = calcResultsMap.entrySet().iterator();
-    			Entry<String, CalcResult> calcResultEntry;
-    			
-    			while (calcResultIter.hasNext()) {
-    				calcResultEntry = calcResultIter.next();
-					if (calcResultEntry.getValue().getBasicResults() != null) {
-						logger.info (printBasicResultsLevels (calcResultEntry.getValue().getCurrencyPair(), calcResultEntry.getValue().getBasicResults(), maxLevels));
-					}
-					if (calcResultEntry.getValue().getSpreadResults() != null) {
-						logger.info (calcResultEntry.getValue().getSpreadResults().toString());						
-					}
-					if (calcResultEntry.getValue().get1212Results() != null) {
-						logger.info (calcResultEntry.getValue().get1212Results().toString());						
-					}
-					if (calcResultEntry.getValue().get1234Results() != null) {
-						logger.info (calcResultEntry.getValue().get1234Results().toString());						
-					}
-    			}
-    			    			
-    			logger.info ("**************************************************");
-    			logger.info("");
-    		}            
-*/            
+            	//logger.info (printBasicResultsHeader(maxLevels));
+            	logger.info (resultsMap.toString());
+   			}
         }
 		logger.info ("");
 		logger.info ("Total figures:");
 		logger.info ("**************************************************");
 		logger.info ("  - Total executions         : " + String.format("%,d", totalExecutions));
-		logger.info ("  - Avg. execution time      : " + GeneralUtils.printElapsedTime (avgExecutionTime));
 		logger.info ("  - Total historical data    : " + String.format("%,d", totalHistDataLoaded));
 		logger.info ("  - Total calculations       : " + String.format("%,d", totalCalculations)); 
-		logger.info ("  - Total basic results      : " + String.format("%,d", totalBasicResults));
-		logger.info ("  - Total spread results     : " + String.format("%,d", totalSpreadResults));
-		logger.info ("  - Total 1212 results       : " + String.format("%,d", total1212Results));
-		logger.info ("  - Total 1234 results       : " + String.format("%,d", total1234Results));
 		logger.info ("  - Elapsed time             : " + GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime));
 		logger.info ("**************************************************");
 		logger.info ("");
@@ -360,18 +312,22 @@ public class Application {
 		stringBuilder.append("calculations|"+calculations+"\n");
 		stringBuilder.append("Results"+"\n");
 		stringBuilder.append("total executions|"+String.format("%,d", totalExecutions)+"\n");
-		stringBuilder.append("avg. execution time|"+GeneralUtils.printElapsedTime (avgExecutionTime)+"\n");
+		stringBuilder.append("avg. execution time|BLANK"+"\n");
 		stringBuilder.append("total historical data|"+String.format("%,d", totalHistDataLoaded)+"\n");
-		stringBuilder.append("total calculations|"+String.format("%,d", totalCalculations)+"\n"); 
-		stringBuilder.append("total basic results|"+String.format("%,d", totalBasicResults)+"\n");
-		stringBuilder.append("total spread results|"+String.format("%,d", totalSpreadResults)+"\n");
-		stringBuilder.append("total 1212 results|"+String.format("%,d", total1212Results)+"\n");
-		stringBuilder.append("total 1234 results|"+String.format("%,d", total1234Results)+"\n");
+		stringBuilder.append("total calculations|"+String.format("%,d", totalCalculations)+"\n");
+		
+		// Iterate through the calculation methodologies and print the results 
+		
+		stringBuilder.append("total basic results|"+String.format("%,d", "BLANK")+"\n");
+		stringBuilder.append("total spread results|"+String.format("%,d", "BLANK")+"\n");
+		stringBuilder.append("total 1212 results|"+String.format("%,d", "BLANK")+"\n");
+		stringBuilder.append("total 1234 results|"+String.format("%,d", "BLANK")+"\n");
 		stringBuilder.append("elapsed time|"+GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime)+"\n");
 
 		return (stringBuilder.toString());
 	}
 
+/*
 	// Print currency levels header
 	private static String printBasicResultsHeader(final int maxLevels) {
 		StringBuilder stringBuilder =  new StringBuilder();
@@ -383,7 +339,7 @@ public class Application {
 		
 		return (stringBuilder.toString());
 	}
-		
+	
 	// Print currency result levels
 	private static String printBasicResultsLevels (final String currency, final Map<String,Integer> levelsMap, final int maxLevels) {
 		
@@ -421,6 +377,7 @@ public class Application {
 		
 		return (currency + "|" + stringBuilder.toString());
 	}
+*/
 
 /*	
 	// Print currency result levels
@@ -464,14 +421,11 @@ public class Application {
 	
 	private static void updateHazelcastResults () throws Exception {
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalExecutions", String.format("%,d", totalExecutions));
-    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "avgExecutionTime", GeneralUtils.printElapsedTime (avgExecutionTime));
+    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "avgExecutionTime", GeneralUtils.printElapsedTime (0));
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalHistDataLoaded", String.format("%,d", totalHistDataLoaded));
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalCalculations", String.format("%,d", totalCalculations));
-    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalBasicResults", String.format("%,d", totalBasicResults));
-    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalSpreadResults", String.format("%,d", totalSpreadResults));
-    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "total1212Results", String.format("%,d", total1212Results));
-    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "total1234Results", String.format("%,d", total1234Results));
+
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "elapsedTime", GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime));
-    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "resultFilePath", resultFilePath.toString());
+//    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "resultFilePath", resultFilePath.toString());
 	}
 }
