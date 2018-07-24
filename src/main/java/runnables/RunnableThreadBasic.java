@@ -57,7 +57,7 @@ public class RunnableThreadBasic implements Runnable {
 				logger.info ("Historical data populated for " + currentCurrency);
 
 				calculationStartTime = System.currentTimeMillis();
-				logger.info ("Starting basic calculations for " + currentCurrency);
+				logger.info ("Starting " + executionTask.getCalculationMethodology() + " calculations for " + currentCurrency);
 				totalCalculations += executeBasicCalculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels);
 				
 				calculationStopTime = System.currentTimeMillis();
@@ -74,12 +74,6 @@ public class RunnableThreadBasic implements Runnable {
 			logger.debug ("Populating Calculation Result Map for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 			// Populates the Calculation Result Map
 			executionTask.setCalculationResult(new CalculationResult(startTime, stopTime, totalHistDataLoaded, totalCalculations, resultsMap));
-
-			logger.debug ("Putting Results for " + currentCurrency + " - " + executionTask.getCalculationMethodology() + " into Hazelcast");
-			
-			// PUT INTO HAZELCAST
-
-			
 		} catch (Exception e) { 
 			e.printStackTrace(); 
 		}
@@ -143,7 +137,7 @@ public class RunnableThreadBasic implements Runnable {
 				}
 			}
 		} else {
-			logger.info("No historical data available for " + currentCurrency + ". Avoid Basic calculation");
+			logger.info("No historical data available for " + currentCurrency + ". Avoid " + executionTask.getCalculationMethodology() + " calculation");
 		}
 		return totalCalculations;
     }
@@ -152,4 +146,5 @@ public class RunnableThreadBasic implements Runnable {
 	public long getTotalCalculations () { return this.totalCalculations; }
 	public long getTotalHistDataLoaded () {	return this.totalHistDataLoaded; }
 	public long getElapsedTimeMillis () { return this.elapsedTimeMillis; }
+	public ExecutionTask getExecutionTask() { return this.executionTask; }
 }

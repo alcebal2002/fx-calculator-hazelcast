@@ -61,7 +61,7 @@ public class RunnableThreadSpread implements Runnable {
 				
 				logger.info ("Retrieving spread data for " + currentCurrency);
 				spread = GeneralUtils.getSpread(currentCurrency,applicationProperties);
-				logger.info ("Starting spread calculations for " + currentCurrency);
+				logger.info ("Starting " + executionTask.getCalculationMethodology() + " calculations for " + currentCurrency);
 				totalCalculations += executeSpreadCalculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels, spread);
 				
 				calculationStopTime = System.currentTimeMillis();
@@ -79,11 +79,6 @@ public class RunnableThreadSpread implements Runnable {
 			// Populates the Calculation Result Map
 			executionTask.setCalculationResult(new CalculationResult(startTime, stopTime, totalHistDataLoaded, totalCalculations, resultsMap));
 
-			logger.debug ("Putting Results for " + currentCurrency + " - " + executionTask.getCalculationMethodology() + " into Hazelcast");
-			
-			// PUT INTO HAZELCAST
-
-			
 		} catch (Exception e) { 
 			e.printStackTrace(); 
 		}
@@ -137,7 +132,7 @@ public class RunnableThreadSpread implements Runnable {
 				}
 			}
 		} else {
-			logger.info("No historical data available for " + currentCurrency + ". Avoid Spread calculation");
+			logger.info("No historical data available for " + currentCurrency + ". Avoid " + executionTask.getCalculationMethodology() + " calculation");
 		}
 		logger.info("Spread result: " + resultsMap.toString());
 		return totalCalculations;
@@ -147,4 +142,5 @@ public class RunnableThreadSpread implements Runnable {
 	public long getTotalCalculations () { return this.totalCalculations; }
 	public long getTotalHistDataLoaded () {	return this.totalHistDataLoaded; }
 	public long getElapsedTimeMillis () { return this.elapsedTimeMillis; }
+	public ExecutionTask getExecutionTask() { return this.executionTask; }
 }
