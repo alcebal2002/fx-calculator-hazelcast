@@ -153,7 +153,7 @@ public class Worker {
 			workerDetail.setActiveStatus(false);
 			workerDetail.setStopTime(stopTime);
 			workerDetail.setTotalElapsedTime((stopTime - startTime));
-			hzClient.getMap(HazelcastInstanceUtils.getMonitorMapName()).put(workerDetail.getUuid(),workerDetail);
+			hzClient.getMap(HazelcastInstanceUtils.getWorkersMapName()).put(workerDetail.getUuid(),workerDetail);
 			
 			// Shutdown Hazelcast cluster node instance		
 			logger.info ("Shutting down hazelcast client...");

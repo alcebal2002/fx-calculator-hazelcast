@@ -29,8 +29,12 @@ public class HazelcastInstanceUtils {
 		return Constants.HZ_TASK_QUEUE_NAME;
 	}
 
-	public static String getMonitorMapName () throws Exception {
-		return Constants.HZ_MONITOR_MAP_NAME;
+	public static String getResultsMapName () throws Exception {
+		return Constants.HZ_RESULTS_MAP_NAME;
+	}
+
+	public static String getWorkersMapName () throws Exception {
+		return Constants.HZ_WORKERS_MAP_NAME;
 	}
 
 	public static String getStatusMapName () throws Exception {

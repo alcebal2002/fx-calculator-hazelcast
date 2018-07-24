@@ -49,7 +49,7 @@ public class Monitor {
         		
     			boolean refreshPage = false;
 
-    			Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getMonitorMapName()).entrySet().iterator();
+    			Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getWorkersMapName()).entrySet().iterator();
 
     			while (iter.hasNext()) {
     	            Entry<String, Object> entry = iter.next();
@@ -58,7 +58,7 @@ public class Monitor {
     			
         		Map<String, Object> root = new HashMap<String, Object>();
 				root.put( "refreshPage", refreshPage );
-        		root.put( HazelcastInstanceUtils.getMonitorMapName (), hzClient.getMap(HazelcastInstanceUtils.getMonitorMapName()) );
+        		root.put( HazelcastInstanceUtils.getWorkersMapName (), hzClient.getMap(HazelcastInstanceUtils.getWorkersMapName()) );
 				root.put( HazelcastInstanceUtils.getStatusMapName (), hzClient.getMap(HazelcastInstanceUtils.getStatusMapName()) );				
 				Template resultTemplate = freemarkerConfig.getTemplate(ApplicationProperties.getStringProperty("spark.templateFileName"));
 				resultTemplate.process(root, writer);

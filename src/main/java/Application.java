@@ -11,7 +11,7 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import datamodel.CalcResult;
+import datamodel.CalculationResult;
 import datamodel.ExecutionTask;
 import datamodel.WorkerDetail;
 import utils.ApplicationProperties;
@@ -105,12 +105,14 @@ public class Application {
     	ExecutionTask executionTask = null;
     	int taskId = 0;
 
-		// For each currencyPair (from properties file) create an Execution Task and put it into Hazelcast task queue for processing
+		// For each currencyPair and calculation methodology (from properties file) create an Execution Task and put it into Hazelcast task queue for processing
     	for (String currentCurrency : ApplicationProperties.getListProperty("application.currencyPairs")) {
-    		taskId++;
-    		logger.info ("Putting currency " + currentCurrency + " as taskId " + taskId);
-    		executionTask = new ExecutionTask (taskId,"FXRATE",currentCurrency,ApplicationProperties.getApplicationProperties());
-    		HazelcastInstanceUtils.putIntoQueue(HazelcastInstanceUtils.getTaskQueueName(), executionTask); 		
+        	for (String calculation : ApplicationProperties.getListProperty("application.calculations")) {
+	    		taskId++;
+	    		logger.info ("Putting currency " + currentCurrency + " - " + calculation + " as taskId " + taskId);
+	    		executionTask = new ExecutionTask (taskId,calculation,currentCurrency,ApplicationProperties.getApplicationProperties());
+	    		HazelcastInstanceUtils.putIntoQueue(HazelcastInstanceUtils.getTaskQueueName(), executionTask); 
+        	}
 		}
 
     	// Set total execution task
@@ -126,7 +128,7 @@ public class Application {
     	
 		logger.info ("Waiting " + monitorDelay + " secs to start monitoring");
 		Thread.sleep(monitorDelay*1000);
-		logger.info ("Checking " + HazelcastInstanceUtils.getMonitorMapName() + " every "+monitorDelay+" secs");
+		logger.info ("Checking " + HazelcastInstanceUtils.getWorkersMapName() + " every "+monitorDelay+" secs");
 		Thread.sleep(monitorDelay*1000);
 
 		boolean stopMonitoring;
@@ -134,7 +136,7 @@ public class Application {
 		while ( true ) {
 			stopMonitoring = true;
 
-			Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getMonitorMapName()).entrySet().iterator();
+			Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getWorkersMapName()).entrySet().iterator();
 
 			while (iter.hasNext()) {
 	            Entry<String, Object> entry = iter.next();
@@ -183,16 +185,17 @@ public class Application {
 
 		int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
 
-		Map <String,CalcResult> calcResultsMap = null;
+		Map <String,CalculationResult> resultsMap = null;
 		
-		Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getMonitorMapName()).entrySet().iterator();
+		Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getResultsMapName()).entrySet().iterator();
 
 		int numWorkers = 0;
 		
 		while (iter.hasNext()) {
 			numWorkers++;
             Entry<String, Object> entry = iter.next();
-            calcResultsMap = ((WorkerDetail) entry.getValue()).getCalculationResults();
+/*
+            resultsMap = ((WorkerDetail) entry.getValue()).getCalculationResults();
             totalExecutions += ((WorkerDetail) entry.getValue()).getTotalExecutions();
             totalHistDataLoaded += ((WorkerDetail) entry.getValue()).getTotalHistoricalDataLoaded();
             totalCalculations += ((WorkerDetail) entry.getValue()).getTotalCalculations();
@@ -202,7 +205,7 @@ public class Application {
             total1234Results += ((WorkerDetail) entry.getValue()).getTotal1234Results();
             avgExecutionTime += ((WorkerDetail) entry.getValue()).getAvgExecutionTime();
             avgExecutionTime = avgExecutionTime / numWorkers;
-            
+
     		if (calcResultsMap != null && calcResultsMap.size() > 0) {
 
     			logger.info(((WorkerDetail) entry.getValue()).getInetAddres() + ":" + ((WorkerDetail) entry.getValue()).getInetPort() + " - Executed: " + ((WorkerDetail) entry.getValue()).getTotalExecutions()  + " - Calculations: " + ((WorkerDetail) entry.getValue()).getTotalCalculations());
@@ -231,6 +234,7 @@ public class Application {
     			logger.info ("**************************************************");
     			logger.info("");
     		}            
+*/            
         }
 		logger.info ("");
 		logger.info ("Total figures:");
@@ -257,15 +261,16 @@ public class Application {
 			int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
 			String resultsPath = ApplicationProperties.getStringProperty("application.resultsPath");
 	
-			Map <String,CalcResult> calcResultsMap = null;
+			Map <String,CalculationResult> calcResultsMap = null;
 			
-			Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getMonitorMapName()).entrySet().iterator();
+			Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getWorkersMapName()).entrySet().iterator();
 	
 			int numWorkers = 0;
 			
 			while (iter.hasNext()) {
 				numWorkers++;
 	            Entry<String, Object> entry = iter.next();
+/*
 	            calcResultsMap = ((WorkerDetail) entry.getValue()).getCalculationResults();
 	            
 	    		if (calcResultsMap != null && calcResultsMap.size() > 0) {
@@ -328,6 +333,7 @@ public class Application {
 	    			}
 
 	    		}            
+*/
 	        }
 			logger.info("Results written into file: " + resultFilePath.toString());
         }

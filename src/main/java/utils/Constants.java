@@ -12,7 +12,8 @@ public class Constants {
 	// List instance names
 	
 	// Map instance names
-	public static final String HZ_MONITOR_MAP_NAME = "monitorMap";
+	public static final String HZ_RESULTS_MAP_NAME = "resultsMap";
+	public static final String HZ_WORKERS_MAP_NAME = "workersMap";
 	public static final String HZ_STATUS_MAP_NAME = "statusMap";
 	public static final String HZ_STATUS_ENTRY_KEY = "status";
 	
