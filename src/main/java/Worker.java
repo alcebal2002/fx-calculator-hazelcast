@@ -66,7 +66,7 @@ public class Worker {
 			SystemThreadPoolExecutor executorPool = new SystemThreadPoolExecutor(ApplicationProperties.getIntProperty("workerpool.coreSize"), 
 																				 ApplicationProperties.getIntProperty("workerpool.maxSize"), 
 																				 ApplicationProperties.getIntProperty("workerpool.timeoutSecs"),
-																				 TimeUnit.SECONDS, blockingQueue, threadFactory, rejectionHandler); 
+																				 TimeUnit.SECONDS, blockingQueue, threadFactory, rejectionHandler,hzClient); 
 			
 			// Create cluster node object
 			long startTime = System.currentTimeMillis();

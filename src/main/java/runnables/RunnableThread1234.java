@@ -25,7 +25,9 @@ public class RunnableThread1234 implements Runnable {
 	private Map<String, List<FxRate>> historicalDataMap = new HashMap<String, List<FxRate>>();
 	private Map<String, Integer> resultsMap = new HashMap<String, Integer>();
 	
-	private long elapsedTimeMillis;
+	private long startTime;
+	private long stopTime;
+	private long elapsedTime;
 	private long totalHistDataLoaded = 0;
 	private long totalCalculations = 0;
 
@@ -38,10 +40,7 @@ public class RunnableThread1234 implements Runnable {
 	@Override
 	public void run() {
 		
-		long calculationStartTime;
-		long calculationStopTime;
-
-		long startTime = System.currentTimeMillis();
+		startTime = System.currentTimeMillis();
 		
 		try {
 			
@@ -55,27 +54,24 @@ public class RunnableThread1234 implements Runnable {
 			
 			if (GeneralUtils.checkIfCurrencyExists (currentCurrency,applicationProperties)) {
 
-				logger.info ("Populating historical data for " + currentCurrency);
+				logger.info ("Populating historical data for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 				totalHistDataLoaded = GeneralUtils.populateHistoricalFxData(currentCurrency,historicalDataMap,applicationProperties);
-				logger.info ("Historical data populated for " + currentCurrency);
+				logger.info ("Historical data populated for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 
-				calculationStartTime = System.currentTimeMillis();
 				
-				logger.info ("Retrieving spread data for " + currentCurrency);
+				logger.info ("Retrieving spread data for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 				spread = GeneralUtils.getSpread(currentCurrency,applicationProperties);
-				logger.info ("Starting " + executionTask.getCalculationMethodology() + " calculations for " + currentCurrency);
+				logger.info ("Starting calculations for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 				totalCalculations += execute1234Calculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels, spread, maxFirstIterations);
 				
-				calculationStopTime = System.currentTimeMillis();
+				stopTime = System.currentTimeMillis();
+				elapsedTime = stopTime - startTime;
 
-				logger.info ("Finished calculations for " + currentCurrency + " [" + totalCalculations + "] in " + (calculationStopTime - calculationStartTime) + " ms");
+				logger.info ("Finished calculations for " + currentCurrency + " - " + executionTask.getCalculationMethodology() + " [" + totalCalculations + "] in " + elapsedTime + " ms");
 				
 			} else {
-				logger.error("No available data for " + currentCurrency);
+				logger.error("No available data for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 			}
-
-			long stopTime = System.currentTimeMillis(); 
-			elapsedTimeMillis = stopTime - startTime;
 
 			logger.debug ("Populating Calculation Result Map for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 			// Populates the Calculation Result Map
@@ -150,14 +146,10 @@ public class RunnableThread1234 implements Runnable {
 				}
 			}
 		} else {
-			logger.info("No historical data available for " + currentCurrency + ". Avoid 1234 calculation");
+			logger.info("No historical data available for " + currentCurrency + " - " + executionTask.getCalculationMethodology() + ". Avoiding calculation");
 		}
 		return totalCalculations;
     }
     
-	public Map<String, Integer> getResultsMap () { return resultsMap; }
-	public long getTotalCalculations () { return this.totalCalculations; }
-	public long getTotalHistDataLoaded () {	return this.totalHistDataLoaded; }
-	public long getElapsedTimeMillis () { return this.elapsedTimeMillis; }
 	public ExecutionTask getExecutionTask() { return this.executionTask; }
 }

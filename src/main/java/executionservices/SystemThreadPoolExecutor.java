@@ -1,25 +1,33 @@
 package executionservices;
-import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import datamodel.ExecutionTask;
-import runnables.RunnableThreadBasic; 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.hazelcast.core.HazelcastInstance;
+
+import runnables.RunnableThreadBasic;
+import utils.HazelcastInstanceUtils; 
   
 public class SystemThreadPoolExecutor extends ThreadPoolExecutor { 
 
-	private ArrayList<ExecutionTask> resultsList = new ArrayList<ExecutionTask>();
+	// Logger
+	private static Logger logger = LoggerFactory.getLogger(SystemThreadPoolExecutor.class);
+
+	private HazelcastInstance hzClient;
 	private long totalExecutionTime = 0;
     private int totalExecutions = 0;
     private long totalCalculations = 0;
     private long totalHistDataLoaded = 0;
 
     public SystemThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, 
-    							BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, RejectedExecutionHandler handler) { 
+    							BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, RejectedExecutionHandler handler, HazelcastInstance hzClient) {
     	super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler);
+    	this.hzClient = hzClient;
     } 
 
     protected void afterExecute (Runnable r, Throwable t ) { 
@@ -27,17 +35,20 @@ public class SystemThreadPoolExecutor extends ThreadPoolExecutor {
 	    try {
 	    	totalExecutions++;
 	    	
-	    	resultsList.add(((RunnableThreadBasic)r).getExecutionTask());
-			totalExecutionTime += ((RunnableThreadBasic)r).getElapsedTimeMillis();
-			totalHistDataLoaded += ((RunnableThreadBasic)r).getTotalHistDataLoaded();
-			totalCalculations += ((RunnableThreadBasic)r).getTotalCalculations();
+			totalExecutionTime += ((RunnableThreadBasic)r).getExecutionTask().getCalculationResult().getElapsedTime();
+			totalHistDataLoaded += ((RunnableThreadBasic)r).getExecutionTask().getCalculationResult().getTotalHistoricalDataLoaded();
+			totalCalculations += ((RunnableThreadBasic)r).getExecutionTask().getCalculationResult().getTotalCalculations();
 
+			// PUT the ExecutionTask results into Hazelcast
+			hzClient.getMap(HazelcastInstanceUtils.getResultsMapName()).put(((RunnableThreadBasic)r).getExecutionTask().getTaskId(),((RunnableThreadBasic)r).getExecutionTask());
+			
+	    } catch (Exception e) {
+	    	logger.error("Exception: " + e.getClass() + " - " + e.getMessage());
 	    } finally { 
 	    	super.afterExecute(r, t); 
 	    } 
     }
     
-    public ArrayList<ExecutionTask> getResultsList () { return this.resultsList; }
     public long getTotalExecutionTime () { return this.totalExecutionTime; }
     public long getTotalExecutions () { return this.totalExecutions; }
 	public long getTotalHistDataLoaded () { return this.totalHistDataLoaded; }

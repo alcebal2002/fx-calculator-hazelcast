@@ -7,7 +7,6 @@ public class CalculationResult implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private long startTime = 0L; 
 	private long stopTime = 0L;
-	private long totalElapsedTime = 0L; 
 	private long totalHistoricalDataLoaded = 0;
 	private long totalCalculations = 0;
 	private Map<String,Integer> resultsMap;
@@ -29,6 +28,7 @@ public class CalculationResult implements Serializable {
 	public final void setStartTime(long startTime) { this.startTime = startTime; }
 	public final long getStopTime() { return stopTime; }
 	public final void setStopTime(long stopTime) { this.stopTime = stopTime; }
+	public final long getElapsedTime() { return (stopTime - startTime); }
 	public final long getTotalHistoricalDataLoaded() { return totalHistoricalDataLoaded;}
 	public final void setTotalHistoricalDataLoaded(long totalHistoricalDataLoaded) { this.totalHistoricalDataLoaded = totalHistoricalDataLoaded;}
 	public final long getTotalCalculations() { return totalCalculations; }
