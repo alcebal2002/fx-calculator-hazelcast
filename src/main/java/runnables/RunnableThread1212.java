@@ -66,8 +66,7 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 				stopTime = System.currentTimeMillis();
 				elapsedTime = stopTime - startTime;
 
-				logger.info ("Finished calculations for " + currentCurrency + " - " + executionTask.getCalculationMethodology() + " [" + totalCalculations + "] in " + elapsedTime + " ms");
-				
+				logger.info ("Finished calculations for " + currentCurrency + " - " + executionTask.getCalculationMethodology() + " [#calcs: " + totalCalculations + " - #results: " + resultsMap.size() + "] in " + elapsedTime + " ms");
 			} else {
 				logger.error("No available data for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 			}
