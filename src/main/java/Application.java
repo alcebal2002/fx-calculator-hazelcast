@@ -189,7 +189,7 @@ public class Application {
 
             if (resultsMap != null && resultsMap.size() > 0) {
 
-            	//logger.info (printBasicResultsHeader(maxLevels));
+            	logger.info (((ExecutionTask) entry.getValue()).getCurrentCurrency() + " - " + ((ExecutionTask) entry.getValue()).getCalculationMethodology());
             	logger.info (resultsMap.toString());
    			}
         }

@@ -16,6 +16,7 @@ import executionservices.RejectedExecutionHandlerImpl;
 import executionservices.SystemLinkedBlockingQueue;
 import executionservices.SystemMonitorThread;
 import executionservices.SystemThreadPoolExecutor;
+import runnables.RunnableCalculationFactory;
 import runnables.RunnableThreadBasic;
 import utils.ApplicationProperties;
 import utils.GeneralUtils;
@@ -103,6 +104,8 @@ public class Worker {
 			long refreshTime = System.currentTimeMillis();
 			logger.info ("Refreshing Hazelcast WorkerDetail status after " + ApplicationProperties.getIntProperty("workerpool.refreshAfter") + " secs");
 */						
+			RunnableCalculationFactory runnableFactory = new RunnableCalculationFactory();
+			
 			while ( true ) {
 				/*
 				 * Option to avoid getting additional tasks from Hazelcast distributed queue if there is no processing capacity available in the ThreadPool 
@@ -111,13 +114,13 @@ public class Worker {
 //					(blockingQueue.remainingCapacity() > 0)) { // For ArrayBlockingQueue
 					(blockingQueue.size() < ApplicationProperties.getIntProperty("workerpool.queueCapacity"))) { // For LinkedBlockingQueue 
 					ExecutionTask executionTaskItem = hazelcastTaskQueue.take();
-					logger.info ("Consumed Execution Task " + executionTaskItem.getTaskId() + " from Hazelcast Task Queue");
+					logger.info ("Consumed Execution Task " + executionTaskItem.getTaskId() + " (" + executionTaskItem.getCurrentCurrency() + " - " + executionTaskItem.getCalculationMethodology() + ") from Hazelcast Task Queue");
 					if ( (HazelcastInstanceUtils.getStopProcessingSignal()).equals(executionTaskItem.getCalculationMethodology()) ) {
 						logger.info ("Detected " + HazelcastInstanceUtils.getStopProcessingSignal());
 						hzClient.getQueue(HazelcastInstanceUtils.getTaskQueueName()).put(new ExecutionTask(HazelcastInstanceUtils.getStopProcessingSignal()));
 						break;
 					}				
-					executorPool.execute(new RunnableThreadBasic(executionTaskItem));
+					executorPool.execute(runnableFactory.getRunnable(executionTaskItem));
 					totalExecutions++; 
 				}
 /*				

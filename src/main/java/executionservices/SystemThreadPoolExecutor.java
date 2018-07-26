@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.hazelcast.core.HazelcastInstance;
 
-import runnables.RunnableThreadBasic;
+import runnables.RunnableCalculation;
 import utils.HazelcastInstanceUtils; 
   
 public class SystemThreadPoolExecutor extends ThreadPoolExecutor { 
@@ -35,12 +35,12 @@ public class SystemThreadPoolExecutor extends ThreadPoolExecutor {
 	    try {
 	    	totalExecutions++;
 	    	
-			totalExecutionTime += ((RunnableThreadBasic)r).getExecutionTask().getCalculationResult().getElapsedTime();
-			totalHistDataLoaded += ((RunnableThreadBasic)r).getExecutionTask().getCalculationResult().getTotalHistoricalDataLoaded();
-			totalCalculations += ((RunnableThreadBasic)r).getExecutionTask().getCalculationResult().getTotalCalculations();
+			totalExecutionTime += ((RunnableCalculation) r).getExecutionTask().getCalculationResult().getElapsedTime();
+			totalHistDataLoaded += ((RunnableCalculation) r).getExecutionTask().getCalculationResult().getTotalHistoricalDataLoaded();
+			totalCalculations += ((RunnableCalculation) r).getExecutionTask().getCalculationResult().getTotalCalculations();
 
 			// PUT the ExecutionTask results into Hazelcast
-			hzClient.getMap(HazelcastInstanceUtils.getResultsMapName()).put(((RunnableThreadBasic)r).getExecutionTask().getTaskId(),((RunnableThreadBasic)r).getExecutionTask());
+			hzClient.getMap(HazelcastInstanceUtils.getResultsMapName()).put(((RunnableCalculation)r).getExecutionTask().getTaskId(),((RunnableCalculation)r).getExecutionTask());
 			
 	    } catch (Exception e) {
 	    	logger.error("Exception: " + e.getClass() + " - " + e.getMessage());

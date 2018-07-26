@@ -13,7 +13,7 @@ import datamodel.ExecutionTask;
 import datamodel.FxRate;
 import utils.GeneralUtils;
 
-public class RunnableThread1234 implements Runnable {
+public class RunnableThread1234 implements RunnableCalculation, Runnable {
 
 	// Logger
 	private static Logger logger = LoggerFactory.getLogger(RunnableThreadSpread.class);
@@ -73,7 +73,7 @@ public class RunnableThread1234 implements Runnable {
 				logger.error("No available data for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 			}
 
-			logger.debug ("Populating Calculation Result Map for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
+			logger.info ("Populating Calculation Result Map for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 			// Populates the Calculation Result Map
 			executionTask.setCalculationResult(new CalculationResult(startTime, stopTime, totalHistDataLoaded, totalCalculations, resultsMap));
 
