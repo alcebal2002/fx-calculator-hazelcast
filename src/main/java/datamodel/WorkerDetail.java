@@ -9,6 +9,7 @@ public class WorkerDetail implements Serializable {
 	private String inetAddres;
 	private String inetPort;
 	private boolean activeStatus = true;
+	private long refreshTime = System.currentTimeMillis();
 
 	// Start up parameters
 	private int poolCoreSize;
@@ -62,6 +63,8 @@ public class WorkerDetail implements Serializable {
 	public final boolean getActiveStatus() { return activeStatus; }
 	public final void setActiveStatus(boolean status) {	this.activeStatus = status;	}
 	public final String getActiveStatusString() { return activeStatus?"Active":"Inactive"; }
+	public final long getRefreshTime() {	return refreshTime; }
+	public final void setRefreshTime (long refreshTime) { this.refreshTime = refreshTime; }
 	public final String getInetAddres() { return inetAddres; }
 	public final String getInetPort() {	return inetPort; }
 	public final int getPoolCoreSize() { return poolCoreSize; }

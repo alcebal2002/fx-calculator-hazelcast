@@ -17,7 +17,6 @@ import executionservices.SystemLinkedBlockingQueue;
 import executionservices.SystemMonitorThread;
 import executionservices.SystemThreadPoolExecutor;
 import runnables.RunnableCalculationFactory;
-import runnables.RunnableThreadBasic;
 import utils.ApplicationProperties;
 import utils.GeneralUtils;
 import utils.HazelcastInstanceUtils;
@@ -96,14 +95,14 @@ public class Worker {
 			Thread monitorThread = new Thread(monitor); 
 			monitorThread.start(); 
 
-//			hzClient.getMap(HazelcastInstanceUtils.getMonitorMapName()).put(workerDetail.getUuid(),workerDetail);
+			hzClient.getMap(HazelcastInstanceUtils.getWorkersMapName()).put(workerDetail.getUuid(),workerDetail);
 			
 			// Listen to Hazelcast tasks queue and submit work to the thread pool for each task 
 			IQueue<ExecutionTask> hazelcastTaskQueue = hzClient.getQueue( HazelcastInstanceUtils.getTaskQueueName() );		
-/*
+
 			long refreshTime = System.currentTimeMillis();
 			logger.info ("Refreshing Hazelcast WorkerDetail status after " + ApplicationProperties.getIntProperty("workerpool.refreshAfter") + " secs");
-*/						
+
 			RunnableCalculationFactory runnableFactory = new RunnableCalculationFactory();
 			
 			while ( true ) {
@@ -123,14 +122,13 @@ public class Worker {
 					executorPool.execute(runnableFactory.getRunnable(executionTaskItem));
 					totalExecutions++; 
 				}
-/*				
+				
 				if ((System.currentTimeMillis()) - refreshTime > (ApplicationProperties.getIntProperty("workerpool.refreshAfter")*1000)) {
 					refreshTime = System.currentTimeMillis();
 					workerDetail.setRefreshTime(refreshTime);
-					hzClient.getMap(HazelcastInstanceUtils.getMonitorMapName()).put(workerDetail.getUuid(),workerDetail);
+					hzClient.getMap(HazelcastInstanceUtils.getWorkersMapName()).put(workerDetail.getUuid(),workerDetail);
 					logger.debug ("Updated Hazelcast WorkerDetail refreshTime");
 				}
-*/
 			}
 			logger.info ("Hazelcast consumer Finished");
 
