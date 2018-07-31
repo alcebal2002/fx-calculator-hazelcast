@@ -242,7 +242,7 @@ public class Application {
 					Iterator<Entry<String, Integer>> calcResults = resultsMap.entrySet().iterator();   						
 					while (calcResults.hasNext()) {
 						Entry<String, Integer> calcEntry = calcResults.next();
-						GeneralUtils.writeTextToFile(resultFilePath, ((ExecutionTask) entry.getValue()).getCurrentCurrency() + ((ExecutionTask) entry.getValue()).getCalculationMethodology() + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
+						GeneralUtils.writeTextToFile(resultFilePath, ((ExecutionTask) entry.getValue()).getCurrentCurrency() + "-" + ((ExecutionTask) entry.getValue()).getCalculationMethodology() + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
 					}
 				}
 
