@@ -4,6 +4,7 @@ import static java.lang.System.out;
 
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
@@ -72,5 +73,18 @@ public class ApplicationProperties {
     public static String getProperty (final String propertyName) {
 
        return applicationProperties.getProperty(propertyName);
+    }
+    
+    public static String printProperties () {
+    	StringBuilder stringBuilder = new StringBuilder();
+    	Enumeration propsList = applicationProperties.propertyNames();
+
+        String propName;
+
+    	for (; propsList.hasMoreElements(); ) {
+            propName = (String) propsList.nextElement();
+    		stringBuilder.append (propName + "=" + (String) applicationProperties.get(propName) + "\n");
+        }
+    	return stringBuilder.toString();
     }
 }

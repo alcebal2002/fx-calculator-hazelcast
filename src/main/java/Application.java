@@ -233,7 +233,7 @@ public class Application {
 	
     				if (numWorkers == 1) {
     					resultFilePath = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+".csv"));
-    					GeneralUtils.writeTextToFile(resultFilePath, printExecutionParams());
+    					GeneralUtils.writeTextToFile(resultFilePath, ApplicationProperties.printProperties());
     				}
     				GeneralUtils.writeTextToFile(resultFilePath, ((WorkerDetail) entry.getValue()).getInetAddres() + ":" + ((WorkerDetail) entry.getValue()).getInetPort() + " - Basic calculation results");
     				GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsHeader(maxLevels));
@@ -293,42 +293,6 @@ public class Application {
 	        }
 			logger.info("Results written into file: " + resultFilePath.toString());
         }
-	}
-	
-	// Print execution parameters
-	private static String printExecutionParams() {
-		
-		List<String> currencyPairs = ApplicationProperties.getListProperty("application.currencyPairs");
-		List<String> calculations = ApplicationProperties.getListProperty("application.calculations");
-		String startDate = ApplicationProperties.getStringProperty("application.startDate");
-		String endDate = ApplicationProperties.getStringProperty("application.endDate");
-		int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
-		float increasePercentage = ApplicationProperties.getFloatProperty("application.increasePercentage");
-		float decreasePercentage = ApplicationProperties.getFloatProperty("application.decreasePercentage");
-		
-		StringBuilder stringBuilder =  new StringBuilder();
-		stringBuilder.append("currency pairs|"+currencyPairs.toString()+"\n");
-		stringBuilder.append("start date|"+startDate+"\n");
-		stringBuilder.append("end date|"+endDate+"\n");
-		stringBuilder.append("increase percentage|"+increasePercentage+"\n");
-		stringBuilder.append("decrease percentage|"+decreasePercentage+"\n");
-		stringBuilder.append("max. levels|"+maxLevels+"\n");
-		stringBuilder.append("calculations|"+calculations+"\n");
-		stringBuilder.append("Results"+"\n");
-		stringBuilder.append("total executions|"+String.format("%,d", totalExecutions)+"\n");
-		stringBuilder.append("avg. execution time|BLANK"+"\n");
-		stringBuilder.append("total historical data|"+String.format("%,d", totalHistDataLoaded)+"\n");
-		stringBuilder.append("total calculations|"+String.format("%,d", totalCalculations)+"\n");
-		
-		// Iterate through the calculation methodologies and print the results 
-		
-		stringBuilder.append("total basic results|"+String.format("%,d", "BLANK")+"\n");
-		stringBuilder.append("total spread results|"+String.format("%,d", "BLANK")+"\n");
-		stringBuilder.append("total 1212 results|"+String.format("%,d", "BLANK")+"\n");
-		stringBuilder.append("total 1234 results|"+String.format("%,d", "BLANK")+"\n");
-		stringBuilder.append("elapsed time|"+GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime)+"\n");
-
-		return (stringBuilder.toString());
 	}
 
 /*
