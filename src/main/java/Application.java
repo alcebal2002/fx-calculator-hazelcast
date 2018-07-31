@@ -1,13 +1,15 @@
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import datamodel.CalculationResult;
 import datamodel.ExecutionTask;
 import datamodel.WorkerDetail;
 import utils.ApplicationProperties;
@@ -79,7 +81,7 @@ public class Application {
         printResultsToLog ();
         
 		// Print results in the output file
-//        printResultsToFile ();	
+        printResultsToFile ();	
         
         // Put results into Hazelcast - statusMap
         updateHazelcastResults();
@@ -178,6 +180,7 @@ public class Application {
 	// Print results to log
 	private static void printResultsToLog () throws Exception {
 
+		logger.info ("Printing results to log");
 		Map<String,Integer> resultsMap = null;
 		
 		Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getResultsMapName()).entrySet().iterator();
@@ -211,93 +214,45 @@ public class Application {
 	// Print results to file
 	private static void printResultsToFile () throws Exception {
 
-        if (ApplicationProperties.getBooleanProperty("application.writeResultsToFile")) {
-	
-			List<String> currencyPairs = ApplicationProperties.getListProperty("application.currencyPairs");
-			int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
-			String resultsPath = ApplicationProperties.getStringProperty("application.resultsPath");
-	
-			Map <String,CalculationResult> calcResultsMap = null;
-			
-			Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getWorkersMapName()).entrySet().iterator();
-	
-			int numWorkers = 0;
-			
-			while (iter.hasNext()) {
-				numWorkers++;
-	            Entry<String, Object> entry = iter.next();
-/*
-	            calcResultsMap = ((WorkerDetail) entry.getValue()).getCalculationResults();
-	            
-	    		if (calcResultsMap != null && calcResultsMap.size() > 0) {
-	
-    				if (numWorkers == 1) {
-    					resultFilePath = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+".csv"));
-    					GeneralUtils.writeTextToFile(resultFilePath, ApplicationProperties.printProperties());
-    				}
-    				GeneralUtils.writeTextToFile(resultFilePath, ((WorkerDetail) entry.getValue()).getInetAddres() + ":" + ((WorkerDetail) entry.getValue()).getInetPort() + " - Basic calculation results");
-    				GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsHeader(maxLevels));
-	
-	    			// Print basic calculation results
-	    			for (String currency : currencyPairs) {
-	    				
-	    				if (calcResultsMap.containsKey(currency)) {
-	    					GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsLevels (currency, ((CalcResult)calcResultsMap.get(currency)).getBasicResults(), maxLevels));
-	    				} else {
-    						GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsLevels (currency, null, maxLevels));
-	    				}
-	    			}
+		boolean firstResult = true;
+		Map<String,Integer> resultsMap = null;
 
-	    			GeneralUtils.writeTextToFile(resultFilePath, ((WorkerDetail) entry.getValue()).getInetAddres() + ":" + ((WorkerDetail) entry.getValue()).getInetPort() + " - Spread calculation results");
+		logger.info ("Printing results to results file");
+		String resultsPath = ApplicationProperties.getStringProperty("application.resultsPath");
+		int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
 
-	    			// Print spread calculation results
-	    			for (String currency : currencyPairs) {
-	    				
-	    				if (calcResultsMap.containsKey(currency)) {
-    						Iterator<Entry<String, Integer>> calcResults = ((CalcResult)calcResultsMap.get(currency)).getSpreadResults().entrySet().iterator();   						
-    						while (calcResults.hasNext()) {
-    							Entry<String, Integer> calcEntry = calcResults.next();
-       							GeneralUtils.writeTextToFile(resultFilePath, currency + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
-    						}
-	    				}
-	    			}
-	    			
-    				GeneralUtils.writeTextToFile(resultFilePath, ((WorkerDetail) entry.getValue()).getInetAddres() + ":" + ((WorkerDetail) entry.getValue()).getInetPort() + " - 1212 calculation results");
-    				GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsHeader(maxLevels));
-	
-	    			// Print 1212 calculation results
-	    			for (String currency : currencyPairs) {
-	    				
-	    				if (calcResultsMap.containsKey(currency)) {
-	    					GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsLevels (currency, ((CalcResult)calcResultsMap.get(currency)).get1212Results(), maxLevels));
-	    				} else {
-    						GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsLevels (currency, null, maxLevels));
-	    				}
-	    			}
+		Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getResultsMapName()).entrySet().iterator();
 
-    				GeneralUtils.writeTextToFile(resultFilePath, ((WorkerDetail) entry.getValue()).getInetAddres() + ":" + ((WorkerDetail) entry.getValue()).getInetPort() + " - 1234 calculation results");
-    				GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsHeader(maxLevels));
-	
-	    			// Print 1234 calculation results
-	    			for (String currency : currencyPairs) {
-	    				
-	    				if (calcResultsMap.containsKey(currency)) {
-	    					GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsLevels (currency, ((CalcResult)calcResultsMap.get(currency)).get1234Results(), maxLevels));
-	    				} else {
-    						GeneralUtils.writeTextToFile(resultFilePath, printBasicResultsLevels (currency, null, maxLevels));
-	    				}
-	    			}
+		while (iter.hasNext()) {
+            Entry<String, Object> entry = iter.next();
 
-	    		}            
-*/
-	        }
-			logger.info("Results written into file: " + resultFilePath.toString());
+            resultsMap = ((ExecutionTask) entry.getValue()).getCalculationResult().getResultsMap();
+
+            if (resultsMap != null && resultsMap.size() > 0) {
+				if (firstResult) {
+					firstResult = false;
+					resultFilePath = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+".csv"));
+					GeneralUtils.writeTextToFile(resultFilePath, ApplicationProperties.printProperties());
+				}
+				
+				if (!(((ExecutionTask) entry.getValue()).getCalculationMethodology()).equalsIgnoreCase("SPREAD")) {
+					GeneralUtils.writeTextToFile(resultFilePath, printResultsHeader(maxLevels));
+					GeneralUtils.writeTextToFile(resultFilePath, printResultsLevels (((ExecutionTask) entry.getValue()).getCurrentCurrency(), ((ExecutionTask) entry.getValue()).getCalculationMethodology(), resultsMap, maxLevels));
+				} else {
+					Iterator<Entry<String, Integer>> calcResults = resultsMap.entrySet().iterator();   						
+					while (calcResults.hasNext()) {
+						Entry<String, Integer> calcEntry = calcResults.next();
+						GeneralUtils.writeTextToFile(resultFilePath, ((ExecutionTask) entry.getValue()).getCurrentCurrency() + ((ExecutionTask) entry.getValue()).getCalculationMethodology() + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
+					}
+				}
+
+   			}
         }
+		logger.info("Results written into file: " + resultFilePath.toString());
 	}
 
-/*
-	// Print currency levels header
-	private static String printBasicResultsHeader(final int maxLevels) {
+	// Print levels header
+	private static String printResultsHeader(final int maxLevels) {
 		StringBuilder stringBuilder =  new StringBuilder();
 		stringBuilder.append("CURRENCYPAIR");
 		
@@ -307,9 +262,9 @@ public class Application {
 		
 		return (stringBuilder.toString());
 	}
-	
+
 	// Print currency result levels
-	private static String printBasicResultsLevels (final String currency, final Map<String,Integer> levelsMap, final int maxLevels) {
+	private static String printResultsLevels (final String currency, final String calculationMethodology, final Map<String,Integer> levelsMap, final int maxLevels) {
 		
 		StringBuilder stringBuilder = new StringBuilder();
 		
@@ -343,49 +298,8 @@ public class Application {
 			stringBuilder.append("|");
 		}
 		
-		return (currency + "|" + stringBuilder.toString());
+		return (currency + "-" + calculationMethodology + "|" + stringBuilder.toString());
 	}
-*/
-
-/*	
-	// Print currency result levels
-	private static String print1212ResultsLevels (final String currency, final Map<String,Integer> levelsMap, final int maxLevels) {
-		
-		StringBuilder stringBuilder = new StringBuilder();
-		
-		double referenceLevel = 0;
-		
-		for (int i=1; i <= maxLevels; i++) {
-			long total=0;
-			if (levelsMap != null && levelsMap.containsKey(""+i)) {
-				stringBuilder.append(levelsMap.get(""+i));
-				total += levelsMap.get(""+i);
-			} else {
-				stringBuilder.append("0");
-			}
-			stringBuilder.append("|");
-			if (levelsMap != null && levelsMap.containsKey(""+i)) {
-				stringBuilder.append(levelsMap.get(""+i));
-				total += levelsMap.get(""+i);
-			} else {
-				stringBuilder.append("0");
-			}
-			stringBuilder.append("|");
-			stringBuilder.append(total);
-			stringBuilder.append("|");
-			if (i==1) referenceLevel = total;
-
-			if (total == 0) {
-				stringBuilder.append("0");
-			} else {
-				stringBuilder.append(new DecimalFormat("#.##").format(total*100/referenceLevel));
-			}
-			stringBuilder.append("|");
-		}
-		
-		return (currency + "|" + stringBuilder.toString());		
-	}
-*/
 	
 	private static void updateHazelcastResults () throws Exception {
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalExecutions", String.format("%,d", totalExecutions));

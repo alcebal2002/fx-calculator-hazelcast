@@ -118,7 +118,12 @@ public class Worker {
 						logger.info ("Detected " + HazelcastInstanceUtils.getStopProcessingSignal());
 						hzClient.getQueue(HazelcastInstanceUtils.getTaskQueueName()).put(new ExecutionTask(HazelcastInstanceUtils.getStopProcessingSignal()));
 						break;
-					}				
+					}
+					
+					// Puts the WorkerDetails into ExecutionTask
+					executionTaskItem.setWorkerDetail(workerDetail);
+					
+					// Determines which Runnable has to execute the task based on the taskType (ie. basic, spread...) 
 					executorPool.execute(runnableFactory.getRunnable(executionTaskItem));
 					totalExecutions++; 
 				}

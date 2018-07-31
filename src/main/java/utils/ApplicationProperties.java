@@ -83,7 +83,7 @@ public class ApplicationProperties {
 
     	for (; propsList.hasMoreElements(); ) {
             propName = (String) propsList.nextElement();
-    		stringBuilder.append (propName + "=" + (String) applicationProperties.get(propName) + "\n");
+    		stringBuilder.append (propName + "|" + (String) applicationProperties.get(propName) + "\n");
         }
     	return stringBuilder.toString();
     }
