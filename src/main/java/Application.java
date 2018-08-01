@@ -236,8 +236,8 @@ public class Application {
 				}
 				
 				if (!(((ExecutionTask) entry.getValue()).getCalculationMethodology()).equalsIgnoreCase("SPREAD")) {
-					GeneralUtils.writeTextToFile(resultFilePath, printResultsHeader(maxLevels));
-					GeneralUtils.writeTextToFile(resultFilePath, printResultsLevels (((ExecutionTask) entry.getValue()).getCurrentCurrency(), ((ExecutionTask) entry.getValue()).getCalculationMethodology(), resultsMap, maxLevels));
+					GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsHeader(maxLevels));
+					GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsLevels (((ExecutionTask) entry.getValue()).getCurrentCurrency(), ((ExecutionTask) entry.getValue()).getCalculationMethodology(), resultsMap, maxLevels));
 				} else {
 					Iterator<Entry<String, Integer>> calcResults = resultsMap.entrySet().iterator();   						
 					while (calcResults.hasNext()) {
@@ -251,63 +251,12 @@ public class Application {
 		logger.info("Results written into file: " + resultFilePath.toString());
 	}
 
-	// Print levels header
-	private static String printResultsHeader(final int maxLevels) {
-		StringBuilder stringBuilder =  new StringBuilder();
-		stringBuilder.append("CURRENCYPAIR");
-		
-		for (int i=1; i <= maxLevels; i++) {
-			stringBuilder.append("|"+i+"-UP|"+i+"-DOWN|"+i+"-TOTAL|"+i+"-%");
-		}
-		
-		return (stringBuilder.toString());
-	}
-
-	// Print currency result levels
-	private static String printResultsLevels (final String currency, final String calculationMethodology, final Map<String,Integer> levelsMap, final int maxLevels) {
-		
-		StringBuilder stringBuilder = new StringBuilder();
-		
-		double referenceLevel = 0;
-		
-		for (int i=1; i <= maxLevels; i++) {
-			long total=0;
-			if (levelsMap != null && levelsMap.containsKey("UP-"+i)) {
-				stringBuilder.append(levelsMap.get("UP-"+i));
-				total += levelsMap.get("UP-"+i);
-			} else {
-				stringBuilder.append("0");
-			}
-			stringBuilder.append("|");
-			if (levelsMap != null && levelsMap.containsKey("DOWN-"+i)) {
-				stringBuilder.append(levelsMap.get("DOWN-"+i));
-				total += levelsMap.get("DOWN-"+i);
-			} else {
-				stringBuilder.append("0");
-			}
-			stringBuilder.append("|");
-			stringBuilder.append(total);
-			stringBuilder.append("|");
-			if (i==1) referenceLevel = total;
-
-			if (total == 0) {
-				stringBuilder.append("0");
-			} else {
-				stringBuilder.append(new DecimalFormat("#.##").format(total*100/referenceLevel));
-			}
-			stringBuilder.append("|");
-		}
-		
-		return (currency + "-" + calculationMethodology + "|" + stringBuilder.toString());
-	}
-	
 	private static void updateHazelcastResults () throws Exception {
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalExecutions", String.format("%,d", totalExecutions));
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "avgExecutionTime", GeneralUtils.printElapsedTime (0));
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalHistDataLoaded", String.format("%,d", totalHistDataLoaded));
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalCalculations", String.format("%,d", totalCalculations));
-
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "elapsedTime", GeneralUtils.printElapsedTime (applicationStartTime,applicationStopTime));
-//    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "resultFilePath", resultFilePath.toString());
+    	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "resultFilePath", resultFilePath.toString());
 	}
 }

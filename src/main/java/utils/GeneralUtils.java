@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -288,5 +289,55 @@ public class GeneralUtils {
 			}
 		}
 
+	}
+
+	// Print levels header
+	public static String printResultsHeader(final int maxLevels) {
+		StringBuilder stringBuilder =  new StringBuilder();
+		stringBuilder.append("CURRENCYPAIR");
+		
+		for (int i=1; i <= maxLevels; i++) {
+			stringBuilder.append("|"+i+"-UP|"+i+"-DOWN|"+i+"-TOTAL|"+i+"-%");
+		}
+		
+		return (stringBuilder.toString());
+	}
+
+	// Print currency result levels
+	public static String printResultsLevels (final String currency, final String calculationMethodology, final Map<String,Integer> levelsMap, final int maxLevels) {
+		
+		StringBuilder stringBuilder = new StringBuilder();
+		
+		double referenceLevel = 0;
+		
+		for (int i=1; i <= maxLevels; i++) {
+			long total=0;
+			if (levelsMap != null && levelsMap.containsKey("UP-"+i)) {
+				stringBuilder.append(levelsMap.get("UP-"+i));
+				total += levelsMap.get("UP-"+i);
+			} else {
+				stringBuilder.append("0");
+			}
+			stringBuilder.append("|");
+			if (levelsMap != null && levelsMap.containsKey("DOWN-"+i)) {
+				stringBuilder.append(levelsMap.get("DOWN-"+i));
+				total += levelsMap.get("DOWN-"+i);
+			} else {
+				stringBuilder.append("0");
+			}
+			stringBuilder.append("|");
+			stringBuilder.append(total);
+			stringBuilder.append("|");
+			if (i==1) referenceLevel = total;
+
+			if (total == 0) {
+				stringBuilder.append("0");
+			} else {
+				stringBuilder.append(new DecimalFormat("#.##").format(total*100/referenceLevel));
+			}
+			stringBuilder.append("|");
+		}
+		
+		return (currency + "-" + calculationMethodology + "|" + stringBuilder.toString());
 	}
 }
