@@ -23,6 +23,7 @@ public class WorkerDetail implements Serializable {
 
 	private long startTime = 0L; 
 	private long stopTime = 0L;
+	private long totalExecutions = 0L;
 	private long totalElapsedTime = 0L;
 	
 	/**
@@ -60,26 +61,28 @@ public class WorkerDetail implements Serializable {
 
 	public final String getUuid() {	return this.uuid; }
 	public final void setNodeId(String uuid) { this.uuid = uuid; }
-	public final boolean getActiveStatus() { return activeStatus; }
+	public final boolean getActiveStatus() { return this.activeStatus; }
 	public final void setActiveStatus(boolean status) {	this.activeStatus = status;	}
-	public final String getActiveStatusString() { return activeStatus?"Active":"Inactive"; }
-	public final long getRefreshTime() {	return refreshTime; }
+	public final String getActiveStatusString() { return this.activeStatus?"Active":"Inactive"; }
+	public final long getRefreshTime() {	return this.refreshTime; }
 	public final void setRefreshTime (long refreshTime) { this.refreshTime = refreshTime; }
-	public final String getInetAddres() { return inetAddres; }
-	public final String getInetPort() {	return inetPort; }
-	public final int getPoolCoreSize() { return poolCoreSize; }
-	public final int getPoolMaxSize() {	return poolMaxSize;	}
-	public final int getQueueCapacity() { return queueCapacity;	}
-	public final int getTimeoutSecs() {	return timeoutSecs;	}
-	public final int getRetrySleepTime() { return retrySleepTime; }
-	public final int getRetryMaxAttempts() { return retryMaxAttempts; }
-	public final int getInitialSleep() { return initialSleep; }
-	public final int getMonitorSleep() { return monitorSleep; }
-	public final long getStartTime() { return startTime; }
+	public final String getInetAddres() { return this.inetAddres; }
+	public final String getInetPort() {	return this.inetPort; }
+	public final int getPoolCoreSize() { return this.poolCoreSize; }
+	public final int getPoolMaxSize() {	return this.poolMaxSize;	}
+	public final int getQueueCapacity() { return this.queueCapacity;	}
+	public final int getTimeoutSecs() {	return this.timeoutSecs;	}
+	public final int getRetrySleepTime() { return this.retrySleepTime; }
+	public final int getRetryMaxAttempts() { return this.retryMaxAttempts; }
+	public final int getInitialSleep() { return this.initialSleep; }
+	public final int getMonitorSleep() { return this.monitorSleep; }
+	public final long getStartTime() { return this.startTime; }
 	public final String getStartTimeString() { return ((this.getStartTime()>0L)?(new Timestamp(this.getStartTime()).toString()):" - ");	}
-	public final long getStopTime() { return stopTime; }
+	public final long getStopTime() { return this.stopTime; }
 	public final String getStopTimeString() { return ((this.getStopTime()>0L)?(new Timestamp(this.getStopTime()).toString()):" - "); }
 	public final void setStopTime(long stopTime) { this.stopTime = stopTime; }	
+	public final long getTotalExecutions() { return this.totalExecutions; }
+	public final void setTotalExecutions(long totalExecutions) { this.totalExecutions = totalExecutions; }	
 	public final long getTotalElapsedTime() { return totalElapsedTime; }
 	public final String getTotalElapsedTimeString() { return ((this.getTotalElapsedTime()>0L)?(new Timestamp(this.getTotalElapsedTime()).toString()):" - "); }
 	public final void setTotalElapsedTime(long totalElapsedTime) { this.totalElapsedTime = totalElapsedTime; }	

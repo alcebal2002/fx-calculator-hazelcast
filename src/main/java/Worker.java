@@ -125,7 +125,8 @@ public class Worker {
 					
 					// Determines which Runnable has to execute the task based on the taskType (ie. basic, spread...) 
 					executorPool.execute(runnableFactory.getRunnable(executionTaskItem));
-					totalExecutions++; 
+					totalExecutions++;
+					workerDetail.setTotalExecutions(totalExecutions);
 				}
 				
 				if ((System.currentTimeMillis()) - refreshTime > (ApplicationProperties.getIntProperty("workerpool.refreshAfter")*1000)) {
