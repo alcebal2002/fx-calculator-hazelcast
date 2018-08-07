@@ -35,7 +35,7 @@ public class Monitor {
 		// Load properties from file
 		ApplicationProperties.loadApplicationProperties ();
 		
-		freemarkerConfig.setClassForTemplateLoading(Monitor.class, ApplicationProperties.getStringProperty("spark.templatePath"));
+		freemarkerConfig.setClassForTemplateLoading(Monitor.class, "/templates/");
 
 		Spark.staticFileLocation(ApplicationProperties.getStringProperty("spark.publicPath"));
 		HazelcastInstance hzClient = HazelcastClient.newHazelcastClient();

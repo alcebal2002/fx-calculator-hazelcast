@@ -29,8 +29,16 @@
 		</style>
     </head>
     <body>
-	<#assign currentStatus = statusMap["status"]>
-	<#assign totalTasks = statusMap["totalTasks"]>	
+    
+    <#assign currentStatus = "">
+    <#assign totalTasks = 0>
+    <#if statusMap["status"]??>
+		<#assign currentStatus = statusMap["status"]>
+	</#if>
+    <#if statusMap["totalTasks"]??>
+		<#assign totalTasks = statusMap["totalTasks"]>	
+	</#if>
+    
 <div class="row">
 	<div class="column" id="canvas-holder" style="width:40%">
 		<canvas id="chart-area"></canvas>
@@ -55,22 +63,25 @@
 	<#assign totalWorkers = 0>
 	<#assign totalThreads = 0>
 	<#assign averageExecutionTime = 0>
-	<#list monitorMap?values as workerDetail>
-		<#assign totalExecuted = totalExecuted + workerDetail.totalExecutions>
-		<#assign totalWorkers = totalWorkers + 1>
-		<#assign totalThreads = totalThreads + workerDetail.poolMaxSize>
-		<#assign averageExecutionTime = averageExecutionTime + (workerDetail.totalExecutions * workerDetail.avgExecutionTime)>
-			<tr>
-				<td>${workerDetail.activeStatusString}</td>
-				<td>${workerDetail.inetAddres}:${workerDetail.inetPort}</td>
-				<td>${workerDetail.startTimeString}</td>
-				<td>${workerDetail.stopTimeString}</td>
-				<td>${workerDetail.totalElapsedTime}</td>
-				<td>${workerDetail.poolMaxSize}</td>
-				<td>${workerDetail.totalExecutions}</td>
-				<td>${workerDetail.avgExecutionTime}</td>
-			</tr>
-	</#list>
+	
+	<#if monitorMap??>
+		<#list monitorMap?values as workerDetail>
+			<#assign totalExecuted = totalExecuted + workerDetail.totalExecutions>
+			<#assign totalWorkers = totalWorkers + 1>
+			<#assign totalThreads = totalThreads + workerDetail.poolMaxSize>
+			<#assign averageExecutionTime = averageExecutionTime + (workerDetail.totalExecutions * workerDetail.avgExecutionTime)>
+				<tr>
+					<td>${workerDetail.activeStatusString}</td>
+					<td>${workerDetail.inetAddres}:${workerDetail.inetPort}</td>
+					<td>${workerDetail.startTimeString}</td>
+					<td>${workerDetail.stopTimeString}</td>
+					<td>${workerDetail.totalElapsedTime}</td>
+					<td>${workerDetail.poolMaxSize}</td>
+					<td>${workerDetail.totalExecutions}</td>
+					<td>${workerDetail.avgExecutionTime}</td>
+				</tr>
+		</#list>
+    </#if>
 	<#if totalWorkers gt 0>
 	  <#if totalExecuted gt 0>
 	    <#assign averageExecutionTime = averageExecutionTime / totalExecuted>
@@ -88,14 +99,38 @@
 	  </table>
 	  
 	  <#if !refreshPage>
-		<#assign totalExecutions = statusMap["totalExecutions"]>
-		<#assign avgExecutionTime = statusMap["avgExecutionTime"]>
-		<#assign totalHistDataLoaded = statusMap["totalHistDataLoaded"]>
-		<#assign totalCalculations = statusMap["totalCalculations"]>
-		<#assign totalBasicResults = statusMap["totalBasicResults"]>
-		<#assign totalSpreadResults = statusMap["totalSpreadResults"]>
-		<#assign elapsedTime = statusMap["elapsedTime"]>
-		<#assign resultFilePath = statusMap["resultFilePath"]>
+	  <#assign totalExecutions = 0>
+	  <#assign avgExecutionTime = 0>
+	  <#assign totalHistDataLoaded = 0>
+	  <#assign totalCalculations = 0>
+	  <#assign totalBasicResults = 0>
+	  <#assign totalSpreadResults = 0>
+	  <#assign elapsedTime = 0>
+	  <#assign resultFilePath = "">
+	   	<#if statusMap["totalExecutions"]??>
+			<#assign totalExecutions = statusMap["totalExecutions"]>
+		</#if>
+		<#if statusMap["avgExecutionTime"]??>
+			<#assign avgExecutionTime = statusMap["avgExecutionTime"]>
+		</#if>
+		<#if statusMap["totalHistDataLoaded"]??>
+			<#assign totalHistDataLoaded = statusMap["totalHistDataLoaded"]>
+		</#if>
+		<#if statusMap["totalCalculations"]??>
+			<#assign totalCalculations = statusMap["totalCalculations"]>
+		</#if>
+		<#if statusMap["totalBasicResults"]??>
+			<#assign totalBasicResults = statusMap["totalBasicResults"]>
+		</#if>
+		<#if statusMap["totalSpreadResults"]??>
+			<#assign totalSpreadResults = statusMap["totalSpreadResults"]>
+		</#if>
+		<#if statusMap["elapsedTime"]??>
+			<#assign elapsedTime = statusMap["elapsedTime"]>
+		</#if>
+		<#if statusMap["resultFilePath"]??>
+			<#assign resultFilePath = statusMap["resultFilePath"]>
+		</#if>
 	  	<table>
 	  		<tr>
 	  			<td>totalTasks</td>
@@ -144,9 +179,11 @@
 		data: {
 			datasets: [{
 				data: [
-					<#list monitorMap?values as workerDetail>
-					${workerDetail.totalExecutionsWithoutComma},
-					</#list>
+					<#if monitorMap??>
+						<#list monitorMap?values as workerDetail>
+							${workerDetail.totalExecutionsWithoutComma},
+						</#list>
+					</#if>
 				],
 				backgroundColor: [
 					window.chartColors.red,
@@ -160,9 +197,11 @@
 				label: 'Workers Monitor'
 			}],
 			labels: [
-				<#list monitorMap?values as workerDetail>
-				'${workerDetail.inetAddres}:${workerDetail.inetPort}',
-				</#list>
+				<#if monitorMap??>
+					<#list monitorMap?values as workerDetail>
+						'${workerDetail.inetAddres}:${workerDetail.inetPort}',
+					</#list>
+					</#if>
 			]
 		},
 		options: {
