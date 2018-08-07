@@ -64,12 +64,11 @@
 	<#assign totalThreads = 0>
 	<#assign averageExecutionTime = 0>
 	
-	<#if monitorMap??>
-		<#list monitorMap?values as workerDetail>
+	<#if workersMap??>
+		<#list workersMap?values as workerDetail>
 			<#assign totalExecuted = totalExecuted + workerDetail.totalExecutions>
 			<#assign totalWorkers = totalWorkers + 1>
 			<#assign totalThreads = totalThreads + workerDetail.poolMaxSize>
-			<#assign averageExecutionTime = averageExecutionTime + (workerDetail.totalExecutions * workerDetail.avgExecutionTime)>
 				<tr>
 					<td>${workerDetail.activeStatusString}</td>
 					<td>${workerDetail.inetAddres}:${workerDetail.inetPort}</td>
@@ -78,15 +77,9 @@
 					<td>${workerDetail.totalElapsedTime}</td>
 					<td>${workerDetail.poolMaxSize}</td>
 					<td>${workerDetail.totalExecutions}</td>
-					<td>${workerDetail.avgExecutionTime}</td>
 				</tr>
 		</#list>
     </#if>
-	<#if totalWorkers gt 0>
-	  <#if totalExecuted gt 0>
-	    <#assign averageExecutionTime = averageExecutionTime / totalExecuted>
-	  </#if>
-	</#if>
 			<tr>
 				<td><b>${totalWorkers}</b></td>
 				<td colspan="4">&nbsp;</td>
@@ -100,30 +93,18 @@
 	  
 	  <#if !refreshPage>
 	  <#assign totalExecutions = 0>
-	  <#assign avgExecutionTime = 0>
 	  <#assign totalHistDataLoaded = 0>
 	  <#assign totalCalculations = 0>
-	  <#assign totalBasicResults = 0>
-	  <#assign totalSpreadResults = 0>
 	  <#assign elapsedTime = 0>
 	  <#assign resultFilePath = "">
 	   	<#if statusMap["totalExecutions"]??>
 			<#assign totalExecutions = statusMap["totalExecutions"]>
-		</#if>
-		<#if statusMap["avgExecutionTime"]??>
-			<#assign avgExecutionTime = statusMap["avgExecutionTime"]>
 		</#if>
 		<#if statusMap["totalHistDataLoaded"]??>
 			<#assign totalHistDataLoaded = statusMap["totalHistDataLoaded"]>
 		</#if>
 		<#if statusMap["totalCalculations"]??>
 			<#assign totalCalculations = statusMap["totalCalculations"]>
-		</#if>
-		<#if statusMap["totalBasicResults"]??>
-			<#assign totalBasicResults = statusMap["totalBasicResults"]>
-		</#if>
-		<#if statusMap["totalSpreadResults"]??>
-			<#assign totalSpreadResults = statusMap["totalSpreadResults"]>
 		</#if>
 		<#if statusMap["elapsedTime"]??>
 			<#assign elapsedTime = statusMap["elapsedTime"]>
@@ -141,24 +122,12 @@
 	  			<td>${totalExecutions}</td>
 	  		</tr>
 	  		<tr>
-	  			<td>avgExecutionTime</td>
-	  			<td>${avgExecutionTime}</td>
-	  		</tr>
-	  		<tr>
 	  			<td>totalHistDataLoaded</td>
 	  			<td>${totalHistDataLoaded}</td>
 	  		</tr>
 	  		<tr>
 	  			<td>totalCalculations</td>
 	  			<td>${totalCalculations}</td>
-	  		</tr>
-	  		<tr>
-	  			<td>totalBasicResults</td>
-	  			<td>${totalBasicResults}</td>
-	  		</tr>
-	  		<tr>
-	  			<td>totalSpreadResults</td>
-	  			<td>${totalSpreadResults}</td>
 	  		</tr>
 	  		<tr>
 	  			<td>elapsedTime</td>
@@ -179,9 +148,9 @@
 		data: {
 			datasets: [{
 				data: [
-					<#if monitorMap??>
-						<#list monitorMap?values as workerDetail>
-							${workerDetail.totalExecutionsWithoutComma},
+					<#if workersMap??>
+						<#list workersMap?values as workerDetail>
+							${workerDetail.totalExecutions},
 						</#list>
 					</#if>
 				],
@@ -197,8 +166,8 @@
 				label: 'Workers Monitor'
 			}],
 			labels: [
-				<#if monitorMap??>
-					<#list monitorMap?values as workerDetail>
+				<#if workersMap??>
+					<#list workersMap?values as workerDetail>
 						'${workerDetail.inetAddres}:${workerDetail.inetPort}',
 					</#list>
 					</#if>
