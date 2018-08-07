@@ -219,6 +219,7 @@ public class Application {
 
 		logger.info ("Printing results to results file");
 		String resultsPath = ApplicationProperties.getStringProperty("application.resultsPath");
+		resultFilePath = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+".csv"));
 		int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
 
 		Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getResultsMapName()).entrySet().iterator();
@@ -231,7 +232,6 @@ public class Application {
             if (resultsMap != null && resultsMap.size() > 0) {
 				if (firstResult) {
 					firstResult = false;
-					resultFilePath = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+".csv"));
 					GeneralUtils.writeTextToFile(resultFilePath, ApplicationProperties.printProperties());
 				}
 				
@@ -248,7 +248,11 @@ public class Application {
 
    			}
         }
-		logger.info("Results written into file: " + resultFilePath.toString());
+		if (resultsMap != null && resultsMap.size() > 0) {
+			logger.info("Results written into file: " + resultFilePath.toString());
+		} else {
+			logger.info("No results found");
+		}
 	}
 
 	private static void updateHazelcastResults () throws Exception {
