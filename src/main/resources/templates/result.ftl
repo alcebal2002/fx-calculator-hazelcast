@@ -54,7 +54,7 @@
 			<th>End Time</th>
 			<th>Elapsed Time</th>
 			<th>Max Pool Size</th>
-			<th># Processed</th>
+			<th># Processing</th>
 			<th>Avg process time</th>
 		  </tr>
 		</thead>
