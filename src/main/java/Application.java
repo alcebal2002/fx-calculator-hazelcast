@@ -85,6 +85,9 @@ public class Application {
         // Put results into Hazelcast - statusMap
         updateHazelcastResults();
         
+		// Set status to Results Updated...
+		HazelcastInstanceUtils.setStatus(Constants.HZ_STATUS_APPLICATION_FINSIHED);
+
 		// Shutdown Hazelcast		
 		logger.info ("Shutting down hazelcast instance...");
 		HazelcastInstanceUtils.shutdown();

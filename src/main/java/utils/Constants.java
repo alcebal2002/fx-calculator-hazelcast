@@ -22,6 +22,7 @@ public class Constants {
 	public static final String HZ_STATUS_WAITING_WORKERS = "Waiting for Workers to finish processing";
 	public static final String HZ_STATUS_SHUTTING_DOWN = "Shutting down";
 	public static final String HZ_STATUS_PROCESS_COMPLETED = "Process Completed";
+	public static final String HZ_STATUS_APPLICATION_FINSIHED = "Application Finished";
 	
 	// Stop process signal
 	public static final String HZ_STOP_PROCESSING_SIGNAL = "STOP_PROCESSING_SIGNAL";
