@@ -31,7 +31,7 @@ public class DatabaseUtils {
 		try {
 			logger.info ("Retrieving historical rates from database for " + currentCurrency);
 			stmt = DatabaseConnection.getInstance(applicationProperties).getConnection().createStatement();
-			sql = "SELECT * FROM historico_" + currentCurrency + " WHERE fecha >= STR_TO_DATE('" + applicationProperties.getProperty("application.startDate") + "','%Y-%m-%d') AND fecha <= STR_TO_DATE('" + applicationProperties.getProperty("application.startDate") + "','%Y-%m-%d') ORDER BY fecha ASC, hora ASC";
+			sql = "SELECT * FROM historico_" + currentCurrency + " WHERE fecha >= STR_TO_DATE('" + applicationProperties.getProperty("application.startDate") + "','%Y-%m-%d') AND fecha <= STR_TO_DATE('" + applicationProperties.getProperty("application.endDate") + "','%Y-%m-%d') ORDER BY fecha ASC, hora ASC";
 			logger.info("Executing query: " + sql);
 			rs = stmt.executeQuery(sql);
 
