@@ -20,13 +20,11 @@ public class DatabaseUtils {
 	private static Logger logger = LoggerFactory.getLogger(DatabaseUtils.class);
 	
 
-	public static Map<String,List<FxRate>> getHistoricalRates (final String currentCurrency, final Properties applicationProperties) {
+	public static void getHistoricalRates (final String currentCurrency, Map<String, List<FxRate>> historicalDataMap, final Properties applicationProperties) {
  
 		Statement stmt = null;
 		String sql = null;
 		ResultSet rs = null;
-
-		Map<String,List<FxRate>> resultMap = new HashMap<String,List<FxRate>>();
 		
 		try {
 			logger.info ("Retrieving historical rates from database for " + currentCurrency);
@@ -46,10 +44,10 @@ public class DatabaseUtils {
 				float low = rs.getFloat("bajo");
 				float close = rs.getFloat("cerrar");
 
-				if (!resultMap.containsKey(currentCurrency)) {
-					resultMap.put(currentCurrency, new ArrayList<FxRate>());
+				if (!historicalDataMap.containsKey(currentCurrency)) {
+					historicalDataMap.put(currentCurrency, new ArrayList<FxRate>());
 				}
-				(resultMap.get(currentCurrency)).add(new FxRate(positionId, currentCurrency, conversionDate, conversionTime, open, high, low, close));
+				(historicalDataMap.get(currentCurrency)).add(new FxRate(positionId, currentCurrency, conversionDate, conversionTime, open, high, low, close));
 				positionId++;
 			}
 			rs.close();
@@ -74,7 +72,6 @@ public class DatabaseUtils {
 				logger.error ("Exception: " + e.getClass() + " - " + e.getMessage());
 			}
 		}
-		return resultMap;
 	}
 
 	public static float getSpread (final String currentCurrency, final Properties applicationProperties) {

@@ -118,7 +118,7 @@ public class GeneralUtils {
     		// Gets properties from task item properties
     		
     		// Populate historical data from mysql database
-    		historicalDataMap = DatabaseUtils.getHistoricalRates(currentCurrency, applicationProperties);
+    		DatabaseUtils.getHistoricalRates(currentCurrency, historicalDataMap, applicationProperties);
     		
     		if (historicalDataMap != null && historicalDataMap.size() > 0) {
     			// There should be only 1 record in the map corresponding to the currentCurrency
