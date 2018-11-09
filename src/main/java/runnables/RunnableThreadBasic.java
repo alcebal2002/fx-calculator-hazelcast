@@ -98,6 +98,8 @@ public class RunnableThreadBasic implements RunnableCalculation, Runnable {
 				for (int i=positionId+1; i<historicalDataMap.get(currentCurrency).size(); i++) {
 					targetFxRate = historicalDataMap.get(currentCurrency).get(i);
 
+					totalCalculations++;
+					
 					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
 					
 					if ((targetFxRate.getHigh() > (opening * increase)) && (indexUp <= maxLevels)) {
@@ -121,8 +123,6 @@ public class RunnableThreadBasic implements RunnableCalculation, Runnable {
 						opening = opening * decrease;
 						indexDown++;
 					}
-					
-					totalCalculations++;
 
 					// No need to continue if maxLevels have been exceeded
 					if (indexUp > maxLevels && indexDown > maxLevels) {

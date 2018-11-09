@@ -92,7 +92,7 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
     	float selectedDecrease = firstDecrease;
     	
 		if (historicalDataMap.containsKey(currentCurrency)) {
-
+			
 			for (FxRate originalFxRate : historicalDataMap.get(currentCurrency)) {
 				
 				int positionId = originalFxRate.getPositionId();
@@ -104,11 +104,15 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 				String previousFound = "";
 				
 				long changeCounter = 1;
+				selectedIncrease = firstIncrease;
+				selectedDecrease = firstDecrease;
 
 				for (int i=positionId+1; i<historicalDataMap.get(currentCurrency).size(); i++) {
 					targetFxRate = historicalDataMap.get(currentCurrency).get(i);
 					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
 
+					totalCalculations++;
+					
 					// Avoid assigning all the time. Just once
 					if (changeCounter == maxFirstIterations + 1) {
 						selectedIncrease = secondIncrease;
@@ -116,7 +120,10 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 					}
 					
 					if (targetFxRate.getHigh() > (opening * selectedIncrease) - spread) {
+						logger.debug(positionId+"-"+totalCalculations+"-"+targetFxRate.getHigh()+"-"+((opening * selectedIncrease) - spread)+"-"+changeCounter+"-"+maxFirstIterations);
+						logger.debug("-UP ("+selectedIncrease+")");
 						if (("UP").equals(previousFound)) {
+							logger.debug("-BREAK ("+selectedIncrease+")");
 							break;
 						}
 						GeneralUtils.increaseMapCounter (resultsMap, ("UP-"+changeCounter));
@@ -125,7 +132,10 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 						previousFound = "UP";
 						opening = (opening * selectedIncrease) - spread;
 					} else if (targetFxRate.getLow() < (opening * selectedDecrease) + spread) {
+						logger.debug(positionId+"-"+totalCalculations+"-"+targetFxRate.getHigh()+"-"+((opening * selectedDecrease) + spread)+"-"+changeCounter+"-"+maxFirstIterations);
+						logger.debug("-BAJA ("+selectedDecrease+")");
 						if (("DOWN").equals(previousFound)) {
+							logger.debug("-BREAK ("+selectedDecrease+")");
 							break;
 						}
 						GeneralUtils.increaseMapCounter (resultsMap, ("DOWN-"+changeCounter));
@@ -134,8 +144,7 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 						previousFound = "DOWN";
 						opening = (opening * selectedDecrease) + spread;
 					}
-					totalCalculations++;
-
+					
 					// No need to continue if maxLevels have been exceeded
 					if (changeCounter > maxLevels) {
 						break;
@@ -145,6 +154,7 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 		} else {
 			logger.info("No historical data available for " + currentCurrency + " - " + executionTask.getCalculationMethodology() + ". Avoiding calculation");
 		}
+				
 		return totalCalculations;
     }
     

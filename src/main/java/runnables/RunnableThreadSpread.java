@@ -104,6 +104,8 @@ public class RunnableThreadSpread implements RunnableCalculation, Runnable {
 				for (int i=positionId+1; i<historicalDataMap.get(currentCurrency).size(); i++) {
 					targetFxRate = historicalDataMap.get(currentCurrency).get(i);
 					
+					totalCalculations++;
+					
 					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
 
 					if ((targetFxRate.getHigh() > (opening * increase)-spread)) {
@@ -115,8 +117,6 @@ public class RunnableThreadSpread implements RunnableCalculation, Runnable {
 						opening = (opening * decrease)+spread;
 						found++;
 					}
-					
-					totalCalculations++;
 
 					if (found == maxLevels) {
 						GeneralUtils.increaseMapCounter (resultsMap, result.toString());
