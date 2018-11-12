@@ -83,7 +83,6 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 	// Executes 1212 calculations (levels)
     public long execute1212Calculation (final String currentCurrency, final float firstPercentage, final float secondPercentage, final int maxLevels, final float spread, final int maxFirstIterations) {
     	
-    	long totalCalculations = 0;
     	float firstIncrease = (1+(firstPercentage)/100);
     	float firstDecrease = (1-(firstPercentage)/100);
     	float secondIncrease = (1+(secondPercentage)/100);
@@ -91,7 +90,15 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
     	float selectedIncrease = firstIncrease;
     	float selectedDecrease = firstDecrease;
     	
+    	long totalCalculations = 0;
+    	long changeCounter = 1;
+    	boolean secondIteration = false;
+    	FxRate targetFxRate = null;
+    	String previousFound = null;
+    	
 		if (historicalDataMap.containsKey(currentCurrency)) {
+
+			//System.out.print ("Original Row|Original Date|Original Time|Target Row|Target Date|Target Time|Selected Increase|Selected Decrease|Second Iteration ?|Previous Found|Opening|Condition|Iterations/#Max Iterations|Change|Break");
 			
 			for (FxRate originalFxRate : historicalDataMap.get(currentCurrency)) {
 				
@@ -100,16 +107,17 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 				
 				logger.debug ("Processing " + currentCurrency + "-" + positionId);
 				
-				FxRate targetFxRate = null;
-				String previousFound = "";
+				previousFound = null;
 				
-				long changeCounter = 1;
+				changeCounter = 1;
+				secondIteration = false;
 				selectedIncrease = firstIncrease;
 				selectedDecrease = firstDecrease;
+				
+				//System.out.println ("Processing PositionId: " + positionId + " with percentages -> " + selectedIncrease + " - " + selectedDecrease);
 
 				for (int i=positionId+1; i<historicalDataMap.get(currentCurrency).size(); i++) {
 					targetFxRate = historicalDataMap.get(currentCurrency).get(i);
-					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
 
 					totalCalculations++;
 					
@@ -117,14 +125,21 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 					if (changeCounter == maxFirstIterations + 1) {
 						selectedIncrease = secondIncrease;
 				    	selectedDecrease = secondDecrease;
+				    	secondIteration = true;
+						//System.out.println ("Changed to second percentages -> " + selectedIncrease + " - " + selectedDecrease);
 					}
 					
+					//System.out.print ("Comparing " + positionId + " vs " + targetFxRate.getPositionId() + " [" + selectedIncrease + " - " + selectedDecrease + "] [secondIteration " + secondIteration + "] [previousFound " + previousFound+ "]");
+					
 					if (targetFxRate.getHigh() > (opening * selectedIncrease) - spread) {
-						logger.debug(positionId+"-"+totalCalculations+"-"+targetFxRate.getHigh()+"-"+((opening * selectedIncrease) - spread)+"-"+changeCounter+"-"+maxFirstIterations);
-						logger.debug("-UP ("+selectedIncrease+")");
-						if (("UP").equals(previousFound)) {
-							logger.debug("-BREAK ("+selectedIncrease+")");
+						
+						//System.out.print (positionId + "|" + originalFxRate.getConversionDate() + "|" + originalFxRate.getConversionTime() + "|" + targetFxRate.getPositionId() + "|" + targetFxRate.getConversionDate() + "|" + targetFxRate.getConversionTime() + "|" + selectedIncrease + "|" + selectedDecrease + "|" + secondIteration + "|" + previousFound+ "|" + opening + "|" + targetFxRate.getHigh() +" > " + ((opening * selectedIncrease) - spread) + "|" + changeCounter + " / " + maxFirstIterations + "|UP");
+
+						if ((!secondIteration && ("DOWN").equals(previousFound)) || (secondIteration && ("UP").equals(previousFound))) {
+							//System.out.println ("|BREAK");
 							break;
+						} else {
+							//System.out.println ("");
 						}
 						GeneralUtils.increaseMapCounter (resultsMap, ("UP-"+changeCounter));
 						
@@ -132,11 +147,15 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 						previousFound = "UP";
 						opening = (opening * selectedIncrease) - spread;
 					} else if (targetFxRate.getLow() < (opening * selectedDecrease) + spread) {
-						logger.debug(positionId+"-"+totalCalculations+"-"+targetFxRate.getHigh()+"-"+((opening * selectedDecrease) + spread)+"-"+changeCounter+"-"+maxFirstIterations);
-						logger.debug("-BAJA ("+selectedDecrease+")");
-						if (("DOWN").equals(previousFound)) {
+						
+						//System.out.print (positionId + "|" + originalFxRate.getConversionDate() + "|" + originalFxRate.getConversionTime() + "|" + targetFxRate.getPositionId() + "|" + targetFxRate.getConversionDate() + "|" + targetFxRate.getConversionTime() + "|" + selectedIncrease + "|" + selectedDecrease + "|" + secondIteration + "|" + previousFound+ "|" + opening + "|" + targetFxRate.getHigh() +" < " + ((opening * selectedIncrease) + spread) + "|" + changeCounter + " / " + maxFirstIterations + "|DOWN");
+
+						if ((!secondIteration && ("UP").equals(previousFound)) || (secondIteration && ("DOWN").equals(previousFound))) {
+							//System.out.println ("|BREAK");
 							logger.debug("-BREAK ("+selectedDecrease+")");
 							break;
+						} else {
+							//System.out.println ("");
 						}
 						GeneralUtils.increaseMapCounter (resultsMap, ("DOWN-"+changeCounter));
 
@@ -146,7 +165,8 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 					}
 					
 					// No need to continue if maxLevels have been exceeded
-					if (changeCounter > maxLevels) {
+					if (changeCounter == maxLevels) {
+						//System.out.println ("|BREAK - MaxLevels detected (" + changeCounter+")");
 						break;
 					}
 				}
