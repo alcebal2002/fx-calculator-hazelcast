@@ -92,7 +92,6 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
     	
     	long totalCalculations = 0;
     	long changeCounter = 1;
-    	boolean secondIteration = false;
     	FxRate targetFxRate = null;
     	String previousFound = null;
     	
@@ -110,7 +109,6 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 				previousFound = null;
 				
 				changeCounter = 1;
-				secondIteration = false;
 				selectedIncrease = firstIncrease;
 				selectedDecrease = firstDecrease;
 				
@@ -125,7 +123,6 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 					if (changeCounter == maxFirstIterations + 1) {
 						selectedIncrease = secondIncrease;
 				    	selectedDecrease = secondDecrease;
-				    	secondIteration = true;
 						//System.out.println ("Changed to second percentages -> " + selectedIncrease + " - " + selectedDecrease);
 					}
 					
@@ -135,7 +132,7 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 						
 						//System.out.print (positionId + "|" + originalFxRate.getConversionDate() + "|" + originalFxRate.getConversionTime() + "|" + targetFxRate.getPositionId() + "|" + targetFxRate.getConversionDate() + "|" + targetFxRate.getConversionTime() + "|" + selectedIncrease + "|" + selectedDecrease + "|" + secondIteration + "|" + previousFound+ "|" + opening + "|" + targetFxRate.getHigh() +" > " + ((opening * selectedIncrease) - spread) + "|" + changeCounter + " / " + maxFirstIterations + "|UP");
 
-						if ((!secondIteration && ("DOWN").equals(previousFound)) || (secondIteration && ("UP").equals(previousFound))) {
+						if (("UP").equals(previousFound)) {
 							//System.out.println ("|BREAK");
 							break;
 						} else {
@@ -150,7 +147,7 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 						
 						//System.out.print (positionId + "|" + originalFxRate.getConversionDate() + "|" + originalFxRate.getConversionTime() + "|" + targetFxRate.getPositionId() + "|" + targetFxRate.getConversionDate() + "|" + targetFxRate.getConversionTime() + "|" + selectedIncrease + "|" + selectedDecrease + "|" + secondIteration + "|" + previousFound+ "|" + opening + "|" + targetFxRate.getHigh() +" < " + ((opening * selectedIncrease) + spread) + "|" + changeCounter + " / " + maxFirstIterations + "|DOWN");
 
-						if ((!secondIteration && ("UP").equals(previousFound)) || (secondIteration && ("DOWN").equals(previousFound))) {
+						if (("DOWN").equals(previousFound)) {
 							//System.out.println ("|BREAK");
 							logger.debug("-BREAK ("+selectedDecrease+")");
 							break;
