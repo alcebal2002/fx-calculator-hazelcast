@@ -84,7 +84,6 @@ public class RunnableThread1234 implements RunnableCalculation, Runnable {
 	// Executes 1234 calculations (levels)
     public long execute1234Calculation (final String currentCurrency, final float firstPercentage, final float secondPercentage, final int maxLevels, final float spread, final int maxFirstIterations) {
     	
-    	long totalCalculations = 0;
     	float firstIncrease = (1+(firstPercentage)/100);
     	float firstDecrease = (1-(firstPercentage)/100);
     	float secondIncrease = (1+(secondPercentage)/100);
@@ -92,8 +91,15 @@ public class RunnableThread1234 implements RunnableCalculation, Runnable {
     	float selectedIncrease = firstIncrease;
     	float selectedDecrease = firstDecrease;
     	
+    	long totalCalculations = 0;
+    	long changeCounter = 1;
+    	FxRate targetFxRate = null;
+    	String previousFound = null;
+    	
 		if (historicalDataMap.containsKey(currentCurrency)) {
 
+			//System.out.print ("Original Row|Original Date|Original Time|Target Row|Target Date|Target Time|Selected Increase|Selected Decrease|Second Iteration ?|Previous Found|Opening|Condition|Iterations/#Max Iterations|Change|Break");
+			
 			for (FxRate originalFxRate : historicalDataMap.get(currentCurrency)) {
 				
 				int positionId = originalFxRate.getPositionId();
@@ -101,45 +107,60 @@ public class RunnableThread1234 implements RunnableCalculation, Runnable {
 				
 				logger.debug ("Processing " + currentCurrency + "-" + positionId);
 				
-				FxRate targetFxRate = null;
-				String previousFound = "";
+				previousFound = null;
 				
-				int indexUp = 1;
-				int indexDown = 1;
+				changeCounter = 1;
+				selectedIncrease = firstIncrease;
+				selectedDecrease = firstDecrease;
+				
+				//System.out.println ("Processing PositionId: " + positionId + " with percentages -> " + selectedIncrease + " - " + selectedDecrease);
 
 				for (int i=positionId+1; i<historicalDataMap.get(currentCurrency).size(); i++) {
 					targetFxRate = historicalDataMap.get(currentCurrency).get(i);
-					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
+
 					totalCalculations++;
 					
 					// Avoid assigning all the time. Just once
-					if ((indexUp > maxFirstIterations) && (indexDown > maxFirstIterations)) {
+					if (changeCounter == maxFirstIterations + 1) {
 						selectedIncrease = secondIncrease;
 				    	selectedDecrease = secondDecrease;
+						//System.out.println ("Changed to second percentages -> " + selectedIncrease + " - " + selectedDecrease);
 					}
 					
-					if ((targetFxRate.getHigh() > (opening * selectedIncrease) - spread)  && (indexUp <= maxLevels)) {
+					//System.out.print ("Comparing " + positionId + " vs " + targetFxRate.getPositionId() + " [" + selectedIncrease + " - " + selectedDecrease + "] [secondIteration " + secondIteration + "] [previousFound " + previousFound+ "]");
+					
+					if (targetFxRate.getHigh() > (opening * selectedIncrease) - spread) {
+						
+						//System.out.print (positionId + "|" + originalFxRate.getConversionDate() + "|" + originalFxRate.getConversionTime() + "|" + targetFxRate.getPositionId() + "|" + targetFxRate.getConversionDate() + "|" + targetFxRate.getConversionTime() + "|" + selectedIncrease + "|" + selectedDecrease + "|" + secondIteration + "|" + previousFound+ "|" + opening + "|" + targetFxRate.getHigh() +" > " + ((opening * selectedIncrease) - spread) + "|" + changeCounter + " / " + maxFirstIterations + "|UP");
+
 						if (("DOWN").equals(previousFound)) {
+							//System.out.println ("|BREAK");
 							break;
 						}
-						GeneralUtils.increaseMapCounter (resultsMap, ("UP-"+indexUp));
+						GeneralUtils.increaseMapCounter (resultsMap, ("UP-"+changeCounter));
 						
-						indexUp++;
+						changeCounter++;
 						previousFound = "UP";
 						opening = (opening * selectedIncrease) - spread;
-					} else if ((targetFxRate.getLow() < (opening * selectedDecrease) + spread) && (indexDown <= maxLevels)) {
+					} else if (targetFxRate.getLow() < (opening * selectedDecrease) + spread) {
+						
+						//System.out.print (positionId + "|" + originalFxRate.getConversionDate() + "|" + originalFxRate.getConversionTime() + "|" + targetFxRate.getPositionId() + "|" + targetFxRate.getConversionDate() + "|" + targetFxRate.getConversionTime() + "|" + selectedIncrease + "|" + selectedDecrease + "|" + secondIteration + "|" + previousFound+ "|" + opening + "|" + targetFxRate.getHigh() +" < " + ((opening * selectedIncrease) + spread) + "|" + changeCounter + " / " + maxFirstIterations + "|DOWN");
+
 						if (("UP").equals(previousFound)) {
+							//System.out.println ("|BREAK");
+							logger.debug("-BREAK ("+selectedDecrease+")");
 							break;
 						}
-						GeneralUtils.increaseMapCounter (resultsMap, ("DOWN-"+indexDown));
+						GeneralUtils.increaseMapCounter (resultsMap, ("DOWN-"+changeCounter));
 
-						indexDown++;
+						changeCounter++;
 						previousFound = "DOWN";
 						opening = (opening * selectedDecrease) + spread;
 					}
-
+					
 					// No need to continue if maxLevels have been exceeded
-					if (indexUp > maxLevels && indexDown > maxLevels) {
+					if (changeCounter == maxLevels) {
+						//System.out.println ("|BREAK - MaxLevels detected (" + changeCounter+")");
 						break;
 					}
 				}
@@ -147,6 +168,7 @@ public class RunnableThread1234 implements RunnableCalculation, Runnable {
 		} else {
 			logger.info("No historical data available for " + currentCurrency + " - " + executionTask.getCalculationMethodology() + ". Avoiding calculation");
 		}
+				
 		return totalCalculations;
     }
     

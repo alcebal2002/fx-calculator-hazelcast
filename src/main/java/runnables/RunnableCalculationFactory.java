@@ -18,6 +18,8 @@ public class RunnableCalculationFactory {
 			result = new RunnableThread1212 (executionTask);
 		} else if((executionTask.getCalculationMethodology()).equalsIgnoreCase("1234")){
 			result = new RunnableThread1234 (executionTask);
+		} else if((executionTask.getCalculationMethodology()).equalsIgnoreCase("1212dos")){
+			result = new RunnableThread1212dos (executionTask);
 		}
 		return result;
 	}

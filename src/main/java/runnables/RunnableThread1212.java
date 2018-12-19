@@ -135,8 +135,6 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 						if (("UP").equals(previousFound)) {
 							//System.out.println ("|BREAK");
 							break;
-						} else {
-							//System.out.println ("");
 						}
 						GeneralUtils.increaseMapCounter (resultsMap, ("UP-"+changeCounter));
 						
@@ -151,8 +149,6 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 							//System.out.println ("|BREAK");
 							logger.debug("-BREAK ("+selectedDecrease+")");
 							break;
-						} else {
-							//System.out.println ("");
 						}
 						GeneralUtils.increaseMapCounter (resultsMap, ("DOWN-"+changeCounter));
 
