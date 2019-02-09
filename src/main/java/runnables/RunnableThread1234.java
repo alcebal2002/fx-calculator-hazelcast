@@ -62,7 +62,7 @@ public class RunnableThread1234 implements RunnableCalculation, Runnable {
 				logger.info ("Retrieving spread data for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 				spread = GeneralUtils.getSpread(currentCurrency,applicationProperties);
 				logger.info ("Starting calculations for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
-				totalCalculations += execute1234Calculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels, spread, maxFirstIterations);
+				totalCalculations += executeCalculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels, spread, maxFirstIterations);
 				
 				stopTime = System.currentTimeMillis();
 				elapsedTime = stopTime - startTime;
@@ -82,7 +82,7 @@ public class RunnableThread1234 implements RunnableCalculation, Runnable {
 	}
 
 	// Executes 1234 calculations (levels)
-    public long execute1234Calculation (final String currentCurrency, final float firstPercentage, final float secondPercentage, final int maxLevels, final float spread, final int maxFirstIterations) {
+    public long executeCalculation (final String currentCurrency, final float firstPercentage, final float secondPercentage, final int maxLevels, final float spread, final int maxFirstIterations) {
     	
     	float firstIncrease = (1+(firstPercentage)/100);
     	float firstDecrease = (1-(firstPercentage)/100);

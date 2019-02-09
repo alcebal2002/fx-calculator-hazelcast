@@ -59,7 +59,7 @@ public class RunnableThreadSpread implements RunnableCalculation, Runnable {
 				logger.info ("Retrieving spread data for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 				spread = GeneralUtils.getSpread(currentCurrency,applicationProperties);
 				logger.info ("Starting calculations for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
-				totalCalculations += executeSpreadCalculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels, spread);
+				totalCalculations += executeCalculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels, spread);
 				
 				stopTime = System.currentTimeMillis();
 				elapsedTime = stopTime - startTime;
@@ -79,7 +79,7 @@ public class RunnableThreadSpread implements RunnableCalculation, Runnable {
 	}
 
 	// Executes calculations with Spreads (levels)
-    public long executeSpreadCalculation (final String currentCurrency, final float increasePercentage, final float decreasePercentage, final int maxLevels, final float spread) {
+    public long executeCalculation (final String currentCurrency, final float increasePercentage, final float decreasePercentage, final int maxLevels, final float spread) {
     	
     	long totalCalculations = 0;
 		float increase = (1+(increasePercentage)/100);

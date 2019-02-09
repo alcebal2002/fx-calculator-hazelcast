@@ -13,10 +13,10 @@ import datamodel.ExecutionTask;
 import datamodel.FxRate;
 import utils.GeneralUtils;
 
-public class RunnableThreadBasic implements RunnableCalculation, Runnable {
+public class RunnableThreadMultiple implements RunnableCalculation, Runnable {
 
 	// Logger
-	private static Logger logger = LoggerFactory.getLogger(RunnableThreadBasic.class);
+	private static Logger logger = LoggerFactory.getLogger(RunnableThreadMultiple.class);
 
 	private String currentCurrency;
 	private Properties applicationProperties;
@@ -30,7 +30,7 @@ public class RunnableThreadBasic implements RunnableCalculation, Runnable {
 	private long totalHistDataLoaded = 0;
 	private long totalCalculations = 0;
 
-	public RunnableThreadBasic (ExecutionTask executionTask) {
+	public RunnableThreadMultiple (ExecutionTask executionTask) {
 		this.executionTask = executionTask;
 		this.applicationProperties = executionTask.getTaskParameters();
 		this.currentCurrency = executionTask.getCurrentCurrency();
