@@ -14,7 +14,7 @@ import datamodel.FxRate;
 import utils.ApplicationProperties;
 import utils.GeneralUtils;
 
-public class RunnableThreadMultiple implements RunnableCalculation, Runnable {
+public class RunnableThreadMultiple2 implements RunnableCalculation, Runnable {
 
 	// Logger
 	private static Logger logger = LoggerFactory.getLogger(RunnableThreadSpread.class);
@@ -32,7 +32,7 @@ public class RunnableThreadMultiple implements RunnableCalculation, Runnable {
 	private long totalHistDataLoaded = 0;
 	private long totalCalculations = 0;
 
-	public RunnableThreadMultiple (ExecutionTask executionTask){
+	public RunnableThreadMultiple2 (ExecutionTask executionTask){
 		this.executionTask = executionTask;
 		this.applicationProperties = executionTask.getTaskParameters();
 		this.currentCurrency = executionTask.getCurrentCurrency();
@@ -123,24 +123,24 @@ public class RunnableThreadMultiple implements RunnableCalculation, Runnable {
 					
 					if (targetFxRate.getHigh() > (opening * selectedIncrease) - spread) {
 						
-						GeneralUtils.increaseMapCounter (resultsMap, ("UP-"+changeCounter));
-
-						if (("UP").equals(selectedDirection)) {
+						if (("DOWN").equals(selectedDirection)) {
 							logger.debug("-BREAK ("+selectedDecrease+")");
 							break;
 						}
+
+						GeneralUtils.increaseMapCounter (resultsMap, ("UP-"+changeCounter));
 
 						opening = (opening * selectedIncrease) - spread;
 						changeCounter++;
 						multiplePosition++;
 					} else if (targetFxRate.getLow() < (opening * selectedDecrease) + spread) {
 						
-						GeneralUtils.increaseMapCounter (resultsMap, ("DOWN-"+changeCounter));
-
-						if (("DOWN").equals(selectedDirection)) {
+						if (("UP").equals(selectedDirection)) {
 							logger.debug("-BREAK ("+selectedDecrease+")");
 							break;
 						}
+
+						GeneralUtils.increaseMapCounter (resultsMap, ("DOWN-"+changeCounter));
 
 						opening = (opening * selectedDecrease) + spread;
 						changeCounter++;

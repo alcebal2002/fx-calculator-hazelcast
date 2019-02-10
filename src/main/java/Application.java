@@ -171,6 +171,7 @@ public class Application {
 		logger.info ("  - increase percentage      : " + ApplicationProperties.getStringProperty("application.increasePercentage"));
 		logger.info ("  - decrease percentage      : " + ApplicationProperties.getStringProperty("application.decreasePercentage"));
 		logger.info ("  - max. levels              : " + ApplicationProperties.getStringProperty("application.maxLevels"));
+		logger.info ("  - multiple percentages     : " + ApplicationProperties.getStringProperty("application.multiple"));
 		logger.info ("  - calculations             : " + ApplicationProperties.getListProperty("application.calculations").toString());
 
 		logger.info ("  - write results to file    : " + ApplicationProperties.getStringProperty("application.writeResultsToFile"));

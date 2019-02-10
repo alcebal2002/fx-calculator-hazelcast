@@ -22,6 +22,8 @@ public class RunnableCalculationFactory {
 			result = new RunnableThread1212dos (executionTask);
 		} else if((executionTask.getCalculationMethodology()).equalsIgnoreCase("multiple")){
 			result = new RunnableThreadMultiple (executionTask);
+		} else if((executionTask.getCalculationMethodology()).equalsIgnoreCase("multiple-2")){
+			result = new RunnableThreadMultiple2 (executionTask);
 		}
 		return result;
 	}
