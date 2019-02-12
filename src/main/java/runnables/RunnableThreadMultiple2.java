@@ -20,6 +20,8 @@ public class RunnableThreadMultiple2 implements RunnableCalculation, Runnable {
 	private static Logger logger = LoggerFactory.getLogger(RunnableThreadSpread.class);
 
 	private String currentCurrency;
+	private String startDate;
+	private String endDate;
 	private Properties applicationProperties;
 	private ExecutionTask executionTask;
 
@@ -36,6 +38,8 @@ public class RunnableThreadMultiple2 implements RunnableCalculation, Runnable {
 		this.executionTask = executionTask;
 		this.applicationProperties = executionTask.getTaskParameters();
 		this.currentCurrency = executionTask.getCurrentCurrency();
+		this.startDate = executionTask.getStartDate();
+		this.endDate = executionTask.getEndDate();
 	}
 	
 	@Override
@@ -53,7 +57,7 @@ public class RunnableThreadMultiple2 implements RunnableCalculation, Runnable {
 			if (GeneralUtils.checkIfCurrencyExists (currentCurrency,applicationProperties)) {
 
 				logger.info ("Populating historical data for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
-				totalHistDataLoaded = GeneralUtils.populateHistoricalFxData(currentCurrency,historicalDataMap,applicationProperties);
+				totalHistDataLoaded = GeneralUtils.populateHistoricalFxData(currentCurrency,startDate,endDate,historicalDataMap,applicationProperties);
 				logger.info ("Historical data populated for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 
 				logger.info ("Retrieving spread data for " + currentCurrency + " - " + executionTask.getCalculationMethodology());

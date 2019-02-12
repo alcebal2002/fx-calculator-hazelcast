@@ -104,15 +104,19 @@ public class Application {
     	ExecutionTask executionTask = null;
     	int taskId = 0;
 
-		// For each currencyPair and calculation methodology (from properties file) create an Execution Task and put it into Hazelcast task queue for processing
-    	for (String currentCurrency : ApplicationProperties.getListProperty("application.currencyPairs")) {
-        	for (String calculation : ApplicationProperties.getListProperty("application.calculations")) {
-	    		taskId++;
-	    		logger.info ("Putting currency " + currentCurrency + " - " + calculation + " as taskId " + taskId);
-	    		executionTask = new ExecutionTask (taskId,calculation,currentCurrency,ApplicationProperties.getApplicationProperties());
-	    		HazelcastInstanceUtils.putIntoQueue(HazelcastInstanceUtils.getTaskQueueName(), executionTask); 
-        	}
-		}
+		// For each start and end date, currencyPair and calculation methodology (from properties file) create an Execution Task and put it into Hazelcast task queue for processing
+	    for (String datePair : ApplicationProperties.getListProperty("application.dates")) {
+	    	String startDate = datePair.substring(0,datePair.indexOf("|")).trim();
+	    	String endDate = datePair.substring(datePair.indexOf("|")+1).trim();
+    		for (String currentCurrency : ApplicationProperties.getListProperty("application.currencyPairs")) {
+	        	for (String calculation : ApplicationProperties.getListProperty("application.calculations")) {
+		    		taskId++;
+		    		logger.info ("Putting currency " + currentCurrency + " - " + calculation + " - " + startDate + " - " + endDate + " as taskId " + taskId);
+		    		executionTask = new ExecutionTask (taskId,calculation,currentCurrency,startDate,endDate,ApplicationProperties.getApplicationProperties());
+		    		HazelcastInstanceUtils.putIntoQueue(HazelcastInstanceUtils.getTaskQueueName(), executionTask); 
+	        	}
+			}
+	    }
 
     	// Set total execution task
     	HazelcastInstanceUtils.putIntoMap(HazelcastInstanceUtils.getStatusMapName(), "totalTasks", taskId);
@@ -166,8 +170,7 @@ public class Application {
 		logger.info ("  - database password        : " + ApplicationProperties.getStringProperty("database.password"));
 
 		logger.info ("  - currency pairs           : " + ApplicationProperties.getListProperty("application.currencyPairs").toString());
-		logger.info ("  - start date               : " + ApplicationProperties.getStringProperty("application.startDate"));
-		logger.info ("  - end date                 : " + ApplicationProperties.getStringProperty("application.endDate"));
+		logger.info ("  - dates                    : " + ApplicationProperties.getStringProperty("application.dates"));
 		logger.info ("  - increase percentage      : " + ApplicationProperties.getStringProperty("application.increasePercentage"));
 		logger.info ("  - decrease percentage      : " + ApplicationProperties.getStringProperty("application.decreasePercentage"));
 		logger.info ("  - max. levels              : " + ApplicationProperties.getStringProperty("application.maxLevels"));
@@ -234,21 +237,24 @@ public class Application {
 
             if (resultsMap != null && resultsMap.size() > 0) {
 				if (firstResult) {
-					firstResult = false;
 					GeneralUtils.writeTextToFile(resultFilePath, ApplicationProperties.printProperties());
 				}
 				
 				if (!(((ExecutionTask) entry.getValue()).getCalculationMethodology()).equalsIgnoreCase("SPREAD")) {
-					GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsHeader(maxLevels));
-					GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsLevels (((ExecutionTask) entry.getValue()).getCurrentCurrency(), ((ExecutionTask) entry.getValue()).getCalculationMethodology(), resultsMap, maxLevels));
+					if (firstResult) {
+						GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsHeader(maxLevels));
+					}
+					GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsLevels (((ExecutionTask) entry.getValue()).getCurrentCurrency(), ((ExecutionTask) entry.getValue()).getCalculationMethodology(), ((ExecutionTask) entry.getValue()).getStartDate(), ((ExecutionTask) entry.getValue()).getEndDate(), resultsMap, maxLevels));
 				} else {
 					Iterator<Entry<String, Integer>> calcResults = resultsMap.entrySet().iterator();   						
 					while (calcResults.hasNext()) {
 						Entry<String, Integer> calcEntry = calcResults.next();
-						GeneralUtils.writeTextToFile(resultFilePath, ((ExecutionTask) entry.getValue()).getCurrentCurrency() + "-" + ((ExecutionTask) entry.getValue()).getCalculationMethodology() + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
+						GeneralUtils.writeTextToFile(resultFilePath, ((ExecutionTask) entry.getValue()).getCurrentCurrency() + "|" + ((ExecutionTask) entry.getValue()).getCalculationMethodology()  + "|" + ((ExecutionTask) entry.getValue()).getStartDate()  + "|" + ((ExecutionTask) entry.getValue()).getEndDate() + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
 					}
 				}
-
+				if (firstResult) {
+					firstResult = false;
+				}
    			}
         }
 		if (resultsMap != null && resultsMap.size() > 0) {

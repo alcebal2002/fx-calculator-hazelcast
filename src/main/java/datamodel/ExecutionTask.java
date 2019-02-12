@@ -9,6 +9,8 @@ public class ExecutionTask implements Serializable {
 	private int taskId;
 	private String calculationMethodology = null;
 	private String currentCurrency = null;
+	private String startDate = null;
+	private String endDate = null;
 	private Properties taskParameters;
 	
 	private WorkerDetail workerDetail = null;
@@ -18,10 +20,13 @@ public class ExecutionTask implements Serializable {
 		this.calculationMethodology = stopSignal;
 	}
 
-	public ExecutionTask(final int taskId, final String calculationMethodology, final String currentCurrency, final Properties taskParameters) {
+	public ExecutionTask(final int taskId, final String calculationMethodology, final String currentCurrency, 
+						 final String startDate, final String endDate, final Properties taskParameters) {
 		this.taskId = taskId;
 		this.calculationMethodology = calculationMethodology;
 		this.currentCurrency = currentCurrency;
+		this.startDate = startDate;
+		this.endDate = endDate;
 		this.taskParameters = taskParameters;
 	}
 
@@ -35,6 +40,14 @@ public class ExecutionTask implements Serializable {
 
 	public final String getCurrentCurrency() {
 		return this.currentCurrency;
+	}
+
+	public final String getStartDate() {
+		return this.startDate;
+	}
+
+	public final String getEndDate() {
+		return this.endDate;
 	}
 
 	public final Properties getTaskParameters () {

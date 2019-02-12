@@ -107,7 +107,7 @@ public class GeneralUtils {
 	// Populates historical data and puts the objects into historical data list)
     // Depending on the datasource parameter, data could be retrieved from database (mysql) or files
     // FX Historical Data format: conversionDate,conversionTime,open,high,low,close
-    public static long populateHistoricalFxData (final String currentCurrency, Map<String, List<FxRate>> historicalDataMap, final Properties applicationProperties) {
+    public static long populateHistoricalFxData (final String currentCurrency, final String startDate, final String endDate, Map<String, List<FxRate>> historicalDataMap, final Properties applicationProperties) {
     	
     	long result = 0;
     	
@@ -118,7 +118,7 @@ public class GeneralUtils {
     		// Gets properties from task item properties
     		
     		// Populate historical data from mysql database
-    		DatabaseUtils.getHistoricalRates(currentCurrency, historicalDataMap, applicationProperties);
+    		DatabaseUtils.getHistoricalRates(currentCurrency, startDate, endDate, historicalDataMap, applicationProperties);
     		
     		if (historicalDataMap != null && historicalDataMap.size() > 0) {
     			// There should be only 1 record in the map corresponding to the currentCurrency
@@ -144,7 +144,7 @@ public class GeneralUtils {
     	        String [] nextLine;
     	        while ((nextLine = reader.readNext()) != null) {
     	        	
-    	        	FxRate fxRate = new FxRate (currentCurrency,nextLine,totalCounter,applicationProperties.getProperty("application.startDate"),applicationProperties.getProperty("application.endDate"));
+    	        	FxRate fxRate = new FxRate (currentCurrency,nextLine,totalCounter,startDate,endDate);
     	        	
     	        	// Check if the fxRate has been created or excluded due to the date filtering
     	        	if (currentCurrency.equals(fxRate.getCurrencyPair())) {
@@ -294,7 +294,7 @@ public class GeneralUtils {
 	// Print levels header
 	public static String printResultsHeader(final int maxLevels) {
 		StringBuilder stringBuilder =  new StringBuilder();
-		stringBuilder.append("CURRENCYPAIR");
+		stringBuilder.append("CURRENCYPAIR|METHODOLOGY|STARTDATE|ENDDATE");
 		
 		for (int i=1; i <= maxLevels; i++) {
 			stringBuilder.append("|"+i+"-UP|"+i+"-DOWN|"+i+"-TOTAL|"+i+"-%");
@@ -304,7 +304,7 @@ public class GeneralUtils {
 	}
 
 	// Print currency result levels
-	public static String printResultsLevels (final String currency, final String calculationMethodology, final Map<String,Integer> levelsMap, final int maxLevels) {
+	public static String printResultsLevels (final String currency, final String calculationMethodology, final String startDate, final String endDate, final Map<String,Integer> levelsMap, final int maxLevels) {
 		
 		StringBuilder stringBuilder = new StringBuilder();
 		
@@ -338,6 +338,6 @@ public class GeneralUtils {
 			stringBuilder.append("|");
 		}
 		
-		return (currency + "-" + calculationMethodology + "|" + stringBuilder.toString());
+		return (currency + "|" + calculationMethodology + "|" + startDate + "|" + endDate + "|" + stringBuilder.toString());
 	}
 }

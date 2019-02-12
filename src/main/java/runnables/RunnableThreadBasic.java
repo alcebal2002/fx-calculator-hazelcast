@@ -19,6 +19,8 @@ public class RunnableThreadBasic implements RunnableCalculation, Runnable {
 	private static Logger logger = LoggerFactory.getLogger(RunnableThreadBasic.class);
 
 	private String currentCurrency;
+	private String startDate;
+	private String endDate;
 	private Properties applicationProperties;
 	private ExecutionTask executionTask;
 
@@ -34,7 +36,8 @@ public class RunnableThreadBasic implements RunnableCalculation, Runnable {
 		this.executionTask = executionTask;
 		this.applicationProperties = executionTask.getTaskParameters();
 		this.currentCurrency = executionTask.getCurrentCurrency();
-	}
+		this.startDate = executionTask.getStartDate();
+		this.endDate = executionTask.getEndDate();	}
 	
 	@Override
 	public void run() {
@@ -51,7 +54,7 @@ public class RunnableThreadBasic implements RunnableCalculation, Runnable {
 			if (GeneralUtils.checkIfCurrencyExists (currentCurrency,applicationProperties)) {
 
 				logger.info ("Populating historical data for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
-				totalHistDataLoaded = GeneralUtils.populateHistoricalFxData(currentCurrency,historicalDataMap,applicationProperties);
+				totalHistDataLoaded = GeneralUtils.populateHistoricalFxData(currentCurrency,startDate,endDate,historicalDataMap,applicationProperties);
 				logger.info ("Historical data populated for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
 
 				logger.info ("Starting calculations for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
