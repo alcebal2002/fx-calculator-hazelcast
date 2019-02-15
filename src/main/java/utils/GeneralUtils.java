@@ -288,7 +288,6 @@ public class GeneralUtils {
 				logger.error ("Exception while closing the results file: " + ex.getClass() + " - " + ex.getMessage());
 			}
 		}
-
 	}
 
 	// Print levels header

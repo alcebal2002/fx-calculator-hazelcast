@@ -2,6 +2,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -220,12 +221,11 @@ public class Application {
 	// Print results to file
 	private static void printResultsToFile () throws Exception {
 
-		boolean firstResult = true;
+		ArrayList<String> listHeaders = new ArrayList<String>();
 		Map<String,Integer> resultsMap = null;
 
 		logger.info ("Printing results to results file");
 		String resultsPath = ApplicationProperties.getStringProperty("application.resultsPath");
-		resultFilePath = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+".csv"));
 		int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
 
 		Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getResultsMapName()).entrySet().iterator();
@@ -234,14 +234,15 @@ public class Application {
             Entry<String, Object> entry = iter.next();
 
             resultsMap = ((ExecutionTask) entry.getValue()).getCalculationResult().getResultsMap();
+            resultFilePath = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+"_["+((ExecutionTask) entry.getValue()).getStartDate()+"_"+((ExecutionTask) entry.getValue()).getEndDate()+"].csv"));
 
             if (resultsMap != null && resultsMap.size() > 0) {
-				if (firstResult) {
+				if (!listHeaders.contains(resultFilePath.toString())) {
 					GeneralUtils.writeTextToFile(resultFilePath, ApplicationProperties.printProperties());
 				}
 				
 				if (!(((ExecutionTask) entry.getValue()).getCalculationMethodology()).equalsIgnoreCase("SPREAD")) {
-					if (firstResult) {
+					if (!listHeaders.contains(resultFilePath.toString())) {
 						GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsHeader(maxLevels));
 					}
 					GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsLevels (((ExecutionTask) entry.getValue()).getCurrentCurrency(), ((ExecutionTask) entry.getValue()).getCalculationMethodology(), ((ExecutionTask) entry.getValue()).getStartDate(), ((ExecutionTask) entry.getValue()).getEndDate(), resultsMap, maxLevels));
@@ -252,8 +253,8 @@ public class Application {
 						GeneralUtils.writeTextToFile(resultFilePath, ((ExecutionTask) entry.getValue()).getCurrentCurrency() + "|" + ((ExecutionTask) entry.getValue()).getCalculationMethodology()  + "|" + ((ExecutionTask) entry.getValue()).getStartDate()  + "|" + ((ExecutionTask) entry.getValue()).getEndDate() + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
 					}
 				}
-				if (firstResult) {
-					firstResult = false;
+				if (!listHeaders.contains(resultFilePath.toString())) {
+					listHeaders.add(resultFilePath.toString());
 				}
    			}
         }
