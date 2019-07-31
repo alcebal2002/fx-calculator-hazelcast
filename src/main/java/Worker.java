@@ -133,7 +133,8 @@ public class Worker {
 					refreshTime = System.currentTimeMillis();
 					workerDetail.setRefreshTime(refreshTime);
 					hzClient.getMap(HazelcastInstanceUtils.getWorkersMapName()).put(workerDetail.getUuid(),workerDetail);
-					logger.debug ("Updated Hazelcast WorkerDetail refreshTime");
+					if (logger.isDebugEnabled())
+						logger.debug ("Updated Hazelcast WorkerDetail refreshTime");
 				}
 			}
 			logger.info ("Hazelcast consumer Finished");
@@ -145,7 +146,8 @@ public class Worker {
 
 			// Shut down the monitor thread 
 			while (!executorPool.isTerminated()) { 
-				logger.debug ("Waiting for all the Executor to terminate"); 
+				if (logger.isDebugEnabled())
+					logger.debug ("Waiting for all the Executor to terminate"); 
 				Thread.sleep(ApplicationProperties.getIntProperty("workerpool.monitorSleep")*1000); 
 			} 
 

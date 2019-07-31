@@ -107,7 +107,8 @@ public class RunnableThreadMultiple implements RunnableCalculation, Runnable {
 				int positionId = originalFxRate.getPositionId();
 				float opening = originalFxRate.getOpen();
 				
-				logger.debug ("Processing " + currentCurrency + "-" + positionId);
+				if (logger.isDebugEnabled())
+					logger.debug ("Processing " + currentCurrency + "-" + positionId);
 				
 				changeCounter = 1;
 				multiplePosition = 0;
@@ -129,7 +130,8 @@ public class RunnableThreadMultiple implements RunnableCalculation, Runnable {
 						GeneralUtils.increaseMapCounter (resultsMap, ("UP-"+changeCounter));
 
 						if (("UP").equals(selectedDirection)) {
-							logger.debug("-BREAK ("+selectedDecrease+")");
+							if (logger.isDebugEnabled())
+								logger.debug("-BREAK ("+selectedDecrease+")");
 							break;
 						}
 
@@ -141,7 +143,8 @@ public class RunnableThreadMultiple implements RunnableCalculation, Runnable {
 						GeneralUtils.increaseMapCounter (resultsMap, ("DOWN-"+changeCounter));
 
 						if (("DOWN").equals(selectedDirection)) {
-							logger.debug("-BREAK ("+selectedDecrease+")");
+							if (logger.isDebugEnabled())
+								logger.debug("-BREAK ("+selectedDecrease+")");
 							break;
 						}
 

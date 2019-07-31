@@ -107,7 +107,8 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 				int positionId = originalFxRate.getPositionId();
 				float opening = originalFxRate.getOpen();
 				
-				logger.debug ("Processing " + currentCurrency + "-" + positionId);
+				if (logger.isDebugEnabled())
+					logger.debug ("Processing " + currentCurrency + "-" + positionId);
 				
 				previousFound = null;
 				
@@ -150,7 +151,8 @@ public class RunnableThread1212 implements RunnableCalculation, Runnable {
 
 						if (("DOWN").equals(previousFound)) {
 							//System.out.println ("|BREAK");
-							logger.debug("-BREAK ("+selectedDecrease+")");
+							if (logger.isDebugEnabled())
+								logger.debug("-BREAK ("+selectedDecrease+")");
 							break;
 						}
 						GeneralUtils.increaseMapCounter (resultsMap, ("DOWN-"+changeCounter));

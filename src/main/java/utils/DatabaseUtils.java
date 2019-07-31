@@ -147,13 +147,15 @@ public class DatabaseUtils {
 			} catch(Exception e) {
 				//Handle errors for Class.forName
 				logger.error ("Exception while executing " + sql);
-				logger.debug ("Exception: " + e.getClass() + " - " + e.getMessage());
+				if (logger.isDebugEnabled())
+					logger.debug ("Exception: " + e.getClass() + " - " + e.getMessage());
 			}
 	
 		} catch(Exception e) {
 			//Handle errors for Class.forName
 			logger.error ("Exception while checking if currency table exists for " + currentCurrency);
-			logger.debug ("Exception: " + e.getClass() + " - " + e.getMessage());
+			if (logger.isDebugEnabled())
+				logger.debug ("Exception: " + e.getClass() + " - " + e.getMessage());
 		} finally {
 			//finally block used to close resources
 			try {

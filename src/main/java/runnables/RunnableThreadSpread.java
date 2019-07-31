@@ -98,7 +98,8 @@ public class RunnableThreadSpread implements RunnableCalculation, Runnable {
 				int positionId = originalFxRate.getPositionId();
 				float opening = originalFxRate.getOpen();
 				
-				logger.debug ("Processing " + currentCurrency + "-" + positionId);
+				if (logger.isDebugEnabled())
+					logger.debug ("Processing " + currentCurrency + "-" + positionId);
 				
 				FxRate targetFxRate = null;
 		    	result =  new StringBuilder();
@@ -109,7 +110,8 @@ public class RunnableThreadSpread implements RunnableCalculation, Runnable {
 					
 					totalCalculations++;
 					
-					logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
+					if (logger.isDebugEnabled())
+						logger.debug ("Comparing against " + targetFxRate.getCurrencyPair() + "-" + targetFxRate.getPositionId());
 
 					if ((targetFxRate.getHigh() > (opening * increase)-spread)) {
 						result.append("S");

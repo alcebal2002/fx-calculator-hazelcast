@@ -154,7 +154,8 @@ public class GeneralUtils {
     					(historicalDataMap.get(currentCurrency)).add(fxRate);
 
     					if (totalCounter%printAfter == 0) {
-        		        	logger.debug ("  " + currentCurrency + " -> loaded " + totalCounter + " records so far");
+    						if (logger.isDebugEnabled())
+    							logger.debug ("  " + currentCurrency + " -> loaded " + totalCounter + " records so far");
         				}
     					totalCounter++;
     	        	}
@@ -190,14 +191,17 @@ public class GeneralUtils {
     public static float getSpread (final String currentCurrency, final Properties applicationProperties) {
     	float result = 0;
 
-    	logger.debug("Data source set to: " + applicationProperties.getProperty("application.datasource"));
+		if (logger.isDebugEnabled())
+			logger.debug("Data source set to: " + applicationProperties.getProperty("application.datasource"));
     	if ("database".equals(applicationProperties.getProperty("application.datasource"))) {
-    		logger.debug("Retrieving spread value for " + currentCurrency + " from database");
+			if (logger.isDebugEnabled())
+				logger.debug("Retrieving spread value for " + currentCurrency + " from database");
     		// Populate spread data from mysql database
     		result = DatabaseUtils.getSpread(currentCurrency, applicationProperties);  		
     	} else {
 
-    		logger.debug("Retrieving spread value for " + currentCurrency + " from file");
+			if (logger.isDebugEnabled())
+				logger.debug("Retrieving spread value for " + currentCurrency + " from file");
    	    	int counter = 0;
 
 			String historicalDataPath = applicationProperties.getProperty("worker.historicalDataPath");
