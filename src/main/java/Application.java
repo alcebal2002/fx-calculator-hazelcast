@@ -113,7 +113,7 @@ public class Application {
 	        	for (String calculation : ApplicationProperties.getListProperty("application.calculations")) {
 		    		taskId++;
 		    		logger.info ("Putting currency " + currentCurrency + " - " + calculation + " - " + startDate + " - " + endDate + " as taskId " + taskId);
-		    		executionTask = new ExecutionTask (taskId,calculation,currentCurrency,startDate,endDate,ApplicationProperties.getApplicationProperties());
+		    		executionTask = new ExecutionTask (taskId,calculation,currentCurrency,startDate,endDate, ApplicationProperties.getApplicationProperties());
 		    		HazelcastInstanceUtils.putIntoQueue(HazelcastInstanceUtils.getTaskQueueName(), executionTask); 
 	        	}
 			}
@@ -203,7 +203,10 @@ public class Application {
 
             if (resultsMap != null && resultsMap.size() > 0) {
 
-            	logger.info (((ExecutionTask) entry.getValue()).getCurrentCurrency() + " - " + ((ExecutionTask) entry.getValue()).getCalculationMethodology());
+            	logger.info (((ExecutionTask) entry.getValue()).getCurrentCurrency() + " - " + 
+            				 ((ExecutionTask) entry.getValue()).getCalculationMethodology() + " - [" +
+            				 ((ExecutionTask) entry.getValue()).getStartDate() + " > " +
+            				 ((ExecutionTask) entry.getValue()).getEndDate() + "]");
             	logger.info (resultsMap.toString());
    			}
         }
