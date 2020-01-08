@@ -123,10 +123,14 @@ public class Worker {
 					// Puts the WorkerDetails into ExecutionTask
 					executionTaskItem.setWorkerDetail(workerDetail);
 					
-					// Determines which Runnable has to execute the task based on the taskType (ie. basic, spread...) 
-					executorPool.execute(runnableFactory.getRunnable(executionTaskItem));
-					totalExecutions++;
-					workerDetail.setTotalExecutions(totalExecutions);
+					// Determines which Runnable has to execute the task based on the taskType (ie. basic, spread...)
+					try {
+						executorPool.execute(runnableFactory.getRunnable(executionTaskItem));
+						totalExecutions++;
+						workerDetail.setTotalExecutions(totalExecutions);
+					} catch (Exception ex) {
+						logger.error("Unable to find Runnable for Execution Task " + executionTaskItem.getTaskId() + " (" + executionTaskItem.getCurrentCurrency() + " - " + executionTaskItem.getCalculationMethodology() + ")");
+					}
 				}
 				
 				if ((System.currentTimeMillis()) - refreshTime > (ApplicationProperties.getIntProperty("workerpool.refreshAfter")*1000)) {
