@@ -126,10 +126,11 @@ public class Worker {
 					// Determines which Runnable has to execute the task based on the taskType (ie. basic, spread...)
 					try {
 						executorPool.execute(runnableFactory.getRunnable(executionTaskItem));
-						totalExecutions++;
-						workerDetail.setTotalExecutions(totalExecutions);
 					} catch (Exception ex) {
 						logger.error("Unable to find Runnable for Execution Task " + executionTaskItem.getTaskId() + " (" + executionTaskItem.getCurrentCurrency() + " - " + executionTaskItem.getCalculationMethodology() + ")");
+					} finally {
+						totalExecutions++;
+						workerDetail.setTotalExecutions(totalExecutions);
 					}
 				}
 				
