@@ -13,7 +13,6 @@ public class ExecutionTask implements Serializable {
 	private String endDate = null;
 	private Properties taskParameters;
 	
-	private WorkerDetail workerDetail = null;
 	private CalculationResult calculationResult = null;
 
 	public ExecutionTask(String stopSignal) {
@@ -60,12 +59,5 @@ public class ExecutionTask implements Serializable {
 
 	public final void setCalculationResult (CalculationResult calculationResult) {
 		this.calculationResult = calculationResult;
-	}
-	public final WorkerDetail getWorkerDetail () {
-		return workerDetail;
-	}
-
-	public final void setWorkerDetail (WorkerDetail workerDetail) {
-		this.workerDetail = workerDetail;
 	}
 } 

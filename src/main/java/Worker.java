@@ -120,9 +120,6 @@ public class Worker {
 						break;
 					}
 					
-					// Puts the WorkerDetails into ExecutionTask
-					executionTaskItem.setWorkerDetail(workerDetail);
-					
 					// Determines which Runnable has to execute the task based on the taskType (ie. basic, spread...)
 					try {
 						executorPool.execute(runnableFactory.getRunnable(executionTaskItem));
