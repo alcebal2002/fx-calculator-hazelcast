@@ -84,7 +84,7 @@ public class DatabaseUtils {
 		try {
 			logger.info ("Retrieving spreads from database");
 			stmt = DatabaseConnection.getInstance(applicationProperties).getConnection().createStatement();
-			sql = "SELECT id_par, divisas, spread FROM pares WHERE divisas = '" +  currentCurrency + "' AND spread <> '0.000000' ORDER BY id_par";
+			sql = "SELECT divisas, spread FROM pares WHERE divisas = '" +  currentCurrency + "' AND spread <> '0.000000'";
 			logger.info("Executing query: " + sql);
 			rs = stmt.executeQuery(sql);
 
