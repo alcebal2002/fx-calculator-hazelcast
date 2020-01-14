@@ -13,10 +13,10 @@ import com.hazelcast.core.IQueue;
 import datamodel.ExecutionTask;
 import datamodel.WorkerDetail;
 import executionservices.RejectedExecutionHandlerImpl;
-import executionservices.RunnableWorkerThread;
 import executionservices.SystemLinkedBlockingQueue;
 import executionservices.SystemMonitorThread;
 import executionservices.SystemThreadPoolExecutor;
+import runnables.RunnableCalculationFactory;
 import utils.ApplicationProperties;
 import utils.GeneralUtils;
 import utils.HazelcastInstanceUtils;
@@ -66,7 +66,7 @@ public class Worker {
 			SystemThreadPoolExecutor executorPool = new SystemThreadPoolExecutor(ApplicationProperties.getIntProperty("workerpool.coreSize"), 
 																				 ApplicationProperties.getIntProperty("workerpool.maxSize"), 
 																				 ApplicationProperties.getIntProperty("workerpool.timeoutSecs"),
-																				 TimeUnit.SECONDS, blockingQueue, threadFactory, rejectionHandler); 
+																				 TimeUnit.SECONDS, blockingQueue, threadFactory, rejectionHandler,hzClient); 
 			
 			// Create cluster node object
 			long startTime = System.currentTimeMillis();
@@ -95,15 +95,16 @@ public class Worker {
 			Thread monitorThread = new Thread(monitor); 
 			monitorThread.start(); 
 
-			hzClient.getMap(HazelcastInstanceUtils.getMonitorMapName()).put(workerDetail.getUuid(),workerDetail);
+			hzClient.getMap(HazelcastInstanceUtils.getWorkersMapName()).put(workerDetail.getUuid(),workerDetail);
 			
 			// Listen to Hazelcast tasks queue and submit work to the thread pool for each task 
-			IQueue<ExecutionTask> hazelcastTaskQueue = hzClient.getQueue( HazelcastInstanceUtils.getTaskQueueName() );
-			
-			// Create cluster node object
+			IQueue<ExecutionTask> hazelcastTaskQueue = hzClient.getQueue( HazelcastInstanceUtils.getTaskQueueName() );		
+
 			long refreshTime = System.currentTimeMillis();
 			logger.info ("Refreshing Hazelcast WorkerDetail status after " + ApplicationProperties.getIntProperty("workerpool.refreshAfter") + " secs");
-						
+
+			RunnableCalculationFactory runnableFactory = new RunnableCalculationFactory();
+			
 			while ( true ) {
 				/*
 				 * Option to avoid getting additional tasks from Hazelcast distributed queue if there is no processing capacity available in the ThreadPool 
@@ -112,21 +113,30 @@ public class Worker {
 //					(blockingQueue.remainingCapacity() > 0)) { // For ArrayBlockingQueue
 					(blockingQueue.size() < ApplicationProperties.getIntProperty("workerpool.queueCapacity"))) { // For LinkedBlockingQueue 
 					ExecutionTask executionTaskItem = hazelcastTaskQueue.take();
-					logger.info ("Consumed Execution Task " + executionTaskItem.getTaskId() + " from Hazelcast Task Queue");
-					if ( (HazelcastInstanceUtils.getStopProcessingSignal()).equals(executionTaskItem.getTaskType()) ) {
+					logger.info ("Consumed Execution Task " + executionTaskItem.getTaskId() + " (" + executionTaskItem.getCurrentCurrency() + " - " + executionTaskItem.getCalculationMethodology() + ") from Hazelcast Task Queue");
+					if ( (HazelcastInstanceUtils.getStopProcessingSignal()).equals(executionTaskItem.getCalculationMethodology()) ) {
 						logger.info ("Detected " + HazelcastInstanceUtils.getStopProcessingSignal());
 						hzClient.getQueue(HazelcastInstanceUtils.getTaskQueueName()).put(new ExecutionTask(HazelcastInstanceUtils.getStopProcessingSignal()));
 						break;
-					}				
-					executorPool.execute(new RunnableWorkerThread(executionTaskItem));
-					totalExecutions++; 
+					}
+					
+					// Determines which Runnable has to execute the task based on the taskType (ie. basic, spread...)
+					try {
+						executorPool.execute(runnableFactory.getRunnable(executionTaskItem));
+					} catch (Exception ex) {
+						logger.error("Unable to find Runnable for Execution Task " + executionTaskItem.getTaskId() + " (" + executionTaskItem.getCurrentCurrency() + " - " + executionTaskItem.getCalculationMethodology() + ")");
+					} finally {
+						totalExecutions++;
+						workerDetail.setTotalExecutions(totalExecutions);
+					}
 				}
 				
 				if ((System.currentTimeMillis()) - refreshTime > (ApplicationProperties.getIntProperty("workerpool.refreshAfter")*1000)) {
 					refreshTime = System.currentTimeMillis();
 					workerDetail.setRefreshTime(refreshTime);
-					hzClient.getMap(HazelcastInstanceUtils.getMonitorMapName()).put(workerDetail.getUuid(),workerDetail);
-					logger.debug ("Updated Hazelcast WorkerDetail refreshTime");
+					hzClient.getMap(HazelcastInstanceUtils.getWorkersMapName()).put(workerDetail.getUuid(),workerDetail);
+					if (logger.isDebugEnabled())
+						logger.debug ("Updated Hazelcast WorkerDetail refreshTime");
 				}
 			}
 			logger.info ("Hazelcast consumer Finished");
@@ -138,7 +148,8 @@ public class Worker {
 
 			// Shut down the monitor thread 
 			while (!executorPool.isTerminated()) { 
-				logger.debug ("Waiting for all the Executor to terminate"); 
+				if (logger.isDebugEnabled())
+					logger.debug ("Waiting for all the Executor to terminate"); 
 				Thread.sleep(ApplicationProperties.getIntProperty("workerpool.monitorSleep")*1000); 
 			} 
 
@@ -153,16 +164,7 @@ public class Worker {
 			workerDetail.setActiveStatus(false);
 			workerDetail.setStopTime(stopTime);
 			workerDetail.setTotalElapsedTime((stopTime - startTime));
-			workerDetail.setTotalExecutions(totalExecutions);
-			workerDetail.setCalculationResults(executorPool.getCalcResultsMap());
-			workerDetail.setAvgExecutionTime(executorPool.getAvgExecutionTime());
-			workerDetail.setTotalHistoricalDataLoaded(executorPool.getTotalHistDataLoaded());
-			workerDetail.setTotalCalculations(executorPool.getTotalCalculations());
-			workerDetail.setTotalBasicResults(executorPool.getTotalBasicResults());
-			workerDetail.setTotalSpreadResults(executorPool.getTotalSpreadResults());
-			workerDetail.setTotal1212Results(executorPool.getTotal1212Results());
-			workerDetail.setTotal1234Results(executorPool.getTotal1234Results());
-			hzClient.getMap(HazelcastInstanceUtils.getMonitorMapName()).put(workerDetail.getUuid(),workerDetail);
+			hzClient.getMap(HazelcastInstanceUtils.getWorkersMapName()).put(workerDetail.getUuid(),workerDetail);
 			
 			// Shutdown Hazelcast cluster node instance		
 			logger.info ("Shutting down hazelcast client...");

@@ -7,48 +7,57 @@ public class ExecutionTask implements Serializable {
 	private static final long serialVersionUID = 1L;
 	// Task parameters
 	private int taskId;
-	private String taskType = null;
+	private String calculationMethodology = null;
 	private String currentCurrency = null;
+	private String startDate = null;
+	private String endDate = null;
 	private Properties taskParameters;
 	
-	private long creationTimestamp = 0L;
-	private long elapsedExecutionTime = 0L;
+	private CalculationResult calculationResult = null;
 
-	public ExecutionTask(String taskType) {
-		this.taskType = taskType;
+	public ExecutionTask(String stopSignal) {
+		this.calculationMethodology = stopSignal;
 	}
 
-	public ExecutionTask(final int taskId, final String taskType, final String currentCurrency, final Properties taskParameters) {
+	public ExecutionTask(final int taskId, final String calculationMethodology, final String currentCurrency, 
+						 final String startDate, final String endDate, final Properties taskParameters) {
 		this.taskId = taskId;
-		this.taskType = taskType;
+		this.calculationMethodology = calculationMethodology;
 		this.currentCurrency = currentCurrency;
+		this.startDate = startDate;
+		this.endDate = endDate;
 		this.taskParameters = taskParameters;
-		this.creationTimestamp = System.currentTimeMillis();
 	}
 
 	public final int getTaskId() {
 		return this.taskId;
 	}
 
-	public final String getTaskType() {
-		return this.taskType;
+	public final String getCalculationMethodology() {
+		return this.calculationMethodology;
 	}
 
 	public final String getCurrentCurrency() {
 		return this.currentCurrency;
 	}
 
+	public final String getStartDate() {
+		return this.startDate;
+	}
+
+	public final String getEndDate() {
+		return this.endDate;
+	}
+
 	public final Properties getTaskParameters () {
 		return taskParameters;
 	}
 	
-	public final long getCreationTimestamp() {
-		return creationTimestamp;
+	public final CalculationResult getCalculationResult () {
+		return calculationResult;
 	}
-	public final long getElapsedExecutionTime() {
-		return elapsedExecutionTime;
-	}
-	public final void setElapsedExecutionTime (long elapsedTime) {
-		this.elapsedExecutionTime = elapsedTime;
+
+	public final void setCalculationResult (CalculationResult calculationResult) {
+		this.calculationResult = calculationResult;
 	}
 } 

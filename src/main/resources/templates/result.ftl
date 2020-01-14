@@ -29,8 +29,16 @@
 		</style>
     </head>
     <body>
-	<#assign currentStatus = statusMap["status"]>
-	<#assign totalTasks = statusMap["totalTasks"]>	
+    
+    <#assign currentStatus = "">
+    <#assign totalTasks = 0>
+    <#if statusMap["status"]??>
+		<#assign currentStatus = statusMap["status"]>
+	</#if>
+    <#if statusMap["totalTasks"]??>
+		<#assign totalTasks = statusMap["totalTasks"]>	
+	</#if>
+    
 <div class="row">
 	<div class="column" id="canvas-holder" style="width:40%">
 		<canvas id="chart-area"></canvas>
@@ -46,93 +54,91 @@
 			<th>End Time</th>
 			<th>Elapsed Time</th>
 			<th>Max Pool Size</th>
-			<th># Processed</th>
-			<th>Avg process time</th>
+			<th># Processing</th>
 		  </tr>
 		</thead>
 		<tbody>
 	<#assign totalExecuted = 0>
 	<#assign totalWorkers = 0>
 	<#assign totalThreads = 0>
-	<#assign averageExecutionTime = 0>
-	<#list monitorMap?values as workerDetail>
-		<#assign totalExecuted = totalExecuted + workerDetail.totalExecutions>
-		<#assign totalWorkers = totalWorkers + 1>
-		<#assign totalThreads = totalThreads + workerDetail.poolMaxSize>
-		<#assign averageExecutionTime = averageExecutionTime + (workerDetail.totalExecutions * workerDetail.avgExecutionTime)>
-			<tr>
-				<td>${workerDetail.activeStatusString}</td>
-				<td>${workerDetail.inetAddres}:${workerDetail.inetPort}</td>
-				<td>${workerDetail.startTimeString}</td>
-				<td>${workerDetail.stopTimeString}</td>
-				<td>${workerDetail.totalElapsedTime}</td>
-				<td>${workerDetail.poolMaxSize}</td>
-				<td>${workerDetail.totalExecutions}</td>
-				<td>${workerDetail.avgExecutionTime}</td>
-			</tr>
-	</#list>
-	<#if totalWorkers gt 0>
-	  <#if totalExecuted gt 0>
-	    <#assign averageExecutionTime = averageExecutionTime / totalExecuted>
-	  </#if>
-	</#if>
+	
+	<#if workersMap??>
+		<#list workersMap?values as workerDetail>
+			<#assign totalExecuted = totalExecuted + workerDetail.totalExecutions>
+			<#assign totalWorkers = totalWorkers + 1>
+			<#assign totalThreads = totalThreads + workerDetail.poolMaxSize>
+				<tr>
+					<td>${workerDetail.activeStatusString}</td>
+					<td>${workerDetail.inetAddres}:${workerDetail.inetPort}</td>
+					<td>${workerDetail.startTimeString}</td>
+					<td>${workerDetail.stopTimeString}</td>
+					<td>${workerDetail.totalElapsedTime}</td>
+					<td>${workerDetail.poolMaxSize}</td>
+					<td>${workerDetail.totalExecutions}</td>
+				</tr>
+		</#list>
+    </#if>
 			<tr>
 				<td><b>${totalWorkers}</b></td>
 				<td colspan="4">&nbsp;</td>
 				<td><b>${totalThreads}</b></td>
 				<td><b>${totalExecuted}</b></td>
-				<td><b>${averageExecutionTime}</b></td>
 			</tr>
 			<tr><td colspan="8">&nbsp;</td></tr>
 		</tbody>
 	  </table>
 	  
 	  <#if !refreshPage>
-		<#assign totalExecutions = statusMap["totalExecutions"]>
-		<#assign avgExecutionTime = statusMap["avgExecutionTime"]>
-		<#assign totalHistDataLoaded = statusMap["totalHistDataLoaded"]>
-		<#assign totalCalculations = statusMap["totalCalculations"]>
-		<#assign totalBasicResults = statusMap["totalBasicResults"]>
-		<#assign totalSpreadResults = statusMap["totalSpreadResults"]>
-		<#assign elapsedTime = statusMap["elapsedTime"]>
-		<#assign resultFilePath = statusMap["resultFilePath"]>
-	  	<table>
-	  		<tr>
-	  			<td>totalTasks</td>
-	  			<td>${totalTasks}</td>
-	  		</tr>
-	  		<tr>
-	  			<td>totalExecutions</td>
-	  			<td>${totalExecutions}</td>
-	  		</tr>
-	  		<tr>
-	  			<td>avgExecutionTime</td>
-	  			<td>${avgExecutionTime}</td>
-	  		</tr>
-	  		<tr>
-	  			<td>totalHistDataLoaded</td>
-	  			<td>${totalHistDataLoaded}</td>
-	  		</tr>
-	  		<tr>
-	  			<td>totalCalculations</td>
-	  			<td>${totalCalculations}</td>
-	  		</tr>
-	  		<tr>
-	  			<td>totalBasicResults</td>
-	  			<td>${totalBasicResults}</td>
-	  		</tr>
-	  		<tr>
-	  			<td>totalSpreadResults</td>
-	  			<td>${totalSpreadResults}</td>
-	  		</tr>
-	  		<tr>
-	  			<td>elapsedTime</td>
-	  			<td>${elapsedTime}</td>
-	  		</tr>
-	  		<tr>
-	  			<td>resultFilePath</td>
-	  			<td>${resultFilePath}</td>
-	  		</tr>
+  	    <#assign totalExecutions = 0>
+	    <#assign totalHistDataLoaded = 0>
+	    <#assign totalCalculations = 0>
+	    <#assign elapsedTime = 0>
+	    <#assign resultFilePath = "">
+	   	<#if statusMap["totalExecutions"]??>
+			<#assign totalExecutions = statusMap["totalExecutions"]>
+		</#if>
+		<#if statusMap["totalHistDataLoaded"]??>
+			<#assign totalHistDataLoaded = statusMap["totalHistDataLoaded"]>
+		</#if>
+		<#if statusMap["totalCalculations"]??>
+			<#assign totalCalculations = statusMap["totalCalculations"]>
+		</#if>
+		<#if statusMap["elapsedTime"]??>
+			<#assign elapsedTime = statusMap["elapsedTime"]>
+		</#if>
+		<#if statusMap["resultFilePath"]??>
+			<#assign resultFilePath = statusMap["resultFilePath"]>
+		</#if>
+	  	<table class="table table-condensed">
+			<thead>
+			  <tr><th colspan="2"><b>Results:</b></th></tr>
+			</thead>
+			<tbody>
+		  		<tr>
+		  			<td>totalTasks</td>
+		  			<td>${totalTasks}</td>
+		  		</tr>
+		  		<tr>
+		  			<td>totalExecutions</td>
+		  			<td>${totalExecutions}</td>
+		  		</tr>
+		  		<tr>
+		  			<td>totalHistDataLoaded</td>
+		  			<td>${totalHistDataLoaded}</td>
+		  		</tr>
+		  		<tr>
+		  			<td>totalCalculations</td>
+		  			<td>${totalCalculations}</td>
+		  		</tr>
+		  		<tr>
+		  			<td>elapsedTime</td>
+		  			<td>${elapsedTime}</td>
+		  		</tr>
+		  		<tr>
+		  			<td>resultFilePath</td>
+		  			<td>${resultFilePath}</td>
+		  		</tr>
+		  	</tbody>
 	  	</table>
 	  </#if>	  
   </div>
@@ -144,9 +150,11 @@
 		data: {
 			datasets: [{
 				data: [
-					<#list monitorMap?values as workerDetail>
-					${workerDetail.totalExecutionsWithoutComma},
-					</#list>
+					<#if workersMap??>
+						<#list workersMap?values as workerDetail>
+							${workerDetail.totalExecutions},
+						</#list>
+					</#if>
 				],
 				backgroundColor: [
 					window.chartColors.red,
@@ -160,9 +168,11 @@
 				label: 'Workers Monitor'
 			}],
 			labels: [
-				<#list monitorMap?values as workerDetail>
-				'${workerDetail.inetAddres}:${workerDetail.inetPort}',
-				</#list>
+				<#if workersMap??>
+					<#list workersMap?values as workerDetail>
+						'${workerDetail.inetAddres}:${workerDetail.inetPort}',
+					</#list>
+					</#if>
 			]
 		},
 		options: {

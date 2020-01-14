@@ -4,7 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -20,18 +19,17 @@ public class DatabaseUtils {
 	private static Logger logger = LoggerFactory.getLogger(DatabaseUtils.class);
 	
 
-	public static Map<String,List<FxRate>> getHistoricalRates (final String currentCurrency, final Properties applicationProperties) {
+	public static void getHistoricalRates (final String currentCurrency, final String startDate, final String endDate, Map<String, List<FxRate>> historicalDataMap, final Properties applicationProperties) {
  
 		Statement stmt = null;
 		String sql = null;
 		ResultSet rs = null;
-
-		Map<String,List<FxRate>> resultMap = new HashMap<String,List<FxRate>>();
 		
 		try {
 			logger.info ("Retrieving historical rates from database for " + currentCurrency);
 			stmt = DatabaseConnection.getInstance(applicationProperties).getConnection().createStatement();
-			sql = "SELECT * FROM historico_" + currentCurrency + " WHERE fecha >= STR_TO_DATE('" + applicationProperties.getProperty("application.startDate") + "','%Y-%m-%d') AND fecha <= STR_TO_DATE('" + applicationProperties.getProperty("application.startDate") + "','%Y-%m-%d') ORDER BY fecha ASC, hora ASC";
+			//sql = "SELECT * FROM historical_" + currentCurrency + " WHERE hist_date >= STR_TO_DATE('" + startDate + "','%Y-%m-%d') AND hist_date <= STR_TO_DATE('" + endDate + "','%Y-%m-%d') ORDER BY hist_date ASC, hist_time ASC";
+			sql = "SELECT * FROM historical_data WHERE hist_ccy_pair = '" + currentCurrency + "' AND hist_date >= STR_TO_DATE('" + startDate + "','%Y-%m-%d') AND hist_date <= STR_TO_DATE('" + endDate + "','%Y-%m-%d') ORDER BY hist_date ASC, hist_time ASC";
 			logger.info("Executing query: " + sql);
 			rs = stmt.executeQuery(sql);
 
@@ -39,17 +37,17 @@ public class DatabaseUtils {
 
 			while(rs.next()) {
 				//Retrieve by column name
-				String conversionDate = rs.getString("fecha");
-				String conversionTime = rs.getString("hora");
-				float open = rs.getFloat("apertura");
-				float high = rs.getFloat("alto");
-				float low = rs.getFloat("bajo");
-				float close = rs.getFloat("cerrar");
+				String conversionDate = rs.getString("hist_date");
+				String conversionTime = rs.getString("hist_time");
+				float open = rs.getFloat("hist_open");
+				float high = rs.getFloat("hist_high");
+				float low = rs.getFloat("hist_low");
+				float close = rs.getFloat("hist_close");
 
-				if (!resultMap.containsKey(currentCurrency)) {
-					resultMap.put(currentCurrency, new ArrayList<FxRate>());
+				if (!historicalDataMap.containsKey(currentCurrency)) {
+					historicalDataMap.put(currentCurrency, new ArrayList<FxRate>());
 				}
-				(resultMap.get(currentCurrency)).add(new FxRate(positionId, currentCurrency, conversionDate, conversionTime, open, high, low, close));
+				(historicalDataMap.get(currentCurrency)).add(new FxRate(positionId, currentCurrency, conversionDate, conversionTime, open, high, low, close));
 				positionId++;
 			}
 			rs.close();
@@ -74,7 +72,6 @@ public class DatabaseUtils {
 				logger.error ("Exception: " + e.getClass() + " - " + e.getMessage());
 			}
 		}
-		return resultMap;
 	}
 
 	public static float getSpread (final String currentCurrency, final Properties applicationProperties) {
@@ -88,7 +85,7 @@ public class DatabaseUtils {
 		try {
 			logger.info ("Retrieving spreads from database");
 			stmt = DatabaseConnection.getInstance(applicationProperties).getConnection().createStatement();
-			sql = "SELECT id_par, divisas, spread FROM pares WHERE divisas = '" +  currentCurrency + "' AND spread <> '0.000000' ORDER BY id_par";
+			sql = "SELECT ccy_pair, spread FROM ccy_pairs WHERE ccy_pair = '" +  currentCurrency + "' AND spread <> '0.000000'";
 			logger.info("Executing query: " + sql);
 			rs = stmt.executeQuery(sql);
 
@@ -134,7 +131,7 @@ public class DatabaseUtils {
 			
 			stmt = DatabaseConnection.getInstance(applicationProperties).getConnection().createStatement();
 			
-			sql = "SELECT UPPER(SUBSTRING(table_name, 11)) as 'currency' FROM information_schema.TABLES WHERE table_name like 'historico_" + currentCurrency + "' AND data_length > 0";
+			sql = "SELECT UPPER(SUBSTRING(table_name, 12)) as 'currency' FROM information_schema.TABLES WHERE table_name like 'historical_" + currentCurrency + "' AND data_length > 0";
 			logger.info("Executing query: " + sql);
 			
 			try {
@@ -151,13 +148,15 @@ public class DatabaseUtils {
 			} catch(Exception e) {
 				//Handle errors for Class.forName
 				logger.error ("Exception while executing " + sql);
-				logger.debug ("Exception: " + e.getClass() + " - " + e.getMessage());
+				if (logger.isDebugEnabled())
+					logger.debug ("Exception: " + e.getClass() + " - " + e.getMessage());
 			}
 	
 		} catch(Exception e) {
 			//Handle errors for Class.forName
 			logger.error ("Exception while checking if currency table exists for " + currentCurrency);
-			logger.debug ("Exception: " + e.getClass() + " - " + e.getMessage());
+			if (logger.isDebugEnabled())
+				logger.debug ("Exception: " + e.getClass() + " - " + e.getMessage());
 		} finally {
 			//finally block used to close resources
 			try {
