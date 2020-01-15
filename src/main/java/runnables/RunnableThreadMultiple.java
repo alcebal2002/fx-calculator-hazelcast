@@ -12,6 +12,7 @@ import datamodel.CalculationResult;
 import datamodel.ExecutionTask;
 import datamodel.FxRate;
 import utils.ApplicationProperties;
+import utils.Constants;
 import utils.GeneralUtils;
 
 public class RunnableThreadMultiple implements RunnableCalculation, Runnable {
@@ -49,7 +50,7 @@ public class RunnableThreadMultiple implements RunnableCalculation, Runnable {
 		try {
 			
 			// Calculates required properties based on the application properties retrieved from the execution task
-			List<String> multipleCalculations = ApplicationProperties.getListProperty("application.multiple");
+			List<String> multipleCalculations = ApplicationProperties.getListProperty(Constants.AP_MULTIPLE);
 			
 			float spread = 0;
 			

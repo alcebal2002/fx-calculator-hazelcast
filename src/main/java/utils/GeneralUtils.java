@@ -68,8 +68,8 @@ public class GeneralUtils {
 
 		boolean exists = false;
 
-		String historicalDataPath = appliationProperties.getProperty("worker.historicalDataPath");
-		String historicalDataFileExtension = appliationProperties.getProperty("worker.historicalDataFileExtension");
+		String historicalDataPath = appliationProperties.getProperty(Constants.WK_HISTORICALDATAPATH);
+		String historicalDataFileExtension = appliationProperties.getProperty(Constants.WK_HISTORICALDATAFILEEXTENSION);
 
 		String file = historicalDataPath + currentCurrency + historicalDataFileExtension;
 
@@ -82,11 +82,11 @@ public class GeneralUtils {
 
     public static void checkResultsPath() throws Exception {
     	
-    	if (ApplicationProperties.getBooleanProperty("application.writeResultsToFile")) {
-        	logger.info("Checking if results directory exists (" + ApplicationProperties.getStringProperty("application.resultsPath") + ")");
+    	if (ApplicationProperties.getBooleanProperty(Constants.AP_WRITERESULTSTOFILE)) {
+        	logger.info("Checking if results directory exists (" + ApplicationProperties.getStringProperty(Constants.AP_RESULTSPATH) + ")");
 
-        	if (!GeneralUtils.checkIfDirectoryExists(ApplicationProperties.getStringProperty("application.resultsPath"))) {
-    			throw (new Exception("Results directory (" + ApplicationProperties.getStringProperty("application.resultsPath") + " does not exist. Please check !"));
+        	if (!GeneralUtils.checkIfDirectoryExists(ApplicationProperties.getStringProperty(Constants.AP_RESULTSPATH))) {
+    			throw (new Exception("Results directory (" + ApplicationProperties.getStringProperty(Constants.AP_RESULTSPATH) + " does not exist. Please check !"));
     		} else {
     			logger.info ("Results Path exists");
     		}
@@ -111,9 +111,9 @@ public class GeneralUtils {
     	
     	long result = 0;
     	
-    	logger.info("Data source set to: " + applicationProperties.getProperty("application.datasource"));
+    	logger.info("Data source set to: " + applicationProperties.getProperty(Constants.AP_DATASOURCE));
 
-    	if ("database".equals(applicationProperties.getProperty("application.datasource"))) {
+    	if ("database".equals(applicationProperties.getProperty(Constants.AP_DATASOURCE))) {
     		
     		// Gets properties from task item properties
     		
@@ -130,10 +130,10 @@ public class GeneralUtils {
    	    	int lineNumber = 0;
 
    	    	// Gets properties from application.properties file   	    	
-			String historicalDataPath = ApplicationProperties.getStringProperty("worker.historicalDataPath");
-			String historicalDataFileExtension = ApplicationProperties.getStringProperty("worker.historicalDataFileExtension");
-			String historicalDataSeparator = ApplicationProperties.getStringProperty("worker.historicalDataSeparator");
-			int printAfter = ApplicationProperties.getIntProperty("worker.printAfter");
+			String historicalDataPath = ApplicationProperties.getStringProperty(Constants.WK_HISTORICALDATAPATH);
+			String historicalDataFileExtension = ApplicationProperties.getStringProperty(Constants.WK_HISTORICALDATAFILEEXTENSION);
+			String historicalDataSeparator = ApplicationProperties.getStringProperty(Constants.WK_HISTORICALDATASEPARATOR);
+			int printAfter = ApplicationProperties.getIntProperty(Constants.WK_PRINTAFTER);
 
 			String fileName = historicalDataPath + currentCurrency + historicalDataFileExtension;
     		
@@ -180,7 +180,7 @@ public class GeneralUtils {
 /*
 		boolean exists = false;
 
-		if ("database".equals(applicationProperties.getProperty("application.datasource"))) {
+		if ("database".equals(applicationProperties.getProperty(Constants.AP_DATASOURCE))) {
 			exists = DatabaseUtils.checkCurrencyTableExists(currentCurrency,applicationProperties);
 		} else {
 			exists = GeneralUtils.checkIfFileExists(currentCurrency, applicationProperties);
@@ -193,21 +193,21 @@ public class GeneralUtils {
     	float result = 0;
 
 		if (logger.isDebugEnabled())
-			logger.debug("Data source set to: " + applicationProperties.getProperty("application.datasource"));
-    	if ("database".equals(applicationProperties.getProperty("application.datasource"))) {
+			logger.debug("Data source set to: " + applicationProperties.getProperty(Constants.AP_DATASOURCE));
+    	if ("database".equals(applicationProperties.getProperty(Constants.AP_DATASOURCE))) {
 			if (logger.isDebugEnabled())
 				logger.debug("Retrieving spread value for " + currentCurrency + " from database");
     		// Populate spread data from mysql database
-    		result = DatabaseUtils.getSpread(currentCurrency, applicationProperties);  		
+    		result = DatabaseUtils.getSpread(currentCurrency, applicationProperties);
     	} else {
 
 			if (logger.isDebugEnabled())
 				logger.debug("Retrieving spread value for " + currentCurrency + " from file");
    	    	int counter = 0;
 
-			String historicalDataPath = applicationProperties.getProperty("worker.historicalDataPath");
-			String historicalDataFileExtension = applicationProperties.getProperty("worker.historicalDataFileExtension");
-			String historicalDataSeparator = applicationProperties.getProperty("worker.historicalDataSeparator");
+			String historicalDataPath = applicationProperties.getProperty(Constants.WK_HISTORICALDATAPATH);
+			String historicalDataFileExtension = applicationProperties.getProperty(Constants.WK_HISTORICALDATAFILEEXTENSION);
+			String historicalDataSeparator = applicationProperties.getProperty(Constants.WK_HISTORICALDATASEPARATOR);
 
 			String fileName = historicalDataPath + "pares" + historicalDataFileExtension;
     		        	

@@ -40,11 +40,11 @@ public class DatabaseConnection {
     	
         if ((instance == null) || (instance.getConnection().isClosed())) {
         	
-    		databaseHost = applicationProperties.getProperty("database.host");
-    		databasePort = applicationProperties.getProperty("database.port");
-    		databaseName = applicationProperties.getProperty("database.db_name");
-    		databaseUser = applicationProperties.getProperty("database.username");
-    		databasePass = applicationProperties.getProperty("database.password");
+    		databaseHost = applicationProperties.getProperty(Constants.DB_HOST);
+    		databasePort = applicationProperties.getProperty(Constants.DB_PORT);
+    		databaseName = applicationProperties.getProperty(Constants.DB_NAME);
+    		databaseUser = applicationProperties.getProperty(Constants.DB_USERNAME);
+    		databasePass = applicationProperties.getProperty(Constants.DB_PASSWORD);
     		
     		databaseUrl = databaseUrl.replaceAll("<host>", databaseHost).replaceAll("<port>", databasePort).replaceAll("<name>", databaseName);
 

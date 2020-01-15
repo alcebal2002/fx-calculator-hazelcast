@@ -33,9 +33,9 @@ public class Monitor {
 		// Load properties from file
 		ApplicationProperties.loadApplicationProperties ();
 		
-		freemarkerConfig.setClassForTemplateLoading(Monitor.class, ApplicationProperties.getStringProperty("spark.templatePath"));
+		freemarkerConfig.setClassForTemplateLoading(Monitor.class, ApplicationProperties.getStringProperty(Constants.SP_TEMPLATEPATH));
 
-		Spark.staticFileLocation(ApplicationProperties.getStringProperty("spark.publicPath"));
+		Spark.staticFileLocation(ApplicationProperties.getStringProperty(Constants.SP_PUBLICPATH));
 		HazelcastInstance hzClient = HazelcastClient.newHazelcastClient();
 		
 		get("/", (req, res) -> Constants.SPARK_WELCOME_MESSAGE);
@@ -55,7 +55,7 @@ public class Monitor {
 				root.put( "refreshPage", refreshPage );
         		root.put( HazelcastInstanceUtils.getWorkersMapName (), hzClient.getMap(HazelcastInstanceUtils.getWorkersMapName()) );
 				root.put( HazelcastInstanceUtils.getStatusMapName (), hzClient.getMap(HazelcastInstanceUtils.getStatusMapName()) );				
-				Template resultTemplate = freemarkerConfig.getTemplate(ApplicationProperties.getStringProperty("spark.templateFileName"));
+				Template resultTemplate = freemarkerConfig.getTemplate(ApplicationProperties.getStringProperty(Constants.SP_TEMPLATEFILENAME));
 				resultTemplate.process(root, writer);
     		} catch (Exception ex) {
         		 logger.error ("Exception: " + ex.getClass() + " - " + ex.getMessage());

@@ -106,11 +106,11 @@ public class Application {
     	int taskId = 0;
 
 		// For each start and end date, currencyPair and calculation methodology (from properties file) create an Execution Task and put it into Hazelcast task queue for processing
-	    for (String datePair : ApplicationProperties.getListProperty("application.dates")) {
+	    for (String datePair : ApplicationProperties.getListProperty(Constants.AP_DATES)) {
 	    	String startDate = datePair.substring(0,datePair.indexOf("|")).trim();
 	    	String endDate = datePair.substring(datePair.indexOf("|")+1).trim();
-    		for (String currentCurrency : ApplicationProperties.getListProperty("application.currencyPairs")) {
-	        	for (String calculation : ApplicationProperties.getListProperty("application.calculations")) {
+    		for (String currentCurrency : ApplicationProperties.getListProperty(Constants.AP_CURRENCYPAIRS)) {
+	        	for (String calculation : ApplicationProperties.getListProperty(Constants.AP_CALCULATIONS)) {
 		    		taskId++;
 		    		logger.info ("Putting currency " + currentCurrency + " - " + calculation + " - " + startDate + " - " + endDate + " as taskId " + taskId);
 		    		executionTask = new ExecutionTask (taskId,calculation,currentCurrency,startDate,endDate, ApplicationProperties.getApplicationProperties());
@@ -128,7 +128,7 @@ public class Application {
     }
 
     private static void checkWorkersCompletion () throws Exception {
-    	long monitorDelay = ApplicationProperties.getLongProperty("application.monitorDelay");
+    	long monitorDelay = ApplicationProperties.getLongProperty(Constants.AP_MONITORDELAY);
     	
 		logger.info ("Waiting " + monitorDelay + " secs to start monitoring");
 		Thread.sleep(monitorDelay*1000);
@@ -163,23 +163,23 @@ public class Application {
 		logger.info ("****************************************************"); 
 		logger.info (title + " FXCalculator with the following parameters:"); 
 		logger.info ("****************************************************"); 
-		logger.info ("  - datasource               : " + ApplicationProperties.getStringProperty("application.datasource"));
-		logger.info ("  - database host            : " + ApplicationProperties.getStringProperty("database.host"));
-		logger.info ("  - database port            : " + ApplicationProperties.getStringProperty("database.port"));
-		logger.info ("  - database name            : " + ApplicationProperties.getStringProperty("database.db_name"));
-		logger.info ("  - database username        : " + ApplicationProperties.getStringProperty("database.username"));
-		logger.info ("  - database password        : " + ApplicationProperties.getStringProperty("database.password"));
+		logger.info ("  - datasource               : " + ApplicationProperties.getStringProperty(Constants.AP_DATASOURCE));
+		logger.info ("  - database host            : " + ApplicationProperties.getStringProperty(Constants.DB_HOST));
+		logger.info ("  - database port            : " + ApplicationProperties.getStringProperty(Constants.DB_PORT));
+		logger.info ("  - database name            : " + ApplicationProperties.getStringProperty(Constants.DB_NAME));
+		logger.info ("  - database username        : " + ApplicationProperties.getStringProperty(Constants.DB_USERNAME));
+		logger.info ("  - database password        : " + ApplicationProperties.getStringProperty(Constants.DB_PASSWORD));
 
-		logger.info ("  - currency pairs           : " + ApplicationProperties.getListProperty("application.currencyPairs").toString());
-		logger.info ("  - dates                    : " + ApplicationProperties.getStringProperty("application.dates"));
-		logger.info ("  - increase percentage      : " + ApplicationProperties.getStringProperty("application.increasePercentage"));
-		logger.info ("  - decrease percentage      : " + ApplicationProperties.getStringProperty("application.decreasePercentage"));
-		logger.info ("  - max. levels              : " + ApplicationProperties.getStringProperty("application.maxLevels"));
-		logger.info ("  - multiple percentages     : " + ApplicationProperties.getStringProperty("application.multiple"));
-		logger.info ("  - calculations             : " + ApplicationProperties.getListProperty("application.calculations").toString());
+		logger.info ("  - currency pairs           : " + ApplicationProperties.getListProperty(Constants.AP_CURRENCYPAIRS).toString());
+		logger.info ("  - dates                    : " + ApplicationProperties.getStringProperty(Constants.AP_DATES));
+		logger.info ("  - increase percentage      : " + ApplicationProperties.getStringProperty(Constants.AP_INCREASEPERCENTAGE));
+		logger.info ("  - decrease percentage      : " + ApplicationProperties.getStringProperty(Constants.AP_DECREASEPERCENTAGE));
+		logger.info ("  - max. levels              : " + ApplicationProperties.getStringProperty(Constants.AP_MAXLEVELS));
+		logger.info ("  - multiple percentages     : " + ApplicationProperties.getStringProperty(Constants.AP_MULTIPLE));
+		logger.info ("  - calculations             : " + ApplicationProperties.getListProperty(Constants.AP_CALCULATIONS).toString());
 
-		logger.info ("  - write results to file    : " + ApplicationProperties.getStringProperty("application.writeResultsToFile"));
-		logger.info ("  - results path             : " + ApplicationProperties.getStringProperty("application.resultsPath"));
+		logger.info ("  - write results to file    : " + ApplicationProperties.getStringProperty(Constants.AP_WRITERESULTSTOFILE));
+		logger.info ("  - results path             : " + ApplicationProperties.getStringProperty(Constants.AP_RESULTSPATH));
 		logger.info ("****************************************************");
 		logger.info ("");
 	}
@@ -224,47 +224,51 @@ public class Application {
 	// Print results to file
 	private static void printResultsToFile () throws Exception {
 
-		ArrayList<String> listHeaders = new ArrayList<String>();
-		Map<String,Integer> resultsMap = null;
-
-		logger.info ("Printing results to results file");
-		String resultsPath = ApplicationProperties.getStringProperty("application.resultsPath");
-		int maxLevels = ApplicationProperties.getIntProperty("application.maxLevels");
-
-		Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getResultsMapName()).entrySet().iterator();
-
-		while (iter.hasNext()) {
-            Entry<String, Object> entry = iter.next();
-
-            resultsMap = ((ExecutionTask) entry.getValue()).getCalculationResult().getResultsMap();
-            resultFilePath = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+"_["+((ExecutionTask) entry.getValue()).getStartDate()+"_"+((ExecutionTask) entry.getValue()).getEndDate()+"].csv"));
-
-            if (resultsMap != null && resultsMap.size() > 0) {
-				if (!listHeaders.contains(resultFilePath.toString())) {
-					GeneralUtils.writeTextToFile(resultFilePath, ApplicationProperties.printProperties());
-				}
-				
-				if (!(((ExecutionTask) entry.getValue()).getTaskType()).equalsIgnoreCase("SPREAD")) {
+		if (ApplicationProperties.getBooleanProperty(Constants.AP_WRITERESULTSTOFILE)) {
+			ArrayList<String> listHeaders = new ArrayList<String>();
+			Map<String,Integer> resultsMap = null;
+	
+			logger.info ("Printing results to results file");
+			String resultsPath = ApplicationProperties.getStringProperty(Constants.AP_RESULTSPATH);
+			int maxLevels = ApplicationProperties.getIntProperty(Constants.AP_MAXLEVELS);
+	
+			Iterator<Entry<String, Object>> iter = HazelcastInstanceUtils.getMap(HazelcastInstanceUtils.getResultsMapName()).entrySet().iterator();
+	
+			while (iter.hasNext()) {
+	            Entry<String, Object> entry = iter.next();
+	
+	            resultsMap = ((ExecutionTask) entry.getValue()).getCalculationResult().getResultsMap();
+	            resultFilePath = Paths.get(resultsPath + (LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))+"_["+((ExecutionTask) entry.getValue()).getStartDate()+"_"+((ExecutionTask) entry.getValue()).getEndDate()+"].csv"));
+	
+	            if (resultsMap != null && resultsMap.size() > 0) {
 					if (!listHeaders.contains(resultFilePath.toString())) {
-						GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsHeader(maxLevels));
+						GeneralUtils.writeTextToFile(resultFilePath, ApplicationProperties.printProperties());
 					}
-					GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsLevels (((ExecutionTask) entry.getValue()).getCurrentCurrency(), ((ExecutionTask) entry.getValue()).getTaskType(), ((ExecutionTask) entry.getValue()).getStartDate(), ((ExecutionTask) entry.getValue()).getEndDate(), resultsMap, maxLevels));
-				} else {
-					Iterator<Entry<String, Integer>> calcResults = resultsMap.entrySet().iterator();   						
-					while (calcResults.hasNext()) {
-						Entry<String, Integer> calcEntry = calcResults.next();
-						GeneralUtils.writeTextToFile(resultFilePath, ((ExecutionTask) entry.getValue()).getCurrentCurrency() + "|" + ((ExecutionTask) entry.getValue()).getTaskType()  + "|" + ((ExecutionTask) entry.getValue()).getStartDate()  + "|" + ((ExecutionTask) entry.getValue()).getEndDate() + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
+					
+					if (!(((ExecutionTask) entry.getValue()).getTaskType()).equalsIgnoreCase("SPREAD")) {
+						if (!listHeaders.contains(resultFilePath.toString())) {
+							GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsHeader(maxLevels));
+						}
+						GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsLevels (((ExecutionTask) entry.getValue()).getCurrentCurrency(), ((ExecutionTask) entry.getValue()).getTaskType(), ((ExecutionTask) entry.getValue()).getStartDate(), ((ExecutionTask) entry.getValue()).getEndDate(), resultsMap, maxLevels));
+					} else {
+						Iterator<Entry<String, Integer>> calcResults = resultsMap.entrySet().iterator();   						
+						while (calcResults.hasNext()) {
+							Entry<String, Integer> calcEntry = calcResults.next();
+							GeneralUtils.writeTextToFile(resultFilePath, ((ExecutionTask) entry.getValue()).getCurrentCurrency() + "|" + ((ExecutionTask) entry.getValue()).getTaskType()  + "|" + ((ExecutionTask) entry.getValue()).getStartDate()  + "|" + ((ExecutionTask) entry.getValue()).getEndDate() + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
+						}
 					}
-				}
-				if (!listHeaders.contains(resultFilePath.toString())) {
-					listHeaders.add(resultFilePath.toString());
-				}
-   			}
-        }
-		if (resultsMap != null && resultsMap.size() > 0) {
-			logger.info("Results written into file: " + resultFilePath.toString());
+					if (!listHeaders.contains(resultFilePath.toString())) {
+						listHeaders.add(resultFilePath.toString());
+					}
+	   			}
+	        }
+			if (resultsMap != null && resultsMap.size() > 0) {
+				logger.info("Results written into file: " + resultFilePath.toString());
+			} else {
+				logger.info("No results found");
+			}
 		} else {
-			logger.info("No results found");
+			logger.info("Print to File set to false. Results are not written into file");
 		}
 	}
 

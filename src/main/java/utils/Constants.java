@@ -33,6 +33,31 @@ public class Constants {
 	// Chart.js
 	public static final String[] CHART_DATA_COLORS = {"red","orange","yellow","green","blue","purple","grey"};
 	
+	// Application properties
+	public static final String AP_DATASOURCE = "application.datasource";
+	public static final String AP_CURRENCYPAIRS = "application.currencyPairs";
+	public static final String AP_DATES = "application.dates";
+	public static final String AP_CALCULATIONS = "application.calculations";
+	public static final String AP_MULTIPLE = "application.multiple";
+	public static final String AP_INCREASEPERCENTAGE = "application.increasePercentage";
+	public static final String AP_DECREASEPERCENTAGE = "application.decreasePercentage";
+	public static final String AP_MAXLEVELS = "application.maxLevels";
+	public static final String AP_MAXFIRSTITERATIONS = "application.maxFirstIterations";
+	public static final String AP_WRITERESULTSTOFILE = "application.writeResultsToFile";
+	public static final String AP_RESULTSPATH = "application.resultsPath";
+	public static final String AP_MONITORDELAY = "application.monitorDelay";
+	
+	// Spart properties
+	public static final String SP_TEMPLATEPATH = "spark.templatePath";
+	public static final String SP_PUBLICPATH = "spark.publicPath";
+	public static final String SP_TEMPLATEFILENAME = "spark.templateFileName";
+	
+	// Woker properties
+	public static final String WK_HISTORICALDATAPATH = "worker.historicalDataPath";
+	public static final String WK_HISTORICALDATAFILEEXTENSION = "worker.historicalDataFileExtension";
+	public static final String WK_HISTORICALDATASEPARATOR = "worker.historicalDataSeparator";
+	public static final String WK_PRINTAFTER = "worker.printAfter";
+
 	// Wokerpool properties
 	public static final String WP_CORE_SIZE = "workerpool.coreSize";
 	public static final String WP_MAX_SIZE = "workerpool.maxSize";
@@ -43,5 +68,11 @@ public class Constants {
 	public static final String WP_RETRY_MAX_ATTEMPTS = "workerpool.retryMaxAttempts";
 	public static final String WP_MONITOR_SLEEP = "workerpool.monitorSleep";
 	public static final String WP_REFRESH_AFTER = "workerpool.refreshAfter";
-	
+
+	// Database properties
+	public static final String DB_HOST = "database.host";
+	public static final String DB_PORT = "database.port";
+	public static final String DB_NAME = "database.name";
+	public static final String DB_USERNAME = "database.username";
+	public static final String DB_PASSWORD = "database.password";
 }

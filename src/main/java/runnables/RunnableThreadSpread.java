@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import datamodel.CalculationResult;
 import datamodel.ExecutionTask;
 import datamodel.FxRate;
+import utils.Constants;
 import utils.GeneralUtils;
 
 public class RunnableThreadSpread implements RunnableCalculation, Runnable {
@@ -48,9 +49,9 @@ public class RunnableThreadSpread implements RunnableCalculation, Runnable {
 		try {
 			
 			// Calculates required properties based on the application properties retrieved from the execution task
-			float increasePercentage = Float.parseFloat(applicationProperties.getProperty("application.increasePercentage"));
-			float decreasePercentage = Float.parseFloat(applicationProperties.getProperty("application.decreasePercentage"));
-			int maxLevels = Integer.parseInt(applicationProperties.getProperty("application.maxLevels"));
+			float increasePercentage = Float.parseFloat(applicationProperties.getProperty(Constants.AP_INCREASEPERCENTAGE));
+			float decreasePercentage = Float.parseFloat(applicationProperties.getProperty(Constants.AP_DECREASEPERCENTAGE));
+			int maxLevels = Integer.parseInt(applicationProperties.getProperty(Constants.AP_MAXLEVELS));
 			float spread = 0;
 			
 			if (GeneralUtils.checkIfCurrencyExists (currentCurrency,applicationProperties)) {
