@@ -110,10 +110,10 @@ public class Application {
 	    	String startDate = datePair.substring(0,datePair.indexOf("|")).trim();
 	    	String endDate = datePair.substring(datePair.indexOf("|")+1).trim();
     		for (String currentCurrency : ApplicationProperties.getListProperty(Constants.AP_CURRENCYPAIRS)) {
-	        	for (String calculation : ApplicationProperties.getListProperty(Constants.AP_CALCULATIONS)) {
+	        	for (String calculationType : ApplicationProperties.getListProperty(Constants.AP_CALCULATIONS)) {
 		    		taskId++;
-		    		logger.info ("Putting currency " + currentCurrency + " - " + calculation + " - " + startDate + " - " + endDate + " as taskId " + taskId);
-		    		executionTask = new ExecutionTask (taskId,calculation,currentCurrency,startDate,endDate, ApplicationProperties.getApplicationProperties());
+		    		logger.info ("Task created [" + taskId + "]. Parameters [" + currentCurrency + " - " + calculationType + " - " + startDate + " - " + endDate + "]");
+		    		executionTask = new ExecutionTask (taskId,calculationType,currentCurrency,startDate,endDate, ApplicationProperties.getApplicationProperties());
 		    		HazelcastInstanceUtils.putIntoQueue(HazelcastInstanceUtils.getTaskQueueName(), executionTask); 
 	        	}
 			}
