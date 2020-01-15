@@ -18,6 +18,7 @@ import executionservices.SystemMonitorThread;
 import executionservices.SystemThreadPoolExecutor;
 import runnables.RunnableCalculationFactory;
 import utils.ApplicationProperties;
+import utils.Constants;
 import utils.GeneralUtils;
 import utils.HazelcastInstanceUtils;
 
@@ -42,8 +43,8 @@ public class Worker {
 		// Load properties from file
 		ApplicationProperties.loadApplicationProperties ();
 		
-		logger.info ("Waiting " + ApplicationProperties.getIntProperty("workerpool.initialSleep") + " secs to start..."); 
-		Thread.sleep(ApplicationProperties.getIntProperty("workerpool.initialSleep")*1000); 
+		logger.info ("Waiting " + ApplicationProperties.getIntProperty(Constants.WP_INITIAL_SLEEP) + " secs to start..."); 
+		Thread.sleep(ApplicationProperties.getIntProperty(Constants.WP_INITIAL_SLEEP)*1000); 
 
 		printParameters ("Started");
 
@@ -63,9 +64,9 @@ public class Worker {
 			SystemLinkedBlockingQueue<Runnable> blockingQueue = new SystemLinkedBlockingQueue<Runnable>();		
 			
 			// Creating the ThreadPoolExecutor 
-			SystemThreadPoolExecutor executorPool = new SystemThreadPoolExecutor(ApplicationProperties.getIntProperty("workerpool.coreSize"), 
-																				 ApplicationProperties.getIntProperty("workerpool.maxSize"), 
-																				 ApplicationProperties.getIntProperty("workerpool.timeoutSecs"),
+			SystemThreadPoolExecutor executorPool = new SystemThreadPoolExecutor(ApplicationProperties.getIntProperty(Constants.WP_CORE_SIZE), 
+																				 ApplicationProperties.getIntProperty(Constants.WP_MAX_SIZE), 
+																				 ApplicationProperties.getIntProperty(Constants.WP_TIMEOUT_SECS),
 																				 TimeUnit.SECONDS, blockingQueue, threadFactory, rejectionHandler,hzClient); 
 			
 			// Create cluster node object
@@ -80,18 +81,18 @@ public class Worker {
 					nodeId,
 					GeneralUtils.getHostName(),
 					localEndPointPort,
-					ApplicationProperties.getIntProperty("workerpool.coreSize"),
-					ApplicationProperties.getIntProperty("workerpool.maxSize"),
-					ApplicationProperties.getIntProperty("workerpool.queueCapacity"),
-					ApplicationProperties.getIntProperty("workerpool.timeoutSecs"),
-					ApplicationProperties.getIntProperty("workerpool.retrySleepTime"),
-					ApplicationProperties.getIntProperty("workerpool.retryMaxAttempts"),
-					ApplicationProperties.getIntProperty("workerpool.initialSleep"),
-					ApplicationProperties.getIntProperty("workerpool.monitorSleep"),
+					ApplicationProperties.getIntProperty(Constants.WP_CORE_SIZE),
+					ApplicationProperties.getIntProperty(Constants.WP_MAX_SIZE),
+					ApplicationProperties.getIntProperty(Constants.WP_QUEUE_CAPACITY),
+					ApplicationProperties.getIntProperty(Constants.WP_TIMEOUT_SECS),
+					ApplicationProperties.getIntProperty(Constants.WP_RETRY_SLEEP_TIME),
+					ApplicationProperties.getIntProperty(Constants.WP_RETRY_MAX_ATTEMPTS),
+					ApplicationProperties.getIntProperty(Constants.WP_INITIAL_SLEEP),
+					ApplicationProperties.getIntProperty(Constants.WP_MONITOR_SLEEP),
 					startTime);
 
 			// Start the monitoring thread 
-			SystemMonitorThread monitor = new SystemMonitorThread(executorPool, ApplicationProperties.getIntProperty("workerpool.monitorSleep"), nodeId); 
+			SystemMonitorThread monitor = new SystemMonitorThread(executorPool, ApplicationProperties.getIntProperty(Constants.WP_MONITOR_SLEEP), nodeId); 
 			Thread monitorThread = new Thread(monitor); 
 			monitorThread.start(); 
 
@@ -101,7 +102,7 @@ public class Worker {
 			IQueue<ExecutionTask> hazelcastTaskQueue = hzClient.getQueue( HazelcastInstanceUtils.getTaskQueueName() );		
 
 			long refreshTime = System.currentTimeMillis();
-			logger.info ("Refreshing Hazelcast WorkerDetail status after " + ApplicationProperties.getIntProperty("workerpool.refreshAfter") + " secs");
+			logger.info ("Refreshing Hazelcast WorkerDetail status after " + ApplicationProperties.getIntProperty(Constants.WP_REFRESH_AFTER) + " secs");
 
 			RunnableCalculationFactory runnableFactory = new RunnableCalculationFactory();
 			
@@ -111,10 +112,10 @@ public class Worker {
 				 */
 				if ((executorPool.getActiveCount() < executorPool.getMaximumPoolSize()) ||
 //					(blockingQueue.remainingCapacity() > 0)) { // For ArrayBlockingQueue
-					(blockingQueue.size() < ApplicationProperties.getIntProperty("workerpool.queueCapacity"))) { // For LinkedBlockingQueue 
+					(blockingQueue.size() < ApplicationProperties.getIntProperty(Constants.WP_QUEUE_CAPACITY))) { // For LinkedBlockingQueue 
 					ExecutionTask executionTaskItem = hazelcastTaskQueue.take();
-					logger.info ("Consumed Execution Task " + executionTaskItem.getTaskId() + " (" + executionTaskItem.getCurrentCurrency() + " - " + executionTaskItem.getCalculationMethodology() + ") from Hazelcast Task Queue");
-					if ( (HazelcastInstanceUtils.getStopProcessingSignal()).equals(executionTaskItem.getCalculationMethodology()) ) {
+					logger.info ("Consumed Execution Task " + executionTaskItem.getTaskId() + " (" + executionTaskItem.getCurrentCurrency() + " - " + executionTaskItem.getTaskType() + ") from Hazelcast Task Queue");
+					if ( (HazelcastInstanceUtils.getStopProcessingSignal()).equals(executionTaskItem.getTaskType()) ) {
 						logger.info ("Detected " + HazelcastInstanceUtils.getStopProcessingSignal());
 						hzClient.getQueue(HazelcastInstanceUtils.getTaskQueueName()).put(new ExecutionTask(HazelcastInstanceUtils.getStopProcessingSignal()));
 						break;
@@ -124,14 +125,14 @@ public class Worker {
 					try {
 						executorPool.execute(runnableFactory.getRunnable(executionTaskItem));
 					} catch (Exception ex) {
-						logger.error("Unable to find Runnable for Execution Task " + executionTaskItem.getTaskId() + " (" + executionTaskItem.getCurrentCurrency() + " - " + executionTaskItem.getCalculationMethodology() + ")");
+						logger.error("Unable to find Runnable for Execution Task " + executionTaskItem.getTaskId() + " (" + executionTaskItem.getCurrentCurrency() + " - " + executionTaskItem.getTaskType() + ")");
 					} finally {
 						totalExecutions++;
 						workerDetail.setTotalExecutions(totalExecutions);
 					}
 				}
 				
-				if ((System.currentTimeMillis()) - refreshTime > (ApplicationProperties.getIntProperty("workerpool.refreshAfter")*1000)) {
+				if ((System.currentTimeMillis()) - refreshTime > (ApplicationProperties.getIntProperty(Constants.WP_REFRESH_AFTER)*1000)) {
 					refreshTime = System.currentTimeMillis();
 					workerDetail.setRefreshTime(refreshTime);
 					hzClient.getMap(HazelcastInstanceUtils.getWorkersMapName()).put(workerDetail.getUuid(),workerDetail);
@@ -150,7 +151,7 @@ public class Worker {
 			while (!executorPool.isTerminated()) { 
 				if (logger.isDebugEnabled())
 					logger.debug ("Waiting for all the Executor to terminate"); 
-				Thread.sleep(ApplicationProperties.getIntProperty("workerpool.monitorSleep")*1000); 
+				Thread.sleep(ApplicationProperties.getIntProperty(Constants.WP_MONITOR_SLEEP)*1000); 
 			} 
 
 			logger.info ("Executor terminated"); 
@@ -201,14 +202,14 @@ public class Worker {
 		
 		boolean result = false;
 		
-		for (int i=0; (i<ApplicationProperties.getIntProperty("workerpool.retryMaxAttempts")) && (!result); i++) {
+		for (int i=0; (i<ApplicationProperties.getIntProperty(Constants.WP_RETRY_MAX_ATTEMPTS)) && (!result); i++) {
 			try {
 				hzClient = HazelcastClient.newHazelcastClient();
 				result = true;
 			} catch (Exception e) {
-				logger.error("Exception. Unable to create Hazelcast client instance. Attempt [" + i + "/" + ApplicationProperties.getIntProperty("workerpool.retryMaxAttempts") + "]. Checking again after " + ApplicationProperties.getIntProperty("workerpool.retrySleepTime") + " secs");
+				logger.error("Exception. Unable to create Hazelcast client instance. Attempt [" + i + "/" + ApplicationProperties.getIntProperty(Constants.WP_RETRY_MAX_ATTEMPTS) + "]. Checking again after " + ApplicationProperties.getIntProperty(Constants.WP_RETRY_SLEEP_TIME) + " secs");
 				logger.error("Exception details: " + e.getClass() + " - " + e.getMessage());
-				Thread.sleep(ApplicationProperties.getIntProperty("workerpool.retrySleepTime")*1000);
+				Thread.sleep(ApplicationProperties.getIntProperty(Constants.WP_RETRY_SLEEP_TIME)*1000);
 			}
 		}
 		return result;
@@ -220,15 +221,15 @@ public class Worker {
 		logger.info ("**************************************************"); 
 		logger.info (title + " WorkerPool with the following parameters:"); 
 		logger.info ("**************************************************"); 
-		logger.info ("  - pool core size       : " + ApplicationProperties.getIntProperty("workerpool.coreSize")); 
-		logger.info ("  - pool max size        : " + ApplicationProperties.getIntProperty("workerpool.maxSize")); 
-		logger.info ("  - queue capacity       : " + ApplicationProperties.getIntProperty("workerpool.queueCapacity")); 
-		logger.info ("  - timeout (secs)       : " + ApplicationProperties.getIntProperty("workerpool.timeoutSecs")); 
+		logger.info ("  - pool core size       : " + ApplicationProperties.getIntProperty(Constants.WP_CORE_SIZE)); 
+		logger.info ("  - pool max size        : " + ApplicationProperties.getIntProperty(Constants.WP_MAX_SIZE)); 
+		logger.info ("  - queue capacity       : " + ApplicationProperties.getIntProperty(Constants.WP_QUEUE_CAPACITY)); 
+		logger.info ("  - timeout (secs)       : " + ApplicationProperties.getIntProperty(Constants.WP_TIMEOUT_SECS)); 
 		logger.info ("  - number of tasks      : " + totalExecutions); 
-		logger.info ("  - retry sleep (secs)   : " + ApplicationProperties.getIntProperty("workerpool.retrySleepTime")); 
-		logger.info ("  - retry max attempts   : " + ApplicationProperties.getIntProperty("workerpool.retryMaxAttempts"));
-		logger.info ("  - initial sleep (secs) : " + ApplicationProperties.getIntProperty("workerpool.initialSleep")); 
-		logger.info ("  - monitor sleep (secs) : " + ApplicationProperties.getIntProperty("workerpool.monitorSleep")); 
+		logger.info ("  - retry sleep (secs)   : " + ApplicationProperties.getIntProperty(Constants.WP_RETRY_SLEEP_TIME)); 
+		logger.info ("  - retry max attempts   : " + ApplicationProperties.getIntProperty(Constants.WP_RETRY_MAX_ATTEMPTS));
+		logger.info ("  - initial sleep (secs) : " + ApplicationProperties.getIntProperty(Constants.WP_INITIAL_SLEEP)); 
+		logger.info ("  - monitor sleep (secs) : " + ApplicationProperties.getIntProperty(Constants.WP_MONITOR_SLEEP)); 
 		logger.info ("**************************************************");
 	}
 } 

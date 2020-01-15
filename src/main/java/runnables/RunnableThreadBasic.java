@@ -34,7 +34,7 @@ public class RunnableThreadBasic implements RunnableCalculation, Runnable {
 
 	public RunnableThreadBasic (ExecutionTask executionTask) {
 		this.executionTask = executionTask;
-		this.applicationProperties = executionTask.getTaskParameters();
+		this.applicationProperties = executionTask.getApplicationParameters();
 		this.currentCurrency = executionTask.getCurrentCurrency();
 		this.startDate = executionTask.getStartDate();
 		this.endDate = executionTask.getEndDate();	}
@@ -53,22 +53,22 @@ public class RunnableThreadBasic implements RunnableCalculation, Runnable {
 			
 			if (GeneralUtils.checkIfCurrencyExists (currentCurrency,applicationProperties)) {
 
-				logger.info ("Populating historical data for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
+				logger.info ("Populating historical data for " + currentCurrency + " - " + executionTask.getTaskType());
 				totalHistDataLoaded = GeneralUtils.populateHistoricalFxData(currentCurrency,startDate,endDate,historicalDataMap,applicationProperties);
-				logger.info ("Historical data populated for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
+				logger.info ("Historical data populated for " + currentCurrency + " - " + executionTask.getTaskType());
 
-				logger.info ("Starting calculations for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
+				logger.info ("Starting calculations for " + currentCurrency + " - " + executionTask.getTaskType());
 				totalCalculations += executeCalculation (currentCurrency, increasePercentage, decreasePercentage, maxLevels);
 				
 				stopTime = System.currentTimeMillis();
 				elapsedTime = stopTime - startTime;
 
-				logger.info ("Finished calculations for " + currentCurrency + " - " + executionTask.getCalculationMethodology() + " [#calcs: " + totalCalculations + " - #results: " + resultsMap.size() + "] in " + elapsedTime + " ms");
+				logger.info ("Finished calculations for " + currentCurrency + " - " + executionTask.getTaskType() + " [#calcs: " + totalCalculations + " - #results: " + resultsMap.size() + "] in " + elapsedTime + " ms");
 			} else {
-				logger.error("No available data for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
+				logger.error("No available data for " + currentCurrency + " - " + executionTask.getTaskType());
 			}
 
-			logger.info ("Populating Calculation Result Map for " + currentCurrency + " - " + executionTask.getCalculationMethodology());
+			logger.info ("Populating Calculation Result Map for " + currentCurrency + " - " + executionTask.getTaskType());
 			// Populates the Calculation Result Map
 			executionTask.setCalculationResult(new CalculationResult(startTime, stopTime, totalHistDataLoaded, totalCalculations, resultsMap));
 		} catch (Exception e) { 
@@ -136,7 +136,7 @@ public class RunnableThreadBasic implements RunnableCalculation, Runnable {
 				}
 			}
 		} else {
-			logger.info("No historical data available for " + currentCurrency + " - " + executionTask.getCalculationMethodology() + ". Avoiding calculation");
+			logger.info("No historical data available for " + currentCurrency + " - " + executionTask.getTaskType() + ". Avoiding calculation");
 		}
 		return totalCalculations;
     }

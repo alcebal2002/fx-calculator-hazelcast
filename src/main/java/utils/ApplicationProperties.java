@@ -77,7 +77,7 @@ public class ApplicationProperties {
     
     public static String printProperties () {
     	StringBuilder stringBuilder = new StringBuilder();
-    	Enumeration propsList = applicationProperties.propertyNames();
+    	Enumeration<?> propsList = applicationProperties.propertyNames();
 
         String propName;
 

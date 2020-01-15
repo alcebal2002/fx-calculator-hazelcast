@@ -204,7 +204,7 @@ public class Application {
             if (resultsMap != null && resultsMap.size() > 0) {
 
             	logger.info (((ExecutionTask) entry.getValue()).getCurrentCurrency() + " - " + 
-            				 ((ExecutionTask) entry.getValue()).getCalculationMethodology() + " - [" +
+            				 ((ExecutionTask) entry.getValue()).getTaskType() + " - [" +
             				 ((ExecutionTask) entry.getValue()).getStartDate() + " > " +
             				 ((ExecutionTask) entry.getValue()).getEndDate() + "]");
             	logger.info (resultsMap.toString());
@@ -244,16 +244,16 @@ public class Application {
 					GeneralUtils.writeTextToFile(resultFilePath, ApplicationProperties.printProperties());
 				}
 				
-				if (!(((ExecutionTask) entry.getValue()).getCalculationMethodology()).equalsIgnoreCase("SPREAD")) {
+				if (!(((ExecutionTask) entry.getValue()).getTaskType()).equalsIgnoreCase("SPREAD")) {
 					if (!listHeaders.contains(resultFilePath.toString())) {
 						GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsHeader(maxLevels));
 					}
-					GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsLevels (((ExecutionTask) entry.getValue()).getCurrentCurrency(), ((ExecutionTask) entry.getValue()).getCalculationMethodology(), ((ExecutionTask) entry.getValue()).getStartDate(), ((ExecutionTask) entry.getValue()).getEndDate(), resultsMap, maxLevels));
+					GeneralUtils.writeTextToFile(resultFilePath, GeneralUtils.printResultsLevels (((ExecutionTask) entry.getValue()).getCurrentCurrency(), ((ExecutionTask) entry.getValue()).getTaskType(), ((ExecutionTask) entry.getValue()).getStartDate(), ((ExecutionTask) entry.getValue()).getEndDate(), resultsMap, maxLevels));
 				} else {
 					Iterator<Entry<String, Integer>> calcResults = resultsMap.entrySet().iterator();   						
 					while (calcResults.hasNext()) {
 						Entry<String, Integer> calcEntry = calcResults.next();
-						GeneralUtils.writeTextToFile(resultFilePath, ((ExecutionTask) entry.getValue()).getCurrentCurrency() + "|" + ((ExecutionTask) entry.getValue()).getCalculationMethodology()  + "|" + ((ExecutionTask) entry.getValue()).getStartDate()  + "|" + ((ExecutionTask) entry.getValue()).getEndDate() + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
+						GeneralUtils.writeTextToFile(resultFilePath, ((ExecutionTask) entry.getValue()).getCurrentCurrency() + "|" + ((ExecutionTask) entry.getValue()).getTaskType()  + "|" + ((ExecutionTask) entry.getValue()).getStartDate()  + "|" + ((ExecutionTask) entry.getValue()).getEndDate() + "|" + calcEntry.getKey() + "|" + calcEntry.getValue());
 					}
 				}
 				if (!listHeaders.contains(resultFilePath.toString())) {

@@ -32,4 +32,16 @@ public class Constants {
 	
 	// Chart.js
 	public static final String[] CHART_DATA_COLORS = {"red","orange","yellow","green","blue","purple","grey"};
+	
+	// Wokerpool properties
+	public static final String WP_CORE_SIZE = "workerpool.coreSize";
+	public static final String WP_MAX_SIZE = "workerpool.maxSize";
+	public static final String WP_QUEUE_CAPACITY = "workerpool.queueCapacity";
+	public static final String WP_TIMEOUT_SECS = "workerpool.timeoutSecs";
+	public static final String WP_INITIAL_SLEEP = "workerpool.initialSleep";
+	public static final String WP_RETRY_SLEEP_TIME = "workerpool.retrySleepTime";
+	public static final String WP_RETRY_MAX_ATTEMPTS = "workerpool.retryMaxAttempts";
+	public static final String WP_MONITOR_SLEEP = "workerpool.monitorSleep";
+	public static final String WP_REFRESH_AFTER = "workerpool.refreshAfter";
+	
 }
